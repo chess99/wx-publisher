@@ -56,7 +56,10 @@ export interface NodeStyles {
 }
 
 const BASE_P = "font-size:16px;line-height:1.8;color:#333;margin:0 0 16px 0;"
-const BASE_CODE_BLOCK = "background:#1e1e1e;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;"
+// pre 容器：深色背景
+const BASE_CODE_BLOCK = "background:#282c34;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;display:block;"
+// pre > code：浅色文字，必须显式设置 color，微信不继承 class-based 样式
+const BASE_PRE_CODE = "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#abb2bf;background:none;padding:0;border-radius:0;display:block;white-space:pre-wrap;word-break:break-all;"
 
 export const themes: Record<string, Theme> = {
   default: {
@@ -73,7 +76,7 @@ export const themes: Record<string, Theme> = {
       em: "font-style:italic;color:#555;",
       code: "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:14px;background:#f0f0f0;padding:2px 6px;border-radius:4px;color:#c7254e;",
       pre: BASE_CODE_BLOCK,
-      preCode: "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#d4d4d4;background:none;padding:0;border-radius:0;",
+      preCode: BASE_PRE_CODE,
       blockquote: "border-left:4px solid #07c160;margin:16px 0;padding:10px 16px;background:#f9f9f9;color:#666;font-size:15px;",
       ul: "padding-left:24px;margin:0 0 16px 0;",
       ol: "padding-left:24px;margin:0 0 16px 0;",
@@ -100,8 +103,8 @@ export const themes: Record<string, Theme> = {
       strong: "font-weight:700;color:#1a1a1a;",
       em: "font-style:italic;color:#666;",
       code: "font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;background:#f0ece0;padding:2px 6px;border-radius:3px;color:#8b4513;",
-      pre: "background:#2d2d2d;border-radius:6px;padding:16px 20px;margin:16px 0;overflow-x:auto;",
-      preCode: "font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;color:#e6db74;background:none;padding:0;border-radius:0;",
+      pre: BASE_CODE_BLOCK,
+      preCode: BASE_PRE_CODE,
       blockquote: "border-left:3px solid #c9a84c;margin:20px 0;padding:12px 20px;background:#fdf8ec;color:#5a4a2a;font-size:15px;font-style:italic;",
       ul: "padding-left:22px;margin:0 0 18px 0;",
       ol: "padding-left:22px;margin:0 0 18px 0;",
@@ -128,8 +131,8 @@ export const themes: Record<string, Theme> = {
       strong: "font-weight:700;color:#0d1117;",
       em: "font-style:italic;color:#57606a;",
       code: "font-family:'SFMono-Regular',Consolas,monospace;font-size:85%;background:#f6f8fa;padding:2px 6px;border-radius:6px;color:#0969da;border:1px solid #d0d7de;",
-      pre: "background:#0d1117;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;border:1px solid #30363d;",
-      preCode: "font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;color:#e6edf3;background:none;padding:0;border-radius:0;border:none;",
+      pre: "background:#0d1117;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;display:block;border:1px solid #30363d;",
+      preCode: "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#c9d1d9;background:none;padding:0;border-radius:0;display:block;white-space:pre-wrap;word-break:break-all;",
       blockquote: "border-left:4px solid #0969da;margin:16px 0;padding:10px 16px;background:#f6f8fa;color:#57606a;font-size:15px;",
       ul: "padding-left:24px;margin:0 0 16px 0;",
       ol: "padding-left:24px;margin:0 0 16px 0;",
@@ -156,8 +159,8 @@ export const themes: Record<string, Theme> = {
       strong: "font-weight:700;color:#000;",
       em: "font-style:italic;",
       code: "font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;background:#f4f4f4;padding:1px 5px;border-radius:3px;color:#333;",
-      pre: "background:#f4f4f4;border-radius:4px;padding:14px 16px;margin:14px 0;overflow-x:auto;",
-      preCode: "font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;color:#333;background:none;padding:0;border-radius:0;",
+      pre: BASE_CODE_BLOCK,
+      preCode: BASE_PRE_CODE,
       blockquote: "border-left:3px solid #ccc;margin:14px 0;padding:8px 14px;color:#666;font-size:15px;",
       ul: "padding-left:20px;margin:0 0 14px 0;",
       ol: "padding-left:20px;margin:0 0 14px 0;",
