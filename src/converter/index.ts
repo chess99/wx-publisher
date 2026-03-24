@@ -165,10 +165,15 @@ function formatCodeForWechat(text: string, lang?: string): string {
   // 把 hljs class-based span 转成 inline style span
   highlighted = convertHljsClassesToInlineStyles(highlighted)
 
-  // tab → 4空格，换行→<br>，空格保持普通空格（ProseMirror 能正确处理）
-  return highlighted
-    .replace(/\t/g, "    ")
-    .replace(/\n/g, "<br>")
+  // tab → 4空格
+  highlighted = highlighted.replace(/\t/g, "    ")
+
+  // 只把文本节点（标签外）的空格转 &nbsp;，标签属性里的空格不动
+  // 正则 (>[^<]+)|(^[^<]+) 匹配 >文字 或行首文字
+  highlighted = highlighted.replace(/(>[^<]+)|(^[^<]+)/g, str => str.replace(/ /g, "&nbsp;"))
+
+  // 换行 → <br>
+  return highlighted.replace(/\n/g, "<br>")
 }
 
 /**
