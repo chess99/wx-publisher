@@ -165,12 +165,10 @@ function formatCodeForWechat(text: string, lang?: string): string {
   // 把 hljs class-based span 转成 inline style span
   highlighted = convertHljsClassesToInlineStyles(highlighted)
 
-  // tab → 4空格，然后换行→<br>，空格→&nbsp;
+  // tab → 4空格，换行→<br>，空格保持普通空格（ProseMirror 能正确处理）
   return highlighted
     .replace(/\t/g, "    ")
-    .split("\n")
-    .map(line => line.replace(/ /g, "&nbsp;"))
-    .join("<br>")
+    .replace(/\n/g, "<br>")
 }
 
 /**
@@ -239,7 +237,6 @@ function inlineStyles(
       case "blockquote": applyStyle(node, styles.blockquote); break
 
       case "pre": {
-        // 找到 pre > code，提取纯文本，转成 <br>&nbsp; 格式后重建节点
         const codeChild = node.children.find(
           (c): c is Element => c.type === "element" && c.tagName === "code"
         )
@@ -251,22 +248,23 @@ function inlineStyles(
           const lang = classNames.find(c => c.startsWith("language-"))?.replace("language-", "")
           const formattedHtml = formatCodeForWechat(rawText, lang)
 
-          // 提取 color 值用于文字颜色
-          const colorMatch = styles.preCode.match(/color:([^;]+)/)
-          const textColor = colorMatch ? colorMatch[1] : "#abb2bf"
+          // doocs/md 结构：pre 加 hljs class，code 加 language-xxx class
+          // ProseMirror 识别 hljs class 从而保留内容；style 双写保证样式
+          // white-space:nowrap 防折行，color 保证文字可见
+          const preStyle = styles.pre
+          const codeStyle = `${styles.preCode};white-space:nowrap;`
 
-          // 重建 pre 的内容：mac 圆点 + 格式化代码
-          const codeStyle = `${styles.preCode};color:${textColor};`
-
+          node.properties = { class: "hljs code__pre", style: preStyle }
           node.children = [
             {
               type: "raw" as never,
-              value: `<code style="${codeStyle}">${formattedHtml}</code>`,
+              value: `<code class="language-${lang ?? "plaintext"}" style="${codeStyle}">${formattedHtml}</code>`,
             } as never,
           ]
+        } else {
+          applyStyle(node, styles.pre)
         }
 
-        applyStyle(node, styles.pre)
         return SKIP
       }
 
