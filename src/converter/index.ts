@@ -16,7 +16,53 @@ import remarkRehype from "remark-rehype"
 import rehypeStringify from "rehype-stringify"
 import type { Root, Element, Text, ElementContent } from "hast"
 import { visit, SKIP } from "unist-util-visit"
+import hljs from "highlight.js"
 import { getTheme, type NodeStyles } from "./themes.js"
+
+/**
+ * hljs token 类型 → inline style 颜色映射
+ * 参考 Atom One Dark 主题，与 preCode 的 #abb2bf 基础色搭配
+ */
+const HLJS_TOKEN_COLORS: Record<string, string> = {
+  "hljs-comment":    "color:#5c6370;font-style:italic;",
+  "hljs-quote":      "color:#5c6370;font-style:italic;",
+  "hljs-keyword":    "color:#c678dd;",
+  "hljs-selector-tag": "color:#c678dd;",
+  "hljs-addition":   "color:#98c379;",
+  "hljs-number":     "color:#d19a66;",
+  "hljs-string":     "color:#98c379;",
+  "hljs-meta hljs-meta-string": "color:#98c379;",
+  "hljs-literal":    "color:#56b6c2;",
+  "hljs-doctag":     "color:#56b6c2;",
+  "hljs-regexp":     "color:#56b6c2;",
+  "hljs-title":      "color:#61afef;",
+  "hljs-section":    "color:#61afef;font-weight:bold;",
+  "hljs-name":       "color:#e06c75;",
+  "hljs-selector-id":   "color:#e06c75;",
+  "hljs-selector-class":"color:#e06c75;",
+  "hljs-attribute":  "color:#d19a66;",
+  "hljs-attr":       "color:#d19a66;",
+  "hljs-variable":   "color:#e06c75;",
+  "hljs-template-variable": "color:#e06c75;",
+  "hljs-type":       "color:#e5c07b;",
+  "hljs-built_in":   "color:#e5c07b;",
+  "hljs-builtin-name":"color:#e5c07b;",
+  "hljs-symbol":     "color:#e5c07b;",
+  "hljs-bullet":     "color:#e5c07b;",
+  "hljs-link":       "color:#61afef;text-decoration:underline;",
+  "hljs-deletion":   "color:#e06c75;",
+  "hljs-emphasis":   "font-style:italic;",
+  "hljs-strong":     "font-weight:bold;",
+  "hljs-formula":    "color:#56b6c2;",
+  "hljs-params":     "color:#abb2bf;",
+  "hljs-subst":      "color:#abb2bf;",
+  "hljs-meta":       "color:#61afef;",
+  "hljs-selector-pseudo": "color:#56b6c2;",
+  "hljs-selector-attr":   "color:#d19a66;",
+  "hljs-tag":        "color:#e06c75;",
+  "hljs-operator":   "color:#56b6c2;",
+  "hljs-punctuation":"color:#abb2bf;",
+}
 
 export interface ConvertOptions {
   theme?: string
@@ -99,23 +145,66 @@ function unwrapParagraphs(children: ElementContent[]): ElementContent[] {
 }
 
 /**
- * 把代码文本转成微信兼容格式：
+ * 用 highlight.js 高亮代码，输出微信兼容的 HTML：
+ * - hljs 的 class-based span → inline style span
  * - 换行 → <br>
  * - 空格/制表符 → &nbsp;
- * 这样完全不依赖 white-space CSS，微信必然正确渲染
  */
-function formatCodeForWechat(text: string): string {
-  return text
-    .replace(/\t/g, "    ")           // tab → 4空格
+function formatCodeForWechat(text: string, lang?: string): string {
+  // 用 hljs 高亮，得到带 class 的 span HTML
+  let highlighted: string
+  try {
+    const language = lang && hljs.getLanguage(lang) ? lang : undefined
+    highlighted = language
+      ? hljs.highlight(text, { language }).value
+      : hljs.highlightAuto(text).value
+  } catch {
+    highlighted = escapeHtml(text)
+  }
+
+  // 把 hljs class-based span 转成 inline style span
+  highlighted = convertHljsClassesToInlineStyles(highlighted)
+
+  // tab → 4空格，然后换行→<br>，空格→&nbsp;
+  return highlighted
+    .replace(/\t/g, "    ")
     .split("\n")
-    .map(line =>
-      // 文本节点中的空格全部转 &nbsp;
-      line.replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/ /g, "&nbsp;")
-    )
+    .map(line => line.replace(/ /g, "&nbsp;"))
     .join("<br>")
+}
+
+/**
+ * 把 hljs 输出的 <span class="hljs-xxx"> 转成 <span style="color:...">
+ * hljs 输出的 HTML 已经 escape 过，不需要再 escape
+ */
+function convertHljsClassesToInlineStyles(html: string): string {
+  return html.replace(
+    /<span class="([^"]+)">/g,
+    (_, classes: string) => {
+      // hljs 有时会输出多个 class，找第一个匹配的
+      const classList = classes.trim().split(/\s+/)
+      // 先试完整 class 名，再试单个
+      for (const cls of classList) {
+        if (HLJS_TOKEN_COLORS[cls]) {
+          return `<span style="${HLJS_TOKEN_COLORS[cls]}">`
+        }
+      }
+      // 组合 class（如 "hljs-meta hljs-meta-string"）
+      const combined = classList.join(" ")
+      if (HLJS_TOKEN_COLORS[combined]) {
+        return `<span style="${HLJS_TOKEN_COLORS[combined]}">`
+      }
+      // 没有匹配的 token，用默认文字色
+      return `<span style="color:inherit;">`
+    }
+  )
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
 }
 
 /**
@@ -156,9 +245,11 @@ function inlineStyles(
         )
 
         if (codeChild) {
-          // 提取代码纯文本（忽略 highlight.js 的 span 标签，因为我们没用 hljs）
           const rawText = extractText(codeChild)
-          const formattedHtml = formatCodeForWechat(rawText)
+          // 从 class="language-xxx" 提取语言
+          const classNames = (codeChild.properties?.className ?? []) as string[]
+          const lang = classNames.find(c => c.startsWith("language-"))?.replace("language-", "")
+          const formattedHtml = formatCodeForWechat(rawText, lang)
 
           // 提取 color 值用于文字颜色
           const colorMatch = styles.preCode.match(/color:([^;]+)/)
