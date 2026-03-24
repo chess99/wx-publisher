@@ -28,8 +28,6 @@ export interface ConvertResult {
   externalImages: string[]
 }
 
-// mac 风格三色圆点，doocs/md 同款
-const MAC_DOTS_SVG = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" x="0px" y="0px" width="45px" height="13px" viewBox="0 0 450 130"><ellipse cx="50" cy="65" rx="50" ry="52" stroke="rgb(220,60,54)" stroke-width="2" fill="rgb(237,108,96)"></ellipse><ellipse cx="225" cy="65" rx="50" ry="52" stroke="rgb(218,151,33)" stroke-width="2" fill="rgb(247,193,81)"></ellipse><ellipse cx="400" cy="65" rx="50" ry="52" stroke="rgb(27,161,37)" stroke-width="2" fill="rgb(100,200,86)"></ellipse></svg>`
 
 export async function convertMarkdown(markdown: string, options: ConvertOptions = {}): Promise<ConvertResult> {
   const { theme: themeName = "default", stripLinks = true } = options
@@ -167,15 +165,12 @@ function inlineStyles(
           const textColor = colorMatch ? colorMatch[1] : "#abb2bf"
 
           // 重建 pre 的内容：mac 圆点 + 格式化代码
-          const macSpanStyle = "display:block;padding:10px 14px 4px;"
           const codeStyle = `${styles.preCode};color:${textColor};`
 
-          // 用原始 HTML 字符串替换节点，通过 dangerouslySetInnerHTML 方式
-          // 在 hast 里用 raw 节点插入预格式化 HTML
           node.children = [
             {
               type: "raw" as never,
-              value: `<span style="${macSpanStyle}">${MAC_DOTS_SVG}</span><code style="${codeStyle}">${formattedHtml}</code>`,
+              value: `<code style="${codeStyle}">${formattedHtml}</code>`,
             } as never,
           ]
         }
