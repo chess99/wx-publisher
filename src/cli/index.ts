@@ -252,6 +252,106 @@ program
     })
   })
 
+// ── validate：静态检查本地 HTML，不需要 CDP ────────────────────────────────────
+
+program
+  .command("validate")
+  .description("静态检查本地 HTML 文件的已知微信渲染问题（不需要 CDP）")
+  .requiredOption("-f, --file <path>", "要检查的 HTML 文件路径（由 convert 命令生成）")
+  .action((opts) => {
+    let html: string
+    try {
+      html = readFileSync(resolve(opts.file), "utf-8")
+    } catch (e) {
+      fail(`读取文件失败: ${opts.file}`, String(e))
+    }
+
+    const checks: Record<string, { status: string; detail: string }> = {}
+
+    // CHECK: li 有 display:block
+    const liMatches = [...html.matchAll(/<li\s[^>]*style="([^"]*)"/g)]
+    if (liMatches.length === 0) {
+      checks["LIST_DISPLAY_BLOCK"] = { status: "SKIP", detail: "无 li 元素" }
+    } else {
+      const bad = liMatches.filter(m => !m[1].includes("display:block"))
+      checks["LIST_DISPLAY_BLOCK"] = {
+        status: bad.length === 0 ? "PASS" : "FAIL",
+        detail: `${liMatches.length} 个 li，${bad.length} 个缺少 display:block`,
+      }
+    }
+
+    // CHECK: ul li 有 • 前缀文本
+    const bulletCount = (html.match(/• /g) || []).length
+    checks["LIST_HAS_BULLET"] = {
+      status: bulletCount > 0 ? "PASS" : "SKIP",
+      detail: `发现 ${bulletCount} 个 • 前缀`,
+    }
+
+    // CHECK: pre 有深色背景
+    const preMatches = [...html.matchAll(/<pre[^>]*style="([^"]*)"/g)]
+    if (preMatches.length === 0) {
+      checks["CODE_BLOCK_DARK_BG"] = { status: "SKIP", detail: "无代码块" }
+    } else {
+      const bad = preMatches.filter(m => !m[1].includes("background:#") && !m[1].includes("background: #"))
+      checks["CODE_BLOCK_DARK_BG"] = {
+        status: bad.length === 0 ? "PASS" : "FAIL",
+        detail: `${preMatches.length} 个 pre，${bad.length} 个缺少 background 样式`,
+      }
+    }
+
+    // CHECK: pre code 有浅色 color
+    const preCodeMatches = [...html.matchAll(/class="language-[^"]*"\s+style="([^"]*)"/g)]
+    if (preCodeMatches.length === 0) {
+      checks["CODE_BLOCK_LIGHT_TEXT"] = { status: "SKIP", detail: "无代码块" }
+    } else {
+      const bad = preCodeMatches.filter(m => !m[1].includes("color:"))
+      checks["CODE_BLOCK_LIGHT_TEXT"] = {
+        status: bad.length === 0 ? "PASS" : "FAIL",
+        detail: `${preCodeMatches.length} 个 pre code，${bad.length} 个缺少 color 样式`,
+      }
+    }
+
+    // CHECK: inline-code 有 style
+    const inlineCodeMatches = [...html.matchAll(/class="inline-code"\s+style="([^"]*)"/g)]
+    const inlineCodeNoStyle = [...html.matchAll(/class="inline-code"\s+style=""/g)]
+    if (inlineCodeMatches.length === 0 && inlineCodeNoStyle.length === 0) {
+      checks["CODE_INLINE_STYLE"] = { status: "SKIP", detail: "无行内代码" }
+    } else {
+      checks["CODE_INLINE_STYLE"] = {
+        status: inlineCodeNoStyle.length === 0 ? "PASS" : "FAIL",
+        detail: `${inlineCodeMatches.length + inlineCodeNoStyle.length} 个 inline-code，${inlineCodeNoStyle.length} 个 style 为空`,
+      }
+    }
+
+    // CHECK: h2 有 border-left
+    const h2Matches = [...html.matchAll(/<h2[^>]*style="([^"]*)"/g)]
+    if (h2Matches.length === 0) {
+      checks["H2_BORDER_LEFT"] = { status: "SKIP", detail: "无 h2" }
+    } else {
+      const bad = h2Matches.filter(m => !m[1].includes("border-left"))
+      checks["H2_BORDER_LEFT"] = {
+        status: bad.length === 0 ? "PASS" : "FAIL",
+        detail: `${h2Matches.length} 个 h2，${bad.length} 个缺少 border-left`,
+      }
+    }
+
+    const checkList = Object.entries(checks).map(([id, result]) => ({ id, ...result }))
+    const passCount = checkList.filter(c => c.status === "PASS").length
+    const failCount = checkList.filter(c => c.status === "FAIL").length
+    const skipCount = checkList.filter(c => c.status === "SKIP").length
+
+    ok({
+      overall: failCount === 0 ? "PASS" : "FAIL",
+      pass_count: passCount,
+      fail_count: failCount,
+      skip_count: skipCount,
+      checks: checkList,
+      recommendation: failCount === 0
+        ? "静态检查通过，建议用 CDP QA 做最终验证"
+        : `需要修复: ${checkList.filter(c => c.status === "FAIL").map(c => c.id).join(", ")}`,
+    })
+  })
+
 program.parse()
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────

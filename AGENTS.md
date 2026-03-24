@@ -161,3 +161,184 @@ yourTheme: {
 - Node.js 18+（使用原生 `fetch`，不需要 node-fetch）
 - 开发时用 `npm run dev -- <命令>` 代替 `wxp`
 - 构建：`npm run build`，产物在 `dist/`
+
+---
+
+## AI Agent 团队模式（自动化发布循环）
+
+### 概述
+
+本章节为需要做「开发→测试→发布→视觉验证→迭代」完整循环的 AI Agent 提供规范。
+单次发布见上方标准流程；本章节针对需要验证微信 ProseMirror 渲染效果并自动修复样式问题的场景。
+
+**核心问题链**：
+```
+Markdown → convertMarkdown()（本地，完全可控）
+    ↓
+微信草稿 API（createDraft）
+    ↓
+ProseMirror 二次解析（不可控，可能剥离样式）
+    ↓
+最终渲染 DOM（需要 CDP 验证）
+```
+
+### 角色分工
+
+| 角色 | 职责 | 工具 |
+|------|------|------|
+| **Orchestrator** | 任务分解、状态追踪、循环控制、决定何时升级给人工 | 无直接工具，调度其他 Agent |
+| **Builder** | 修改 `themes.ts` CSS 样式，运行 convert 生成 HTML | Bash、Edit |
+| **Publisher** | 调用 `wxp publish` 发布到草稿箱 | Bash |
+| **QA** | 用 CDP 在微信编辑器里验证渲染效果 | mcp__chrome-devtools__* |
+
+### 标准循环
+
+```
+Builder（convert + validate）
+    ↓ HTML 静态检查通过
+Publisher（publish → media_id）
+    ↓ 得到 draft_edit_url
+QA（CDP 打开编辑器 → 运行 qa-checks.js）
+    ↓ 全部 PASS → 通知用户
+    ↓ 有 FAIL → Orchestrator 分析 → Builder 修复 → 重新循环
+    ↓ 连续 3 次失败 → ESCALATE 给人工
+```
+
+### Builder Agent Prompt
+
+```
+你是 wx-publisher 的 Builder Agent。工作目录：~/code2/wx-publisher
+
+任务：将 Markdown 转换为微信 HTML，并运行静态检查。
+
+输入：{ file, theme, fix_instructions }
+
+如果有 fix_instructions：
+- 只修改 src/converter/themes.ts 中的内联 CSS 字符串
+- 不修改 converter/index.ts 的结构逻辑（风险高）
+- 修改后运行 npm run typecheck 确认无错误
+
+执行步骤：
+1. npm run dev -- convert --file {file} --theme {theme} --output /tmp/wx_preview_{timestamp}.html
+2. npm run dev -- validate --file /tmp/wx_preview_{timestamp}.html
+3. 输出 JSON 报告
+
+输出格式：
+{
+  "html_path": "/tmp/wx_preview_xxx.html",
+  "validate_result": { "overall": "PASS/FAIL", "checks": [...] },
+  "modifications_made": "描述本次 CSS 修改（无修改则 null）"
+}
+```
+
+### Publisher Agent Prompt
+
+```
+你是 wx-publisher 的 Publisher Agent。工作目录：~/code2/wx-publisher
+
+任务：发布到微信草稿箱，返回 draft_edit_url。
+
+执行：
+npm run dev -- publish \
+  --file {file} --theme {theme} \
+  --cover-url "{cover_url}" --title "{title}"
+
+从 JSON 输出提取 media_id，构造：
+draft_edit_url = https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={media_id}
+
+输出格式：
+{ "success": true, "media_id": "xxx", "draft_edit_url": "https://..." }
+
+错误处理：
+- errcode 48001（权限不足）→ 标记 NEEDS_HUMAN，不重试
+- invalid ip（IP 白名单）→ 标记 NEEDS_HUMAN，提示检查 103.37.140.0/24
+- access_token 失败 → 标记 NEEDS_HUMAN，提示检查凭证配置
+```
+
+### QA Agent Prompt
+
+```
+你是 wx-publisher 的 QA Agent，用 CDP 工具验证微信编辑器渲染效果。
+
+前置条件：微信登录态由人工维护。如果页面跳转到登录页：
+立即返回 { "overall": "BLOCKED", "reason": "未登录，需要人工重新登录微信" }
+
+输入：{ draft_edit_url, focus_checks }
+
+步骤：
+1. mcp__chrome-devtools__navigate_page 打开 draft_edit_url
+2. mcp__chrome-devtools__wait_for 等待 ".ProseMirror"（超时 15s）
+3. mcp__chrome-devtools__take_screenshot 截图保存 /tmp/qa_{timestamp}.png
+4. mcp__chrome-devtools__evaluate_script 执行 scripts/qa-checks.js 的内容
+   （读取文件后作为函数体执行，或直接把脚本内容粘贴进去）
+5. 解析返回的 JSON，输出 QA 报告
+
+输出格式：
+{
+  "overall": "PASS/FAIL/BLOCKED",
+  "checks": [...],
+  "screenshot": "/tmp/qa_xxx.png",
+  "recommendation": "通过 | 需要修复: [CHECK_ID1, CHECK_ID2]"
+}
+```
+
+### QA 检查项（7 项）
+
+检查脚本在 `scripts/qa-checks.js`，可直接通过 CDP evaluate_script 执行。
+
+| 检查 ID | 验证内容 | 期望值 |
+|---------|---------|--------|
+| `LIST_NO_LIST_ITEM` | li 不渲染为 list-item | `display` ≠ `list-item` |
+| `LIST_HAS_BULLET` | ul li 有 • 前缀 | textContent 以 • 开头 |
+| `OL_HAS_NUMBER` | ol li 有数字前缀 | textContent 以 `N. ` 开头 |
+| `NO_EMPTY_LI` | 无空白 li | textContent 不为空 |
+| `CODE_BLOCK_DARK_BG` | pre 深色背景 | 亮度 < 80 |
+| `CODE_BLOCK_LIGHT_TEXT` | pre code 浅色文字 | 亮度 > 100 |
+| `CODE_NOWRAP` | 代码不折行 | white-space = nowrap/pre |
+| `CODE_INLINE_STYLE` | inline-code 有样式 | style 属性非空 |
+| `H2_BORDER_LEFT` | h2 有左边框 | borderLeftWidth > 0 |
+| `TABLE_BORDER` | 表格 border-collapse | = collapse |
+
+### 修复决策表（Orchestrator 查询用）
+
+| 失败检查 ID | 根因 | 修复动作 | 修改位置 |
+|-------------|------|---------|---------|
+| `LIST_NO_LIST_ITEM` | ProseMirror 恢复 list-style | `BASE_LI` 加 `list-style:none!important` | `themes.ts` |
+| `LIST_HAS_BULLET` | • 前缀被剥离 | 检查 `inlineStyles` 里 ul case 的前缀注入逻辑 | `converter/index.ts` |
+| `CODE_BLOCK_DARK_BG` | background 被覆盖 | 在 `pre` 样式加 `!important` | `themes.ts` |
+| `CODE_BLOCK_LIGHT_TEXT` | color 被剥离 | 确认 `pre code` 的 color 值，加 `!important` | `themes.ts` |
+| `CODE_INLINE_STYLE` | ProseMirror 剥离 style | 确认 `code` 节点用 raw 节点输出，style 硬写 | `converter/index.ts` |
+| `H2_BORDER_LEFT` | border 被剥离 | 改用 `box-shadow` 模拟左边框，或加 `!important` | `themes.ts` |
+| `NO_EMPTY_LI` | 松散列表产生空 li | 检查 `unwrapLiParagraphs` 逻辑 | `converter/index.ts` |
+
+### 人工介入触发条件
+
+**以下情况立即 ESCALATE，不继续自动修复：**
+- 微信 cookie 失效（CDP 导航到登录页）
+- 同一检查项连续 3 次修复后仍 FAIL
+- API errcode 48001（权限不足）
+- 需要修改 `converter/index.ts` 的 AST 遍历逻辑（风险高）
+- 视觉判断类问题（颜色搭配、字体效果）
+
+**以下情况 AI 可自主处理：**
+- `themes.ts` 中内联 CSS 字符串的数值/颜色调整
+- 添加 `!important` 提高样式优先级
+- 用等效 CSS 属性替换（如 `border` → `box-shadow`）
+- `unwrapLiParagraphs` 逻辑的小调整
+
+### 微信编辑器 iframe 定位
+
+微信草稿编辑器的内容区域在嵌套 iframe 里，CDP 查询时需要：
+
+```javascript
+// qa-checks.js 中的 getEditorDoc() 会自动尝试以下选择器：
+// 1. iframe#js_editor_editable
+// 2. iframe.rich_media_content
+// 3. iframe[id*="editor"]
+// 如果都失败，fallback 到 document（某些版本直接在主文档里）
+```
+
+草稿编辑 URL 格式：
+```
+https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={media_id}
+```
