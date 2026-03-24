@@ -274,6 +274,12 @@ function inlineStyles(
       }
 
       case "code": {
+        // 加 inline-code class，让 ProseMirror 识别并保留 style
+        node.properties = node.properties ?? {}
+        const existing = node.properties.className
+        node.properties.className = Array.isArray(existing)
+          ? [...existing, "inline-code"]
+          : ["inline-code"]
         applyStyle(node, styles.code)
         break
       }
