@@ -185,6 +185,30 @@ export class WechatClient {
     return { media_id: data.media_id }
   }
 
+  /**
+   * 获取草稿列表（最新的 N 篇）
+   * 返回包含 media_id 的列表，用于 QA Agent 定位最新草稿
+   */
+  async listDrafts(count = 5): Promise<Array<{ media_id: string; update_time: number; title: string }>> {
+    const token = await this.getAccessToken()
+    const url = `${WX_API}/cgi-bin/draft/batchget?access_token=${token}`
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ offset: 0, count, no_content: 1 }),
+    })
+    const data = await res.json() as {
+      item?: Array<{ media_id: string; update_time: number; content: { news_item: Array<{ title: string }> } }>
+      errcode?: number; errmsg?: string
+    }
+    if (data.errcode) throw new Error(`获取草稿列表失败: ${data.errmsg}`)
+    return (data.item ?? []).map(item => ({
+      media_id: item.media_id,
+      update_time: item.update_time,
+      title: item.content?.news_item?.[0]?.title ?? "",
+    }))
+  }
+
   // ─── token 缓存 ───────────────────────────────────────────────────────────
 
   private loadTokenCache(): void {

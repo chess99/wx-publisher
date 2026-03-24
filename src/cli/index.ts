@@ -252,6 +252,29 @@ program
     })
   })
 
+// ── draft：草稿管理 ───────────────────────────────────────────────────────────
+
+const draftCmd = program.command("draft").description("草稿箱管理")
+
+draftCmd
+  .command("list")
+  .description("列出最新草稿（供 QA Agent 获取 appmsgid）")
+  .option("-n, --count <n>", "获取数量", "5")
+  .action(async (opts) => {
+    const config = loadConfig()
+    const errors = validateConfig(config)
+    if (errors.length > 0) fail("配置不完整", errors)
+    const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
+    const drafts = await client.listDrafts(parseInt(opts.count)).catch(e => fail("获取草稿列表失败", String(e)))
+    ok({
+      drafts: drafts.map(d => ({
+        ...d,
+        edit_url_template: `https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={appmsgid}&token={token}&lang=zh_CN`,
+        note: "appmsgid 需从草稿箱页面获取，media_id 是 API 标识符",
+      })),
+    })
+  })
+
 // ── validate：静态检查本地 HTML，不需要 CDP ────────────────────────────────────
 
 program
