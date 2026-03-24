@@ -259,26 +259,70 @@ draft_edit_url = https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&act
 
 ```
 你是 wx-publisher 的 QA Agent，用 CDP 工具验证微信编辑器渲染效果。
+不要截图（会撑爆上下文），只用 evaluate_script 获取 DOM 数据。
 
-前置条件：微信登录态由人工维护。如果页面跳转到登录页：
-立即返回 { "overall": "BLOCKED", "reason": "未登录，需要人工重新登录微信" }
+前置条件：微信登录态由人工维护。检测方式：
+  evaluate_script: () => document.body.innerText?.includes('请重新登录')
+  如果返回 true → { "overall": "BLOCKED", "reason": "未登录" }
 
-输入：{ draft_edit_url, focus_checks }
+输入：{ media_id }（wxp publish 返回的 media_id）
 
-步骤：
-1. mcp__chrome-devtools__navigate_page 打开 draft_edit_url
-2. mcp__chrome-devtools__wait_for 等待 ".ProseMirror"（超时 15s）
-3. mcp__chrome-devtools__take_screenshot 截图保存 /tmp/qa_{timestamp}.png
-4. mcp__chrome-devtools__evaluate_script 执行 scripts/qa-checks.js 的内容
-   （读取文件后作为函数体执行，或直接把脚本内容粘贴进去）
-5. 解析返回的 JSON，输出 QA 报告
+## 完整步骤（全自动，无需人工）
+
+### Step 1：找到已登录的微信页面
+list_pages，找 URL 含 mp.weixin.qq.com 且含 token= 的页面，select 它。
+
+### Step 2：从草稿列表 API 获取 appmsgid
+evaluate_script:
+```javascript
+async () => {
+  const token = new URLSearchParams(location.search).get('token')
+  const res = await fetch(`/cgi-bin/appmsg?begin=0&count=10&type=77&action=list_card&token=${token}&lang=zh_CN&f=json&ajax=1`)
+  const data = await res.json()
+  const items = data?.app_msg_info?.item ?? []
+  // 取最新草稿（items[0] 是最新的）
+  const latest = items[0]
+  return { token, appmsgid: latest?.app_id, title: latest?.digest?.slice(0, 40) }
+}
+```
+提取 token 和 appmsgid。
+
+### Step 3：导航到编辑器
+navigate_page:
+  https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={appmsgid}&token={token}&lang=zh_CN
+
+### Step 4：等待编辑器加载（轮询，不用 wait_for）
+evaluate_script: () => !!document.querySelector('.ProseMirror')
+如果返回 false，等 2s 再试，最多 3 次。
+
+### Step 5：执行 QA 检查
+evaluate_script:
+```javascript
+() => {
+  const pm = document.querySelector('.ProseMirror')
+  if (!pm) return { error: 'ProseMirror not found' }
+  const ul = pm.querySelector('ul')
+  const allLi = pm.querySelectorAll('li')
+  const emptyLi = Array.from(allLi).filter(li => !li.textContent?.trim())
+  const firstLi = ul?.querySelector('li')
+  const pre = pm.querySelector('pre')
+  const inlineCode = pm.querySelector('code.inline-code')
+  return {
+    LIST_NO_EMPTY_LI: { status: emptyLi.length === 0 ? 'PASS' : 'FAIL', empty: emptyLi.length, total: allLi.length },
+    LIST_HAS_BULLET: { status: firstLi?.textContent?.includes('•') ? 'PASS' : 'FAIL', sample: firstLi?.textContent?.slice(0, 40) },
+    LIST_DISPLAY_BLOCK: { status: firstLi && getComputedStyle(firstLi).display === 'block' ? 'PASS' : 'FAIL', display: firstLi ? getComputedStyle(firstLi).display : null },
+    CODE_DARK_BG: { status: pre ? (()=>{ const rgb = getComputedStyle(pre).backgroundColor.match(/\d+/g)?.map(Number)||[255,255,255]; return (rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000 < 80 ? 'PASS':'FAIL' })() : 'SKIP', bg: pre ? getComputedStyle(pre).backgroundColor : null },
+    CODE_INLINE_STYLE: { status: inlineCode?.getAttribute('style') ? 'PASS' : (inlineCode ? 'FAIL' : 'SKIP'), style: inlineCode?.getAttribute('style')?.slice(0, 60) },
+  }
+}
+```
 
 输出格式：
 {
   "overall": "PASS/FAIL/BLOCKED",
-  "checks": [...],
-  "screenshot": "/tmp/qa_xxx.png",
-  "recommendation": "通过 | 需要修复: [CHECK_ID1, CHECK_ID2]"
+  "appmsgid": 502719393,
+  "checks": { ... },
+  "recommendation": "通过 | 需要修复: [CHECK_ID]"
 }
 ```
 
@@ -368,14 +412,23 @@ https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&
 - 验证：`document.querySelectorAll('iframe').length === 0`，ProseMirror 直接挂在主文档
 - 解法：直接用 `document.querySelector('.ProseMirror')` 访问编辑器内容
 
-**经验 4：media_id ≠ appmsgid**
+**经验 4：media_id ≠ appmsgid，但可以通过草稿列表 API 获取**
 - 问题：`wxp publish` 返回的 `media_id`（字符串）不能直接用于构造编辑器 URL
-- 微信编辑器 URL 里的 `appmsgid` 是数字 ID，两者不同
-- 解法：让用户手动打开草稿，QA Agent 通过 `list_pages` 找到已打开的编辑器页面（URL 含 `appmsg_edit`）
+- 微信编辑器 URL 里的 `appmsgid` 是数字 ID（如 `502719393`）
+- 解法：在已登录页面用 CDP fetch 草稿列表 API，从 `app_id` 字段获取数字 ID：
+  ```javascript
+  // 在任意 mp.weixin.qq.com 已登录页面执行
+  const token = new URLSearchParams(location.search).get('token')
+  const res = await fetch(`/cgi-bin/appmsg?begin=0&count=5&type=77&action=list_card&token=${token}&lang=zh_CN&f=json&ajax=1`)
+  const data = await res.json()
+  const appmsgid = data.app_msg_info.item[0].app_id  // 最新草稿
+  ```
+- 完整封装见 `scripts/qa-checks.js` 的 `getAppmsgIdByMediaId()` 函数
 
-**经验 5：token 会过期，导航可能触发重新验证**
-- 问题：从首页导航到草稿箱时，token 可能失效导致跳转到登录页
-- 解法：导航时在 URL 里带上当前 token（从已登录页面的 URL 提取）
+**经验 5：token 有效期内从同一页面出发，不要跨 token 导航**
+- 问题：用过期 token 构造 URL 直接导航会跳到登录页
+- 解法：先从已登录页面提取当前有效 token，再构造 URL。token 从 `location.search` 提取
+- 关键：草稿列表 API 用的是 cookie 鉴权（同域 fetch 自动带），token 只是 CSRF 保护，只要 cookie 有效就能用
 
 ### ProseMirror 渲染经验
 
