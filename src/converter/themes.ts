@@ -56,6 +56,10 @@ export interface NodeStyles {
 }
 
 const BASE_P = "font-size:16px;line-height:1.8;color:#333;margin:0 0 16px 0;"
+// 列表：display:block 消除浏览器默认 list-item 行为，避免微信二次处理产生空行
+const BASE_UL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
+const BASE_OL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
+const BASE_LI = "display:block;margin:0.2em 8px;font-size:16px;line-height:1.8;color:#333;"
 // pre 容器：深色背景
 const BASE_CODE_BLOCK = "background:#282c34;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;display:block;"
 // pre > code：浅色文字，必须显式设置 color，微信不继承 class-based 样式
@@ -79,9 +83,9 @@ export const themes: Record<string, Theme> = {
       pre: BASE_CODE_BLOCK,
       preCode: BASE_PRE_CODE,
       blockquote: "border-left:4px solid #07c160;margin:16px 0;padding:10px 16px;background:#f9f9f9;color:#666;font-size:15px;",
-      ul: "padding-left:24px;margin:0 0 16px 0;",
-      ol: "padding-left:24px;margin:0 0 16px 0;",
-      li: "font-size:16px;line-height:1.8;color:#333;margin:4px 0;",
+      ul: BASE_UL,
+      ol: BASE_OL,
+      li: BASE_LI,
       hr: "border:none;border-top:1px solid #e5e5e5;margin:24px 0;",
       img: "max-width:100%;border-radius:4px;display:block;margin:16px auto;",
       a: "color:#07c160;text-decoration:none;font-weight:500;",
@@ -107,9 +111,9 @@ export const themes: Record<string, Theme> = {
       pre: BASE_CODE_BLOCK,
       preCode: BASE_PRE_CODE,
       blockquote: "border-left:3px solid #c9a84c;margin:20px 0;padding:12px 20px;background:#fdf8ec;color:#5a4a2a;font-size:15px;font-style:italic;",
-      ul: "padding-left:22px;margin:0 0 18px 0;",
-      ol: "padding-left:22px;margin:0 0 18px 0;",
-      li: "font-size:16px;line-height:1.9;color:#3a3a3a;margin:5px 0;",
+      ul: BASE_UL,
+      ol: BASE_OL,
+      li: BASE_LI,
       hr: "border:none;border-top:1px solid #d4c9a8;margin:28px 0;",
       img: "max-width:100%;border-radius:4px;display:block;margin:20px auto;box-shadow:0 2px 8px rgba(0,0,0,0.1);",
       a: "color:#c9a84c;text-decoration:none;font-weight:500;",
@@ -135,9 +139,9 @@ export const themes: Record<string, Theme> = {
       pre: "background:#0d1117;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;display:block;border:1px solid #30363d;",
       preCode: "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#c9d1d9;background:none;padding:0;border-radius:0;display:block;white-space:nowrap;overflow-x:auto;",
       blockquote: "border-left:4px solid #0969da;margin:16px 0;padding:10px 16px;background:#f6f8fa;color:#57606a;font-size:15px;",
-      ul: "padding-left:24px;margin:0 0 16px 0;",
-      ol: "padding-left:24px;margin:0 0 16px 0;",
-      li: "font-size:16px;line-height:1.8;color:#333;margin:4px 0;",
+      ul: BASE_UL,
+      ol: BASE_OL,
+      li: BASE_LI,
       hr: "border:none;border-top:1px solid #d0d7de;margin:24px 0;",
       img: "max-width:100%;border-radius:6px;display:block;margin:16px auto;",
       a: "color:#0969da;text-decoration:none;font-weight:500;",
@@ -163,9 +167,9 @@ export const themes: Record<string, Theme> = {
       pre: BASE_CODE_BLOCK,
       preCode: BASE_PRE_CODE,
       blockquote: "border-left:3px solid #ccc;margin:14px 0;padding:8px 14px;color:#666;font-size:15px;",
-      ul: "padding-left:20px;margin:0 0 14px 0;",
-      ol: "padding-left:20px;margin:0 0 14px 0;",
-      li: "font-size:16px;line-height:1.75;color:#444;margin:3px 0;",
+      ul: BASE_UL,
+      ol: BASE_OL,
+      li: BASE_LI,
       hr: "border:none;border-top:1px solid #eee;margin:20px 0;",
       img: "max-width:100%;display:block;margin:14px auto;",
       a: "color:#333;text-decoration:underline;",

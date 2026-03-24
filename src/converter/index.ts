@@ -88,7 +88,6 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(() => (tree: Root) => {
-      flattenLists(tree)
       inlineStyles(tree, theme.styles, externalImages, stripLinks)
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
@@ -101,38 +100,10 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
 }
 
 /**
- * 把 ul/ol 展平为 <p> 标签，绕过微信对列表标签的二次处理
+ * 剥掉 li 直接子级的 <p> 包裹（松散列表产生），避免 p 的 margin 撑开空行
+ * <li><p>text</p></li> → <li>text</li>
  */
-function flattenLists(tree: Root): void {
-  visit(tree, "element", (node: Element, index, parent) => {
-    if ((node.tagName !== "ul" && node.tagName !== "ol") || parent == null || index == null) return
-
-    const isOrdered = node.tagName === "ol"
-    const replacements: ElementContent[] = []
-    let counter = 1
-
-    for (const child of node.children) {
-      if (child.type !== "element" || child.tagName !== "li") continue
-
-      const prefix = isOrdered ? `${counter++}. ` : "• "
-      const liContent = unwrapParagraphs(child.children)
-
-      const pNode: Element = {
-        type: "element",
-        tagName: "p",
-        properties: {},
-        children: [{ type: "text", value: prefix } as Text, ...liContent],
-      }
-      replacements.push(pNode)
-    }
-
-    const parentEl = parent as Root | Element
-    parentEl.children.splice(index, 1, ...replacements)
-    return index + replacements.length
-  })
-}
-
-function unwrapParagraphs(children: ElementContent[]): ElementContent[] {
+function unwrapLiParagraphs(children: ElementContent[]): ElementContent[] {
   const result: ElementContent[] = []
   for (const child of children) {
     if (child.type === "element" && child.tagName === "p") {
@@ -236,6 +207,35 @@ function inlineStyles(
 
       case "hr": applyStyle(node, styles.hr); break
 
+      // 列表：display:block 消除 list-item 默认行为，li 前加 bullet 前缀
+      case "ul": {
+        applyStyle(node, styles.ul)
+        // 给每个 li 加 • 前缀
+        for (const child of node.children) {
+          if (child.type === "element" && child.tagName === "li") {
+            child.children = [{ type: "text", value: "• " } as Text, ...child.children]
+          }
+        }
+        break
+      }
+      case "ol": {
+        applyStyle(node, styles.ol)
+        // 给每个 li 加数字前缀
+        let counter = 1
+        for (const child of node.children) {
+          if (child.type === "element" && child.tagName === "li") {
+            child.children = [{ type: "text", value: `${counter++}. ` } as Text, ...unwrapLiParagraphs(child.children)]
+          }
+        }
+        break
+      }
+      case "li": {
+        applyStyle(node, styles.li)
+        // 剥掉 li > p 包裹（松散列表产生的 p），避免 margin 撑开空行
+        node.children = unwrapLiParagraphs(node.children)
+        break
+      }
+
       case "table":      applyStyle(node, styles.table);      break
       case "th":         applyStyle(node, styles.th);         break
       case "td":         applyStyle(node, styles.td);         break
@@ -274,13 +274,12 @@ function inlineStyles(
       }
 
       case "code": {
-        // 加 inline-code class，让 ProseMirror 识别并保留 style
-        node.properties = node.properties ?? {}
-        const existing = node.properties.className
-        node.properties.className = Array.isArray(existing)
-          ? [...existing, "inline-code"]
-          : ["inline-code"]
-        applyStyle(node, styles.code)
+        // 用 raw 节点硬写 style + class，确保 ProseMirror 不剥离样式
+        const codeText = extractText(node)
+        const escaped = escapeHtml(codeText);
+        (node as unknown as { type: string; value: string }).type = "raw";
+        (node as unknown as { value: string }).value =
+          `<code class="inline-code" style="${styles.code}">${escaped}</code>`
         break
       }
 
