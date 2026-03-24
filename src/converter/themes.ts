@@ -59,7 +59,8 @@ const BASE_P = "font-size:16px;line-height:1.8;color:#333;margin:0 0 16px 0;"
 // pre 容器：深色背景
 const BASE_CODE_BLOCK = "background:#282c34;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;display:block;"
 // pre > code：浅色文字，必须显式设置 color，微信不继承 class-based 样式
-const BASE_PRE_CODE = "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#abb2bf;background:none;padding:0;border-radius:0;display:block;white-space:pre-wrap;word-break:break-all;"
+// white-space:nowrap 保证代码不折行（doocs/md 的做法），配合 pre 的 overflow-x:auto 横向滚动
+const BASE_PRE_CODE = "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#abb2bf;background:none;padding:0;border-radius:0;display:block;white-space:nowrap;overflow-x:auto;"
 
 export const themes: Record<string, Theme> = {
   default: {
@@ -132,7 +133,7 @@ export const themes: Record<string, Theme> = {
       em: "font-style:italic;color:#57606a;",
       code: "font-family:'SFMono-Regular',Consolas,monospace;font-size:85%;background:#f6f8fa;padding:2px 6px;border-radius:6px;color:#0969da;border:1px solid #d0d7de;",
       pre: "background:#0d1117;border-radius:8px;padding:16px 20px;margin:16px 0;overflow-x:auto;display:block;border:1px solid #30363d;",
-      preCode: "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#c9d1d9;background:none;padding:0;border-radius:0;display:block;white-space:pre-wrap;word-break:break-all;",
+      preCode: "font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:#c9d1d9;background:none;padding:0;border-radius:0;display:block;white-space:nowrap;overflow-x:auto;",
       blockquote: "border-left:4px solid #0969da;margin:16px 0;padding:10px 16px;background:#f6f8fa;color:#57606a;font-size:15px;",
       ul: "padding-left:24px;margin:0 0 16px 0;",
       ol: "padding-left:24px;margin:0 0 16px 0;",
