@@ -12,9 +12,13 @@
  */
 
 import { program } from "commander"
-import { readFileSync } from "fs"
+import { readFileSync, writeFileSync } from "fs"
 import { resolve } from "path"
+import { tmpdir } from "os"
+import { randomUUID } from "crypto"
+import { spawn } from "child_process"
 import { convertMarkdown } from "../converter/index.js"
+import { generatePreviewHtml } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
 import { listThemes, getTheme } from "../converter/themes.js"
@@ -372,6 +376,62 @@ program
       recommendation: failCount === 0
         ? "静态检查通过，建议用 CDP QA 做最终验证"
         : `需要修复: ${checkList.filter(c => c.status === "FAIL").map(c => c.id).join(", ")}`,
+    })
+  })
+
+// ── preview：浏览器主题预览（人类用） ─────────────────────────────────────────
+
+program
+  .command("preview")
+  .description("在浏览器中预览所有主题效果（人类用，AI Agent 直接用 --theme 参数）")
+  .requiredOption("-f, --file <path>", "Markdown 文件路径")
+  .option("-o, --output <path>", "输出 HTML 路径（默认写入系统临时目录）")
+  .option("--no-open", "生成 HTML 但不自动打开浏览器")
+  .action(async (opts) => {
+    let markdown: string
+    const absPath = resolve(opts.file)
+    try {
+      markdown = readFileSync(absPath, "utf-8")
+    } catch (e) {
+      fail(`读取文件失败: ${opts.file}`, String(e))
+    }
+
+    const themes = listThemes()
+
+    // 并行渲染所有主题，任一失败不影响其他
+    const settled = await Promise.allSettled(
+      themes.map(theme => convertMarkdown(markdown, { theme }))
+    )
+
+    const results = themes.map((theme, i) => {
+      const r = settled[i]
+      if (r.status === "fulfilled") {
+        return { theme, html: r.value.html }
+      } else {
+        return { theme, html: "", error: String(r.reason) }
+      }
+    })
+
+    const outputPath = opts.output ?? `${tmpdir()}/wxp-preview-${randomUUID()}.html`
+    const html = generatePreviewHtml(results, absPath)
+
+    try {
+      writeFileSync(outputPath, html, "utf-8")
+    } catch (e) {
+      fail(`写入预览文件失败: ${outputPath}`, String(e))
+    }
+
+    if (opts.open !== false) {
+      const openCmd = process.platform === "darwin" ? "open"
+        : process.platform === "win32" ? "start"
+        : "xdg-open"
+      spawn(openCmd, [outputPath], { detached: true, stdio: "ignore" }).unref()
+    }
+
+    ok({
+      path: outputPath,
+      themes: results.map(r => ({ theme: r.theme, ok: !r.error, error: r.error })),
+      message: opts.open !== false ? "已在浏览器中打开预览" : "预览文件已生成",
     })
   })
 

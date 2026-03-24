@@ -14,6 +14,7 @@
 **不用**：
 - 用户只是想预览排版（用 `convert` 命令即可，不需要微信凭证）
 - 用户想直接发布（微信 API 不支持直接发布，只能创建草稿）
+- 用户想在浏览器里可视化选主题（用 `preview` 命令，但这是人类用的 GUI，Agent 直接用 `--theme` 参数即可）
 
 ## 前置检查（每次使用前必做）
 
@@ -118,11 +119,14 @@ src/
 ├── cli/index.ts          # CLI 入口，commander 定义所有命令
 ├── converter/
 │   ├── index.ts          # Markdown → HTML 核心转换逻辑
-│   └── themes.ts         # 主题定义（NodeStyles 接口 + 各主题样式）
+│   ├── themes.ts         # 主题定义（NodeStyles 接口 + 各主题样式）
+│   └── preview-html.ts   # 浏览器预览 HTML 生成（人类用，wxp preview）
 ├── wechat/
 │   └── client.ts         # 微信 API 客户端（token/上传/草稿）
 └── config/
     └── index.ts          # 配置读写（~/.config/wx-publisher/config.json）
+test/
+└── preview-html.test.ts  # vitest 单元测试
 ```
 
 ## 新增主题（Agent 可直接操作）
