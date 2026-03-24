@@ -342,3 +342,70 @@ draft_edit_url = https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&act
 ```
 https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={media_id}
 ```
+
+**重要**：`wxp publish` 返回的 `media_id` 是字符串（如 `bpB07u_8H2Ns8YJA...`），但微信编辑器 URL 里的 `appmsgid` 需要的是**数字 ID**（如 `502719389`）。两者不同，不能直接用 media_id 构造编辑 URL。
+
+正确做法：让用户在草稿箱手动打开草稿，QA Agent 通过 `list_pages` 找到已打开的编辑器页面，而不是自己导航。
+
+---
+
+## 团队经验积累（持续更新）
+
+本章节记录团队在迭代过程中积累的经验教训。**每次发现新的坑或解法，必须更新此章节**，这是团队的集体记忆。
+
+### CDP 操作经验
+
+**经验 1：不要用 take_snapshot 做内容分析**
+- 问题：take_snapshot 返回 a11y 树，数据量大，haiku 上下文容易超限
+- 解法：直接用 evaluate_script 执行 JS，返回精确的 JSON 数据
+
+**经验 2：take_screenshot 会导致上下文爆炸**
+- 问题：截图作为图片传入 Agent 上下文，opus/sonnet 会超限
+- 解法：QA Agent 用 haiku 运行，且不截图；只在必要时截图并保存到文件而不内联
+
+**经验 3：微信草稿编辑器内容在主文档，不在 iframe**
+- 问题：最初以为内容在 iframe 里（参考其他富文本编辑器经验）
+- 验证：`document.querySelectorAll('iframe').length === 0`，ProseMirror 直接挂在主文档
+- 解法：直接用 `document.querySelector('.ProseMirror')` 访问编辑器内容
+
+**经验 4：media_id ≠ appmsgid**
+- 问题：`wxp publish` 返回的 `media_id`（字符串）不能直接用于构造编辑器 URL
+- 微信编辑器 URL 里的 `appmsgid` 是数字 ID，两者不同
+- 解法：让用户手动打开草稿，QA Agent 通过 `list_pages` 找到已打开的编辑器页面（URL 含 `appmsg_edit`）
+
+**经验 5：token 会过期，导航可能触发重新验证**
+- 问题：从首页导航到草稿箱时，token 可能失效导致跳转到登录页
+- 解法：导航时在 URL 里带上当前 token（从已登录页面的 URL 提取）
+
+### ProseMirror 渲染经验
+
+**经验 1：ul/ol 里的文本节点（\n）会被渲染成空 li**
+- 问题：remark 生成的 hast 树中，ul/ol 的 children 包含换行文本节点
+- 症状：每隔一个 li 就有一个空 li（`<li><section><br></section></li>`）
+- 解法：在处理 ul/ol 时，用 `.filter(c => c.type === "element" && c.tagName === "li")` 过滤掉文本节点
+
+**经验 2：li 的 display:block 会被 ProseMirror 覆盖为 list-item**
+- 问题：我们写了 `display:block`，但 ProseMirror 的 schema 强制 li 为 `list-item`
+- 当前状态：已知问题，尚未找到可靠解法（`!important` 待验证）
+- 影响：列表项间距略大，但内容正确显示
+
+**经验 3：inline code 的 style 必须用 raw 节点硬写，不能依赖 applyStyle**
+- 问题：通过 hast 节点的 properties.style 设置的样式，ProseMirror 会剥离
+- 解法：把 code 节点转成 raw 节点，直接输出 `<code class="inline-code" style="...">文字</code>`
+
+**经验 4：pre > code 的高亮颜色需要 class + style 双写**
+- 问题：只有 style 的 span 会被 ProseMirror 剥离文字内容
+- 解法：hljs 的 class-based span 转换时，保留 class（`hljs-keyword` 等）并加上 style，ProseMirror 识别 class 后会保留内容
+
+### 自我迭代规范
+
+**何时更新本文件**：
+- 发现新的 ProseMirror 行为 → 更新「ProseMirror 渲染经验」
+- CDP 操作遇到新坑 → 更新「CDP 操作经验」
+- 修复决策表有新条目 → 更新「修复决策表」
+- 发现某个 Agent Prompt 需要调整 → 直接修改对应 Prompt 模板
+
+**谁来更新**：
+- Orchestrator Agent 在每次循环结束后，将新发现的经验追加到对应章节
+- 格式：`**经验 N：标题**` + 问题/解法两行
+- 不删除旧经验，只追加或修正

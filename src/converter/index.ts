@@ -101,13 +101,16 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
 
 /**
  * 剥掉 li 直接子级的 <p> 包裹（松散列表产生），避免 p 的 margin 撑开空行
- * <li><p>text</p></li> → <li>text</li>
+ * 同时过滤掉纯空白文本节点（\n），防止微信编辑器将其渲染为额外空行
+ * <li>\n<p>text</p>\n</li> → <li>text</li>
  */
 function unwrapLiParagraphs(children: ElementContent[]): ElementContent[] {
   const result: ElementContent[] = []
   for (const child of children) {
     if (child.type === "element" && child.tagName === "p") {
       result.push(...child.children)
+    } else if (child.type === "text" && child.value.trim() === "") {
+      // 跳过纯空白文本节点（loose list 产生的 \n）
     } else {
       result.push(child)
     }
@@ -208,30 +211,32 @@ function inlineStyles(
       case "hr": applyStyle(node, styles.hr); break
 
       // 列表：display:block 消除 list-item 默认行为，li 前加 bullet 前缀
+      // 关键：过滤掉 ul/ol 里的文本节点（\n），防止 ProseMirror 把它们渲染成空 li
       case "ul": {
         applyStyle(node, styles.ul)
-        // 给每个 li 加 • 前缀
-        for (const child of node.children) {
-          if (child.type === "element" && child.tagName === "li") {
-            child.children = [{ type: "text", value: "• " } as Text, ...child.children]
-          }
+        const ulLis = node.children.filter(
+          (c): c is Element => c.type === "element" && c.tagName === "li"
+        )
+        for (const li of ulLis) {
+          li.children = [{ type: "text", value: "• " } as Text, ...unwrapLiParagraphs(li.children)]
         }
+        node.children = ulLis
         break
       }
       case "ol": {
         applyStyle(node, styles.ol)
-        // 给每个 li 加数字前缀
         let counter = 1
-        for (const child of node.children) {
-          if (child.type === "element" && child.tagName === "li") {
-            child.children = [{ type: "text", value: `${counter++}. ` } as Text, ...unwrapLiParagraphs(child.children)]
-          }
+        const olLis = node.children.filter(
+          (c): c is Element => c.type === "element" && c.tagName === "li"
+        )
+        for (const li of olLis) {
+          li.children = [{ type: "text", value: `${counter++}. ` } as Text, ...unwrapLiParagraphs(li.children)]
         }
+        node.children = olLis
         break
       }
       case "li": {
         applyStyle(node, styles.li)
-        // 剥掉 li > p 包裹（松散列表产生的 p），避免 margin 撑开空行
         node.children = unwrapLiParagraphs(node.children)
         break
       }
