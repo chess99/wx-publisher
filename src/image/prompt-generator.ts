@@ -36,9 +36,14 @@ export async function generateImagePrompt(
   })
 
   let content = resp.choices[0]?.message?.content ?? ""
-  // 部分推理模型（如 MiniMax-M2.7）把思考过程包在 <think>...</think> 里，实际回答在其后
-  // 去掉 think 块，取剩余内容
+  // 部分推理模型（如 MiniMax-M2.7）把思考过程包在 <think>...</think> 里
   content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
+  // 只取第一段英文提示词：截断到第一个 --- 分隔线或第一个中文字符前
+  // 避免模型额外附上翻译或解释文字
+  const hrIdx = content.indexOf("\n---")
+  if (hrIdx > 0) content = content.slice(0, hrIdx).trim()
+  // 去掉 markdown 粗体标记（**标题：**）
+  content = content.replace(/^\*\*[^*]+\*\*[\s:：]*/m, "").trim()
   return content || summary
 }
 
