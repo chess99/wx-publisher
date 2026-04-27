@@ -110,10 +110,13 @@ wxp publish \
     "theme": "tech",
     "images_uploaded": 0,
     "message": "草稿已创建，请在微信公众号后台发布",
+    "used_placeholder_cover": true,
     "warning": "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。"
   }
 }
 ```
+
+**Agent 检测信号：** `data.used_placeholder_cover === true`（布尔值，始终存在）或 `data.warning` 字段存在（仅占位图时出现）。
 
 `media_id` 是草稿 ID，可在微信公众号后台草稿箱找到对应文章。
 
@@ -302,12 +305,10 @@ npm run dev -- publish \
 从 JSON 输出提取 media_id，构造：
 draft_edit_url = https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={media_id}
 
-输出格式（无占位图 warning）：
-{ "success": true, "media_id": "xxx", "draft_edit_url": "https://...", "used_placeholder_cover": false }
-
-输出格式（有占位图 warning）：
-{ "success": true, "media_id": "xxx", "draft_edit_url": "https://...", "used_placeholder_cover": true,
-  "warning": "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。" }
+wxp 原始输出含 title/theme/images_uploaded/message/used_placeholder_cover 字段。
+used_placeholder_cover 是布尔值，始终存在：
+- false：用户提供了封面图，正常发布
+- true：使用了内置占位图，同时会有 warning 字段
 
 调用 Publisher 的 Orchestrator 看到 used_placeholder_cover: true 时，
 应询问用户是否提供真实封面图，然后决定是否重新发布。

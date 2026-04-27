@@ -88,7 +88,7 @@ program
       thumbMediaId = result.media_id
     } else {
       // 未提供封面图，使用内置占位图
-      const tmpPath = resolve(tmpdir(), PLACEHOLDER_COVER_FILENAME)
+      const tmpPath = resolve(tmpdir(), `wx-publisher-placeholder-${randomUUID()}.png`)
       writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_COVER_BASE64, "base64"))
       try {
         const result = await client.uploadImage(tmpPath).catch(e => fail(`上传占位封面图失败`, String(e)))
@@ -136,6 +136,7 @@ program
       theme,
       images_uploaded: externalImages.length,
       message: "草稿已创建，请在微信公众号后台发布",
+      used_placeholder_cover: usedPlaceholderCover,
       ...(usedPlaceholderCover && { warning: "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。" }),
     })
   })
@@ -238,8 +239,8 @@ program
         publish: {
           description: "完整流程：Markdown → HTML → 上传图片 → 创建草稿",
           required_config: ["wechat_appid", "wechat_secret"],
-          required_flags: ["--file", "--cover OR --cover-url"],
-          optional_flags: ["--theme", "--title", "--author", "--no-upload-images"],
+          required_flags: ["--file"],
+          optional_flags: ["--theme", "--title", "--author", "--no-upload-images", "--cover", "--cover-url"],
         },
         convert: {
           description: "仅转换 Markdown 为微信 HTML，不发布",
@@ -260,7 +261,7 @@ program
       },
       themes: listThemes(),
       notes: [
-        "封面图必须提供（--cover 本地路径 或 --cover-url 公网 URL）",
+        "封面图可选：--cover 本地路径 或 --cover-url 公网 URL；不提供则自动使用内置占位图，JSON 输出含 warning 字段",
         "文章中的外链图片会自动下载并上传到微信素材库",
         "微信公众号草稿创建后需在后台手动发布",
         "access_token 自动缓存，有效期内不重复请求",
