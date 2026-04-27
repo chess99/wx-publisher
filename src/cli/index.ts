@@ -12,7 +12,7 @@
  */
 
 import { program } from "commander"
-import { readFileSync, writeFileSync } from "fs"
+import { readFileSync, writeFileSync, unlinkSync } from "fs"
 import { resolve } from "path"
 import { tmpdir } from "os"
 import { randomUUID } from "crypto"
@@ -22,6 +22,7 @@ import { generatePreviewHtml } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
 import { listThemes, getTheme } from "../converter/themes.js"
+import { PLACEHOLDER_COVER_BASE64, PLACEHOLDER_COVER_FILENAME } from "../converter/placeholder-cover.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ program
   .description("将 Markdown 文件发布到微信公众号草稿箱")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-t, --theme <name>", "排版主题（默认读配置，fallback: default）")
-  .option("-c, --cover <path>", "封面图本地路径（必须提供，否则草稿无封面）")
+  .option("-c, --cover <path>", "封面图本地路径（不提供则使用内置占位图）")
   .option("--cover-url <url>", "封面图 URL（与 --cover 二选一）")
   .option("--title <title>", "文章标题（默认从 Markdown h1 提取）")
   .option("--author <author>", "作者名")
@@ -78,6 +79,7 @@ program
 
     // 处理封面图
     let thumbMediaId: string
+    let usedPlaceholderCover = false
     if (opts.cover) {
       const result = await client.uploadImage(resolve(opts.cover)).catch(e => fail(`上传封面图失败`, String(e)))
       thumbMediaId = result.media_id
@@ -85,7 +87,16 @@ program
       const result = await client.uploadImageFromUrl(opts.coverUrl).catch(e => fail(`下载并上传封面图失败`, String(e)))
       thumbMediaId = result.media_id
     } else {
-      fail("必须提供封面图：--cover <本地路径> 或 --cover-url <URL>")
+      // 未提供封面图，使用内置占位图
+      const tmpPath = resolve(tmpdir(), PLACEHOLDER_COVER_FILENAME)
+      writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_COVER_BASE64, "base64"))
+      try {
+        const result = await client.uploadImage(tmpPath).catch(e => fail(`上传占位封面图失败`, String(e)))
+        thumbMediaId = result.media_id
+        usedPlaceholderCover = true
+      } finally {
+        try { unlinkSync(tmpPath) } catch {}
+      }
     }
 
     // 上传文章内外链图片，替换为微信 URL
@@ -125,6 +136,7 @@ program
       theme,
       images_uploaded: externalImages.length,
       message: "草稿已创建，请在微信公众号后台发布",
+      ...(usedPlaceholderCover && { warning: "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。" }),
     })
   })
 

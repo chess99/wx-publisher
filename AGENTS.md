@@ -32,6 +32,17 @@ wxp config set wechat_secret 你的AppSecret
 
 微信凭证从哪里获取：微信公众平台 → 设置与开发 → 基本配置。
 
+## 架构：谁负责和用户交互
+
+```
+用户 ←→ AI Agent (Claude) ←→ wxp CLI
+```
+
+**wxp 是纯机器接口**：所有输出都是 JSON，不弹交互提示，不询问用户。  
+**AI Agent 负责人机对话**：读取 wxp 的 JSON 输出，判断是否需要询问用户，再决定下一步操作。
+
+这个分工意味着：当 wxp 输出里有 `warning` 字段，AI Agent 需要把 warning 内容告知用户，并询问是否继续或采取补救措施。
+
 ## 发布流程
 
 ### 标准流程（有封面图）
@@ -53,7 +64,27 @@ wxp publish \
   --theme default
 ```
 
-### 成功输出示例
+### 没有封面图（使用内置占位图）
+
+不传 `--cover` 或 `--cover-url` 时，wxp 会**静默使用内置占位图**（900×383 灰色占位图），发布成功但 JSON 里带 `warning` 字段。
+
+```bash
+wxp publish \
+  --file /path/to/article.md \
+  --theme tech \
+  --title "文章标题"
+# 不传 --cover，wxp 自动用内置占位图
+```
+
+**AI Agent 处理 warning 的标准流程：**
+
+1. 调用 `wxp publish`（不带 `--cover`）
+2. 解析 JSON，检查 `data.warning` 是否存在
+3. 如果有 warning，告知用户："草稿已创建，但使用了默认占位封面图。建议提供真实封面图重新发布。是否现在提供？"
+4. 用户提供封面图路径或 URL → 重新调用 `wxp publish --cover <路径>` 或 `--cover-url <URL>`
+5. 用户选择跳过 → 流程结束，草稿已创建
+
+### 成功输出示例（有封面图）
 
 ```json
 {
@@ -64,6 +95,22 @@ wxp publish \
     "theme": "tech",
     "images_uploaded": 3,
     "message": "草稿已创建，请在微信公众号后台发布"
+  }
+}
+```
+
+### 成功输出示例（使用占位图，有 warning）
+
+```json
+{
+  "success": true,
+  "data": {
+    "media_id": "xxxxx",
+    "title": "文章标题",
+    "theme": "tech",
+    "images_uploaded": 0,
+    "message": "草稿已创建，请在微信公众号后台发布",
+    "warning": "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。"
   }
 }
 ```
@@ -116,17 +163,18 @@ wxp convert --file article.md --theme tech > /tmp/preview.html
 
 ```
 src/
-├── cli/index.ts          # CLI 入口，commander 定义所有命令
+├── cli/index.ts                    # CLI 入口，commander 定义所有命令
 ├── converter/
-│   ├── index.ts          # Markdown → HTML 核心转换逻辑
-│   ├── themes.ts         # 主题定义（NodeStyles 接口 + 各主题样式）
-│   └── preview-html.ts   # 浏览器预览 HTML 生成（人类用，wxp preview）
+│   ├── index.ts                    # Markdown → HTML 核心转换逻辑
+│   ├── themes.ts                   # 主题定义（NodeStyles 接口 + 各主题样式）
+│   ├── preview-html.ts             # 浏览器预览 HTML 生成（人类用，wxp preview）
+│   └── placeholder-cover.ts       # 内置占位封面图（900×383 PNG，base64 编码）
 ├── wechat/
-│   └── client.ts         # 微信 API 客户端（token/上传/草稿）
+│   └── client.ts                   # 微信 API 客户端（token/上传/草稿）
 └── config/
-    └── index.ts          # 配置读写（~/.config/wx-publisher/config.json）
+    └── index.ts                    # 配置读写（~/.config/wx-publisher/config.json）
 test/
-└── preview-html.test.ts  # vitest 单元测试
+└── preview-html.test.ts            # vitest 单元测试
 ```
 
 ## 新增主题（Agent 可直接操作）
@@ -245,13 +293,24 @@ QA（CDP 打开编辑器 → 运行 qa-checks.js）
 执行：
 npm run dev -- publish \
   --file {file} --theme {theme} \
-  --cover-url "{cover_url}" --title "{title}"
+  --title "{title}"
+  [可选: --cover "{cover_path}" 或 --cover-url "{cover_url}"]
+
+注意：--cover/--cover-url 是可选的。不传时 wxp 会自动使用内置占位图，
+发布仍会成功，但 JSON 里会有 warning 字段。
 
 从 JSON 输出提取 media_id，构造：
 draft_edit_url = https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={media_id}
 
-输出格式：
-{ "success": true, "media_id": "xxx", "draft_edit_url": "https://..." }
+输出格式（无占位图 warning）：
+{ "success": true, "media_id": "xxx", "draft_edit_url": "https://...", "used_placeholder_cover": false }
+
+输出格式（有占位图 warning）：
+{ "success": true, "media_id": "xxx", "draft_edit_url": "https://...", "used_placeholder_cover": true,
+  "warning": "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。" }
+
+调用 Publisher 的 Orchestrator 看到 used_placeholder_cover: true 时，
+应询问用户是否提供真实封面图，然后决定是否重新发布。
 
 错误处理：
 - errcode 48001（权限不足）→ 标记 NEEDS_HUMAN，不重试
