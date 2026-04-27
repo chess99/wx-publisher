@@ -199,10 +199,17 @@ configCmd
   .action(() => {
     const config = loadConfig()
     ok({
-      wechat_appid: config.wechat_appid || "(未设置)",
-      wechat_secret: config.wechat_secret ? "***" : "(未设置)",
-      default_theme: config.default_theme,
-      config_path: getConfigPath(),
+      wechat_appid:       config.wechat_appid || "(未设置)",
+      wechat_secret:      config.wechat_secret ? "***" : "(未设置)",
+      default_theme:      config.default_theme,
+      image_provider:     config.image_provider,
+      image_provider_url: config.image_provider_url,
+      image_api_key:      config.image_api_key ? "***" : "(未设置)",
+      image_model:        config.image_model,
+      image_text_model:   config.image_text_model,
+      image_size:         config.image_size,
+      image_candidates:   config.image_candidates,
+      config_path:        getConfigPath(),
     })
   })
 

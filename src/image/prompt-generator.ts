@@ -18,6 +18,7 @@ export async function generateImagePrompt(
   const client = new OpenAI({
     apiKey,
     baseURL: opts.baseURL ?? "https://api.openai.com/v1",
+    timeout: 30_000, // 30s，防止 SDK 无限等待
   })
   const resp = await client.chat.completions.create({
     model: opts.textModel ?? "gpt-4o-mini",
@@ -33,7 +34,12 @@ export async function generateImagePrompt(
 文章摘要：${summary}`,
     }],
   })
-  return resp.choices[0]?.message?.content ?? summary
+
+  let content = resp.choices[0]?.message?.content ?? ""
+  // 部分推理模型（如 MiniMax-M2.7）把思考过程包在 <think>...</think> 里，实际回答在其后
+  // 去掉 think 块，取剩余内容
+  content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
+  return content || summary
 }
 
 function extractSummary(markdown: string, maxChars: number): string {
