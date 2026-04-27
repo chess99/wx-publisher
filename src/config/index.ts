@@ -1,15 +1,23 @@
 /**
  * 配置管理
- * 配置文件：~/.config/wx-publisher/config.json
- * 优先级：环境变量 > 配置文件 > 默认值
+ *
+ * 配置文件查找顺序（优先级从高到低）：
+ *   1. 环境变量（WXP_APPID、OPENAI_API_KEY 等）
+ *   2. 当前目录 .wxp.json（per-project，建议加入 .gitignore）
+ *   3. ~/.config/wx-publisher/config.json（全局配置）
+ *   4. 内置默认值
+ *
+ * 直接编辑配置文件：
+ *   cp .wxp.example.json .wxp.json && $EDITOR .wxp.json
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs"
-import { join } from "path"
+import { join, resolve } from "path"
 import { homedir } from "os"
 
 const CONFIG_DIR = join(homedir(), ".config", "wx-publisher")
-const CONFIG_PATH = join(CONFIG_DIR, "config.json")
+const GLOBAL_CONFIG_PATH = join(CONFIG_DIR, "config.json")
+const LOCAL_CONFIG_PATH = resolve(process.cwd(), ".wxp.json")
 
 export interface Config {
   wechat_appid: string
@@ -38,15 +46,21 @@ const DEFAULTS: Config = {
   image_candidates: 4,
 }
 
-export function loadConfig(): Config {
-  let file: Partial<Config> = {}
-  if (existsSync(CONFIG_PATH)) {
-    try {
-      file = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"))
-    } catch {
-      // 解析失败用默认值
-    }
+function readConfigFile(path: string): Partial<Config> {
+  if (!existsSync(path)) return {}
+  try {
+    return JSON.parse(readFileSync(path, "utf-8"))
+  } catch {
+    process.stderr.write(`警告：配置文件解析失败，已忽略：${path}\n`)
+    return {}
   }
+}
+
+export function loadConfig(): Config {
+  // 本地配置覆盖全局配置（浅合并）
+  const globalFile = readConfigFile(GLOBAL_CONFIG_PATH)
+  const localFile  = readConfigFile(LOCAL_CONFIG_PATH)
+  const file = { ...globalFile, ...localFile }
 
   const imageCandidatesRaw = process.env["WXP_IMAGE_CANDIDATES"] ?? file.image_candidates
   const imageCandidates = typeof imageCandidatesRaw === "number"
@@ -68,14 +82,16 @@ export function loadConfig(): Config {
 }
 
 export function saveConfig(updates: Partial<Config>): void {
+  // 写入全局配置（wxp config set 的行为）
   if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true })
-  const current = loadConfig()
+  const current = readConfigFile(GLOBAL_CONFIG_PATH)
   const next = { ...current, ...updates }
-  writeFileSync(CONFIG_PATH, JSON.stringify(next, null, 2), "utf-8")
+  writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(next, null, 2), "utf-8")
 }
 
 export function getConfigPath(): string {
-  return CONFIG_PATH
+  // 返回当前生效的配置文件路径（local 优先）
+  return existsSync(LOCAL_CONFIG_PATH) ? LOCAL_CONFIG_PATH : GLOBAL_CONFIG_PATH
 }
 
 export function validateConfig(config: Config): string[] {

@@ -1,0 +1,17 @@
+{
+  "_comment": "复制此文件为 .wxp.json 并填写你的配置。.wxp.json 已被 gitignore，不会提交到仓库。",
+
+  "wechat_appid": "wx1234567890abcdef",
+  "wechat_secret": "your_app_secret_here",
+  "default_theme": "default",
+
+  "_comment_image": "生图配置 —— 可选，仅 wxp gen-cover 命令需要",
+
+  "image_provider": "minimax",
+  "image_provider_url": "https://api.minimaxi.com/v1",
+  "image_api_key": "sk-cp-your-minimax-key-here",
+  "image_model": "image-01",
+  "image_text_model": "MiniMax-M2.7",
+  "image_size": "1536x1024",
+  "image_candidates": 4
+}
