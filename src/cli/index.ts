@@ -501,29 +501,17 @@ program
       fail(`读取文件失败: ${opts.file}`, String(e))
     }
 
-    // 生成提示词（MiniMax 没有 chat API，提示词生成仍走 openai provider_url 或跳过）
+    // 生成提示词（通过 image_provider_url 的 OpenAI 兼容 chat endpoint）
+    // MiniMax 支持 OpenAI 兼容格式：baseURL=https://api.minimaxi.com/v1，模型=MiniMax-M2.7
     process.stderr.write("正在生成图像提示词...\n")
     let prompt: string
     try {
       prompt = await generateImagePrompt(markdown, apiKey, {
-        // MiniMax 用户如果没有 OpenAI key，提示词生成会失败
-        // 未来可以加 image_text_provider 单独配置；现在先用同一 key/url
-        baseURL: config.image_provider === "minimax"
-          ? "https://api.minimaxi.com/v1"  // MiniMax 的 chat endpoint（如有）
-          : config.image_provider_url,
+        baseURL: config.image_provider_url,
         textModel: config.image_text_model,
       })
       if (opts.style) prompt = `${prompt}, ${opts.style}`
     } catch (e) {
-      // MiniMax 用户可能没有 chat API，给出明确提示
-      if (config.image_provider === "minimax") {
-        process.stderr.write(
-          `提示词自动生成失败（MiniMax chat API 不可用）。\n` +
-          `请通过 --style 手动指定提示词，例如：\n` +
-          `  wxp gen-cover --file article.md --style "科技感，蓝色调，简洁"\n`
-        )
-        process.exit(1)
-      }
       fail("提示词生成失败", String(e))
     }
     process.stderr.write(`提示词：${prompt}\n`)
