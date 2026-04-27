@@ -4,6 +4,7 @@ import type { AddressInfo } from "net"
 export interface SelectionServer {
   port: number
   close: () => void
+  setHtml: (html: string) => void
 }
 
 /**
@@ -17,8 +18,17 @@ export function startSelectionServer(
   images: Buffer[],
   onSelected: (index: number) => void
 ): SelectionServer {
+  let pageHtml = "<html><body>Loading...</body></html>"
+
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost")
+
+    // 根路由：直接从 server 返回 HTML，避免 file:// → http:// CORS 问题
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
+      res.end(pageHtml)
+      return
+    }
 
     if (url.pathname === "/select") {
       const raw = url.searchParams.get("index") ?? ""
@@ -58,5 +68,9 @@ export function startSelectionServer(
 
   server.listen(0) // 随机可用端口
   const { port } = server.address() as AddressInfo
-  return { port, close: () => server.close() }
+  return {
+    port,
+    close: () => server.close(),
+    setHtml: (html: string) => { pageHtml = html },
+  }
 }

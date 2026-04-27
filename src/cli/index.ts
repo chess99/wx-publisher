@@ -548,7 +548,6 @@ program
     const outputPath = opts.output ?? `${tmpdir()}/wxp-cover-${randomUUID()}.jpg`
     let resolved = false
 
-    let htmlPath: string
     const server = startSelectionServer(images, (index) => {
       if (resolved) return
       resolved = true
@@ -561,28 +560,25 @@ program
       }
 
       server.close()
-      // 清理临时 HTML 文件
-      try { unlinkSync(htmlPath) } catch { /* best effort */ }
       ok({ cover: outputPath, prompt })
     })
 
-    // 生成并打开选图页
+    // 生成选图页 HTML，由 server 直接托管（避免 file:// → http:// CORS 问题）
     const html = generateGenCoverHtml({
       port: server.port,
       imageCount: images.length,
       prompt,
       filePath: absPath,
     })
+    server.setHtml(html)
 
-    htmlPath = `${tmpdir()}/wxp-gen-cover-${randomUUID()}.html`
-    writeFileSync(htmlPath, html, "utf-8")
-
-    process.stderr.write(`正在打开浏览器选图页...\n`)
+    // 打开浏览器，访问 http://localhost:PORT（同源，无 CORS 问题）
+    const pageUrl = `http://localhost:${server.port}`
+    process.stderr.write(`正在打开浏览器选图页: ${pageUrl}\n`)
     const openCmd = process.platform === "darwin" ? "open"
       : process.platform === "win32" ? "start"
       : "xdg-open"
-    // Issue #9: Windows 的 start 是 cmd.exe 内建命令，需要 shell:true
-    spawn(openCmd, [htmlPath], {
+    spawn(openCmd, [pageUrl], {
       detached: true,
       stdio: "ignore",
       shell: process.platform === "win32",
