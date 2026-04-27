@@ -59,7 +59,7 @@ export function loadConfig(): Config {
     default_theme:     process.env["WXP_THEME"]              ?? file.default_theme     ?? DEFAULTS.default_theme,
     image_provider:    process.env["WXP_IMAGE_PROVIDER"]     ?? file.image_provider    ?? DEFAULTS.image_provider,
     image_provider_url:process.env["WXP_IMAGE_PROVIDER_URL"] ?? file.image_provider_url ?? DEFAULTS.image_provider_url,
-    image_api_key:     process.env["OPENAI_API_KEY"]         ?? file.image_api_key     ?? DEFAULTS.image_api_key,
+    image_api_key:     process.env["OPENAI_API_KEY"] ?? process.env["MINIMAX_API_KEY"] ?? file.image_api_key ?? DEFAULTS.image_api_key,
     image_model:       process.env["WXP_IMAGE_MODEL"]        ?? file.image_model       ?? DEFAULTS.image_model,
     image_text_model:  process.env["WXP_IMAGE_TEXT_MODEL"]   ?? file.image_text_model  ?? DEFAULTS.image_text_model,
     image_size:       (process.env["WXP_IMAGE_SIZE"]         ?? file.image_size        ?? DEFAULTS.image_size) as Config["image_size"],

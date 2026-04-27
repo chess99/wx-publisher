@@ -24,6 +24,7 @@ import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config
 import { listThemes, getTheme } from "../converter/themes.js"
 import { PLACEHOLDER_COVER_BASE64, PLACEHOLDER_COVER_FILENAME } from "../converter/placeholder-cover.js"
 import { OpenAIImageProvider } from "../image/providers/openai.js"
+import { MiniMaxImageProvider } from "../image/providers/minimax.js"
 import { generateImagePrompt } from "../image/prompt-generator.js"
 import { startSelectionServer } from "../image/selection-server.js"
 import { generateGenCoverHtml } from "../image/gen-cover-html.js"
@@ -465,25 +466,26 @@ program
     const config = loadConfig()
 
     // 检查 provider 支持
-    if (config.image_provider !== "openai") {
+    const supportedProviders = ["openai", "minimax"]
+    if (!supportedProviders.includes(config.image_provider)) {
       process.stderr.write(
-        `gen-cover 目前仅支持 image_provider: openai。\n` +
-        `当前配置: image_provider=${config.image_provider}\n` +
-        `如需使用其他 provider，请设置 image_provider_url 指向兼容代理（如 LiteLLM）并将 image_provider 设为 openai。\n`
+        `不支持的 image_provider: ${config.image_provider}\n` +
+        `支持的值：${supportedProviders.join(", ")}\n` +
+        `如需接入其他 OpenAI 兼容服务，设置 image_provider: openai 并配置 image_provider_url。\n`
       )
       process.exit(1)
     }
 
     const apiKey = config.image_api_key
     if (!apiKey) {
-      process.stderr.write(
-        `未找到 API key。请设置 OPENAI_API_KEY 环境变量，或运行：\n` +
-        `  wxp config set image_api_key sk-...\n`
-      )
+      const envHint = config.image_provider === "minimax"
+        ? "请设置 MINIMAX_API_KEY 环境变量，或运行：\n  wxp config set image_api_key <your-key>"
+        : "请设置 OPENAI_API_KEY 环境变量，或运行：\n  wxp config set image_api_key sk-..."
+      process.stderr.write(`未找到 API key。${envHint}\n`)
       process.exit(1)
     }
 
-    // 校验 --n 参数（Issue #2: NaN 静默传给 API）
+    // 校验 --n 参数
     if (opts.n !== undefined && !/^\d+$/.test(String(opts.n))) {
       process.stderr.write(`--n 必须为 1-4 的整数，收到: ${opts.n}\n`)
       process.exit(1)
@@ -499,23 +501,37 @@ program
       fail(`读取文件失败: ${opts.file}`, String(e))
     }
 
-    // 生成提示词
+    // 生成提示词（MiniMax 没有 chat API，提示词生成仍走 openai provider_url 或跳过）
     process.stderr.write("正在生成图像提示词...\n")
     let prompt: string
     try {
       prompt = await generateImagePrompt(markdown, apiKey, {
-        baseURL: config.image_provider_url,
+        // MiniMax 用户如果没有 OpenAI key，提示词生成会失败
+        // 未来可以加 image_text_provider 单独配置；现在先用同一 key/url
+        baseURL: config.image_provider === "minimax"
+          ? "https://api.minimaxi.com/v1"  // MiniMax 的 chat endpoint（如有）
+          : config.image_provider_url,
         textModel: config.image_text_model,
       })
       if (opts.style) prompt = `${prompt}, ${opts.style}`
     } catch (e) {
+      // MiniMax 用户可能没有 chat API，给出明确提示
+      if (config.image_provider === "minimax") {
+        process.stderr.write(
+          `提示词自动生成失败（MiniMax chat API 不可用）。\n` +
+          `请通过 --style 手动指定提示词，例如：\n` +
+          `  wxp gen-cover --file article.md --style "科技感，蓝色调，简洁"\n`
+        )
+        process.exit(1)
+      }
       fail("提示词生成失败", String(e))
     }
     process.stderr.write(`提示词：${prompt}\n`)
 
-    // 生成候选图
-    process.stderr.write(`正在生成 ${n} 张候选图（约 20-30 秒）...\n`)
-    const provider = new OpenAIImageProvider(apiKey, config.image_provider_url, config.image_model)
+    // 选择生图 provider 实例
+    const provider = config.image_provider === "minimax"
+      ? new MiniMaxImageProvider(apiKey, config.image_model)
+      : new OpenAIImageProvider(apiKey, config.image_provider_url, config.image_model)
     let images: Buffer[]
     try {
       const results = await provider.generateImages(prompt, {
