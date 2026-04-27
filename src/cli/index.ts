@@ -23,6 +23,11 @@ import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
 import { listThemes, getTheme } from "../converter/themes.js"
 import { PLACEHOLDER_COVER_BASE64, PLACEHOLDER_COVER_FILENAME } from "../converter/placeholder-cover.js"
+import { OpenAIImageProvider } from "../image/providers/openai.js"
+import { GeminiImageProvider } from "../image/providers/gemini.js"
+import { generateImagePrompt } from "../image/prompt-generator.js"
+import { startSelectionServer } from "../image/selection-server.js"
+import { generateGenCoverHtml } from "../image/gen-cover-html.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -446,6 +451,125 @@ program
       themes: results.map(r => ({ theme: r.theme, ok: !r.error, error: r.error })),
       message: opts.open !== false ? "已在浏览器中打开预览" : "预览文件已生成",
     })
+  })
+
+// ── gen-cover：AI 生成封面图候选，浏览器选图 ─────────────────────────────────
+
+program
+  .command("gen-cover")
+  .description("AI 生成封面图候选，浏览器选图后输出封面图路径")
+  .requiredOption("-f, --file <path>", "Markdown 文件路径")
+  .option("-n, --n <number>", "候选图数量（1-4，默认读配置）")
+  .option("--style <desc>", "附加风格提示词（追加到自动生成的提示词后）")
+  .option("-o, --output <path>", "封面图输出路径（默认 /tmp/wxp-cover-{uuid}.jpg）")
+  .action(async (opts) => {
+    const config = loadConfig()
+
+    // 检查 provider 支持
+    if (config.image_provider !== "openai") {
+      process.stderr.write(
+        `gen-cover 目前仅支持 image_provider: openai。\n` +
+        `当前配置: image_provider=${config.image_provider}\n` +
+        `如需使用其他 provider，请设置 image_provider_url 指向兼容代理（如 LiteLLM）并将 image_provider 设为 openai。\n`
+      )
+      process.exit(1)
+    }
+
+    const apiKey = config.image_api_key
+    if (!apiKey) {
+      process.stderr.write(
+        `未找到 API key。请设置 OPENAI_API_KEY 环境变量，或运行：\n` +
+        `  wxp config set image_api_key sk-...\n`
+      )
+      process.exit(1)
+    }
+
+    // 读取文章
+    const absPath = resolve(opts.file)
+    let markdown: string
+    try {
+      markdown = readFileSync(absPath, "utf-8")
+    } catch (e) {
+      fail(`读取文件失败: ${opts.file}`, String(e))
+    }
+
+    const n = opts.n ? Math.min(4, Math.max(1, parseInt(opts.n, 10))) : config.image_candidates
+
+    // 生成提示词
+    process.stderr.write("正在生成图像提示词...\n")
+    let prompt: string
+    try {
+      prompt = await generateImagePrompt(markdown, apiKey, {
+        baseURL: config.image_provider_url,
+        textModel: config.image_text_model,
+      })
+      if (opts.style) prompt = `${prompt}, ${opts.style}`
+    } catch (e) {
+      fail("提示词生成失败", String(e))
+    }
+    process.stderr.write(`提示词：${prompt}\n`)
+
+    // 生成候选图
+    process.stderr.write(`正在生成 ${n} 张候选图（约 20-30 秒）...\n`)
+    const provider = new OpenAIImageProvider(apiKey, config.image_provider_url, config.image_model)
+    let images: Buffer[]
+    try {
+      const results = await provider.generateImages(prompt, {
+        n,
+        size: config.image_size,
+      })
+      images = results.map(r => r.data)
+    } catch (e) {
+      fail("图片生成失败", String(e))
+    }
+
+    // 启动选图服务
+    const outputPath = opts.output ?? `${tmpdir()}/wxp-cover-${randomUUID()}.jpg`
+    let resolved = false
+
+    const server = startSelectionServer(images, (index) => {
+      if (resolved) return
+      resolved = true
+
+      try {
+        writeFileSync(outputPath, images[index])
+      } catch (e) {
+        server.close()
+        fail(`写入封面图失败: ${outputPath}`, String(e))
+      }
+
+      server.close()
+      ok({ cover: outputPath, prompt })
+    })
+
+    // 生成并打开选图页
+    const html = generateGenCoverHtml({
+      port: server.port,
+      imageCount: images.length,
+      prompt,
+      filePath: absPath,
+    })
+
+    const htmlPath = `${tmpdir()}/wxp-gen-cover-${randomUUID()}.html`
+    writeFileSync(htmlPath, html, "utf-8")
+
+    process.stderr.write(`正在打开浏览器选图页...\n`)
+    const openCmd = process.platform === "darwin" ? "open"
+      : process.platform === "win32" ? "start"
+      : "xdg-open"
+    spawn(openCmd, [htmlPath], { detached: true, stdio: "ignore" }).unref()
+
+    process.stderr.write(`选图页已打开，请在浏览器中选择封面图。\n`)
+
+    // 等待用户选图（最多 10 分钟）
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        server.close()
+        process.stderr.write("超时（10分钟未选图），进程退出。\n")
+        process.exit(1)
+      }
+    }, 10 * 60 * 1000)
+    timeout.unref()
   })
 
 program.parse()
