@@ -90,7 +90,10 @@ ${imagesHtml}
     status.style.display = 'block';
 
     fetch('${base}/select?index=' + index)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('server error ' + r.status);
+        return r.json();
+      })
       .then(() => {
         status.textContent = '✓ 已选定候选 ' + (index + 1) + '，终端将输出封面图路径';
         status.style.background = '#07c160';

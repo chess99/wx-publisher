@@ -44,7 +44,10 @@ export function startSelectionServer(
         res.end("Not found")
         return
       }
-      res.writeHead(200, { "Content-Type": "image/jpeg" })
+      res.writeHead(200, {
+        "Content-Type": "image/jpeg",
+        "Access-Control-Allow-Origin": "*",
+      })
       res.end(images[idx])
       return
     }

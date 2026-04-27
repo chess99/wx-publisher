@@ -24,9 +24,11 @@ export class OpenAIImageProvider implements ImageProvider {
       response_format: "b64_json",
     }) as unknown as ImagesResponse
 
-    return (response.data ?? []).map(item => ({
-      data: Buffer.from(item.b64_json ?? "", "base64"),
-      prompt: item.revised_prompt ?? prompt,
-    }))
+    return (response.data ?? [])
+      .filter(item => item.b64_json)
+      .map(item => ({
+        data: Buffer.from(item.b64_json!, "base64"),
+        prompt: item.revised_prompt ?? prompt,
+      }))
   }
 }

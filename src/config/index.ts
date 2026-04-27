@@ -21,7 +21,7 @@ export interface Config {
   image_api_key: string
   image_model: string
   image_text_model: string
-  image_size: "1024x1024" | "1792x1024" | "1024x1792"
+  image_size: "1024x1024" | "1536x1024" | "1024x1536" | "1792x1024" | "1024x1792"
   image_candidates: number
 }
 
@@ -34,7 +34,7 @@ const DEFAULTS: Config = {
   image_api_key: "",
   image_model: "gpt-image-2",
   image_text_model: "gpt-4o-mini",
-  image_size: "1792x1024",
+  image_size: "1536x1024",
   image_candidates: 4,
 }
 

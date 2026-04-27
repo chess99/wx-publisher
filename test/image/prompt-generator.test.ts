@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
 const mockCreate = vi.fn()
+const constructorCalls: unknown[] = []
 
 vi.mock("openai", () => {
   class MockOpenAI {
     chat = { completions: { create: mockCreate } }
-    constructor(public config: unknown) {}
+    constructor(public config: unknown) {
+      constructorCalls.push(config)
+    }
   }
   return { default: MockOpenAI }
 })
@@ -15,6 +18,7 @@ const { generateImagePrompt } = await import("../../src/image/prompt-generator.j
 describe("generateImagePrompt", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    constructorCalls.length = 0
   })
 
   it("happy path: 返回 LLM 生成的提示词", async () => {
@@ -47,7 +51,7 @@ describe("generateImagePrompt", () => {
     expect(result).toBe("abstract image")
   })
 
-  it("使用自定义 textModel 传给 create", async () => {
+  it("使用自定义 baseURL 和 textModel", async () => {
     mockCreate.mockResolvedValue({
       choices: [{ message: { content: "result" } }],
     })
@@ -57,6 +61,12 @@ describe("generateImagePrompt", () => {
       textModel: "gpt-4o",
     })
 
+    // 验证 baseURL 传给了构造函数
+    expect(constructorCalls[0]).toMatchObject({
+      apiKey: "sk-test",
+      baseURL: "http://localhost:4000/v1",
+    })
+    // 验证 model 传给了 create
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({ model: "gpt-4o" })
     )

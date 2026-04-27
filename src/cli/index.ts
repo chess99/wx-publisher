@@ -24,7 +24,6 @@ import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config
 import { listThemes, getTheme } from "../converter/themes.js"
 import { PLACEHOLDER_COVER_BASE64, PLACEHOLDER_COVER_FILENAME } from "../converter/placeholder-cover.js"
 import { OpenAIImageProvider } from "../image/providers/openai.js"
-import { GeminiImageProvider } from "../image/providers/gemini.js"
 import { generateImagePrompt } from "../image/prompt-generator.js"
 import { startSelectionServer } from "../image/selection-server.js"
 import { generateGenCoverHtml } from "../image/gen-cover-html.js"
@@ -461,7 +460,7 @@ program
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-n, --n <number>", "候选图数量（1-4，默认读配置）")
   .option("--style <desc>", "附加风格提示词（追加到自动生成的提示词后）")
-  .option("-o, --output <path>", "封面图输出路径（默认 /tmp/wxp-cover-{uuid}.jpg）")
+  .option("-o, --output <path>", "封面图输出路径（默认 <tmpdir>/wxp-cover-{uuid}.jpg）")
   .action(async (opts) => {
     const config = loadConfig()
 
@@ -484,6 +483,13 @@ program
       process.exit(1)
     }
 
+    // 校验 --n 参数（Issue #2: NaN 静默传给 API）
+    if (opts.n !== undefined && !/^\d+$/.test(String(opts.n))) {
+      process.stderr.write(`--n 必须为 1-4 的整数，收到: ${opts.n}\n`)
+      process.exit(1)
+    }
+    const n = opts.n ? Math.min(4, Math.max(1, parseInt(opts.n, 10))) : config.image_candidates
+
     // 读取文章
     const absPath = resolve(opts.file)
     let markdown: string
@@ -492,8 +498,6 @@ program
     } catch (e) {
       fail(`读取文件失败: ${opts.file}`, String(e))
     }
-
-    const n = opts.n ? Math.min(4, Math.max(1, parseInt(opts.n, 10))) : config.image_candidates
 
     // 生成提示词
     process.stderr.write("正在生成图像提示词...\n")
@@ -518,15 +522,22 @@ program
         n,
         size: config.image_size,
       })
-      images = results.map(r => r.data)
+      // Issue #7: 过滤掉 b64_json 为空的项（某些兼容层可能返回 null）
+      images = results.filter(r => r.data.length > 0).map(r => r.data)
     } catch (e) {
       fail("图片生成失败", String(e))
+    }
+
+    // Issue #6: API 返回空数组时提前退出，避免挂起 10 分钟
+    if (images.length === 0) {
+      fail("图片生成失败：API 未返回任何图片，请检查模型配置和 API 配额")
     }
 
     // 启动选图服务
     const outputPath = opts.output ?? `${tmpdir()}/wxp-cover-${randomUUID()}.jpg`
     let resolved = false
 
+    let htmlPath: string
     const server = startSelectionServer(images, (index) => {
       if (resolved) return
       resolved = true
@@ -539,6 +550,8 @@ program
       }
 
       server.close()
+      // 清理临时 HTML 文件
+      try { unlinkSync(htmlPath) } catch { /* best effort */ }
       ok({ cover: outputPath, prompt })
     })
 
@@ -550,14 +563,19 @@ program
       filePath: absPath,
     })
 
-    const htmlPath = `${tmpdir()}/wxp-gen-cover-${randomUUID()}.html`
+    htmlPath = `${tmpdir()}/wxp-gen-cover-${randomUUID()}.html`
     writeFileSync(htmlPath, html, "utf-8")
 
     process.stderr.write(`正在打开浏览器选图页...\n`)
     const openCmd = process.platform === "darwin" ? "open"
       : process.platform === "win32" ? "start"
       : "xdg-open"
-    spawn(openCmd, [htmlPath], { detached: true, stdio: "ignore" }).unref()
+    // Issue #9: Windows 的 start 是 cmd.exe 内建命令，需要 shell:true
+    spawn(openCmd, [htmlPath], {
+      detached: true,
+      stdio: "ignore",
+      shell: process.platform === "win32",
+    }).unref()
 
     process.stderr.write(`选图页已打开，请在浏览器中选择封面图。\n`)
 
