@@ -71,4 +71,79 @@ describe("startSelectionServer", () => {
     const res = await get(server.port, "/unknown")
     expect(res.status).toBe(404)
   })
+
+  it("GET / — 返回 setHtml 设置的 HTML 内容", async () => {
+    server = startSelectionServer(fakeImages, () => {})
+    server.setHtml("<html><body>test-content</body></html>")
+    const res = await get(server.port, "/")
+    expect(res.status).toBe(200)
+    expect(res.body).toContain("test-content")
+  })
+
+  it("GET /index.html — 与 GET / 返回相同内容", async () => {
+    server = startSelectionServer(fakeImages, () => {})
+    server.setHtml("<html><body>alias-test</body></html>")
+    const res = await get(server.port, "/index.html")
+    expect(res.status).toBe(200)
+    expect(res.body).toContain("alias-test")
+  })
+
+  it("onBrowserClose — 页面加载后手动销毁 socket 时触发", async () => {
+    const { request } = await import("http")
+    let closeFired = false
+    server = startSelectionServer(fakeImages, () => {}, () => { closeFired = true })
+
+    // 模拟浏览器：建立连接，加载页面，然后销毁 socket（模拟关闭标签页）
+    await new Promise<void>((resolve, reject) => {
+      const req = request(
+        { hostname: "localhost", port: server!.port, path: "/", method: "GET" },
+        (res) => {
+          res.resume() // 消费响应体
+          res.on("end", () => {
+            // 页面已加载，销毁底层 socket 模拟浏览器关闭
+            req.socket?.destroy()
+            resolve()
+          })
+        }
+      )
+      req.on("error", reject)
+      req.end()
+    })
+
+    // 等待 socket close 事件传播
+    await new Promise<void>((resolve) => {
+      const check = setInterval(() => {
+        if (closeFired) { clearInterval(check); resolve() }
+      }, 10)
+      setTimeout(() => { clearInterval(check); resolve() }, 500)
+    })
+    expect(closeFired).toBe(true)
+  })
+
+  it("onBrowserClose — 选图完成后不触发", async () => {
+    const { request } = await import("http")
+    let closeFired = false
+    server = startSelectionServer(fakeImages, () => {}, () => { closeFired = true })
+
+    // 加载页面
+    await get(server.port, "/")
+    // 选图
+    await get(server.port, "/select?index=0")
+
+    // 销毁连接模拟浏览器关闭
+    await new Promise<void>((resolve, reject) => {
+      const req = request(
+        { hostname: "localhost", port: server!.port, path: "/", method: "GET" },
+        (res) => {
+          res.resume()
+          res.on("end", () => { req.socket?.destroy(); resolve() })
+        }
+      )
+      req.on("error", reject)
+      req.end()
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 200))
+    expect(closeFired).toBe(false)
+  })
 })

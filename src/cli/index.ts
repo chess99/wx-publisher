@@ -548,20 +548,30 @@ program
     const outputPath = opts.output ?? `${tmpdir()}/wxp-cover-${randomUUID()}.jpg`
     let resolved = false
 
-    const server = startSelectionServer(images, (index) => {
-      if (resolved) return
-      resolved = true
+    const server = startSelectionServer(
+      images,
+      (index) => {
+        if (resolved) return
+        resolved = true
 
-      try {
-        writeFileSync(outputPath, images[index])
-      } catch (e) {
+        try {
+          writeFileSync(outputPath, images[index])
+        } catch (e) {
+          server.close()
+          fail(`写入封面图失败: ${outputPath}`, String(e))
+        }
+
         server.close()
-        fail(`写入封面图失败: ${outputPath}`, String(e))
+        ok({ cover: outputPath, prompt })
+      },
+      () => {
+        // 用户关闭浏览器而未选图
+        if (resolved) return
+        resolved = true
+        server.close()
+        fail("用户关闭浏览器，未选择封面图")
       }
-
-      server.close()
-      ok({ cover: outputPath, prompt })
-    })
+    )
 
     // 生成选图页 HTML，由 server 直接托管（避免 file:// → http:// CORS 问题）
     const html = generateGenCoverHtml({
@@ -589,9 +599,9 @@ program
     // 等待用户选图（最多 10 分钟）
     const timeout = setTimeout(() => {
       if (!resolved) {
+        resolved = true
         server.close()
-        process.stderr.write("超时（10分钟未选图），进程退出。\n")
-        process.exit(1)
+        fail("超时（10分钟未选图）")
       }
     }, 10 * 60 * 1000)
     timeout.unref()
