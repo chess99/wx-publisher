@@ -12,7 +12,7 @@
  */
 
 import { program } from "commander"
-import { readFileSync, writeFileSync, unlinkSync } from "fs"
+import { readFileSync, writeFileSync, unlinkSync, mkdirSync } from "fs"
 import { resolve, dirname } from "path"
 import { tmpdir } from "os"
 import { randomUUID } from "crypto"
@@ -543,8 +543,10 @@ program
     }
 
     // 确定输出目录（默认：--file 所在目录）
-    const absFile = resolve(opts.file)
-    const outputDir = opts.outputDir ? resolve(opts.outputDir) : dirname(absFile)
+    const outputDir = opts.outputDir ? resolve(opts.outputDir) : dirname(absPath)
+
+    // 确保输出目录存在
+    mkdirSync(outputDir, { recursive: true })
 
     // 写候选图到输出目录
     const candidatePaths: string[] = []

@@ -47,12 +47,12 @@ describe("gen-cover 文件夹模式", () => {
 
   it("--output-dir 参数被正确识别（不报 unknown option）", async () => {
     const mdPath = makeMdFile(dir)
-    const nonExistentDir = join(dir, "nonexistent")
+    const outputDir = join(dir, "output")
 
     const { exitCode, stderr } = await runCli([
       "gen-cover",
       "--file", mdPath,
-      "--output-dir", nonExistentDir,
+      "--output-dir", outputDir,
     ])
 
     // 因为测试用假 API key，生图会失败（401），所以 exitCode 是 1
@@ -60,5 +60,18 @@ describe("gen-cover 文件夹模式", () => {
     expect(exitCode).toBe(1)
     expect(stderr).not.toContain("unknown option")
     expect(stderr).not.toContain("--output-dir")
+  }, 30000)
+
+  it("--output 旧参数已不存在（报 unknown option）", async () => {
+    const mdPath = makeMdFile(dir)
+
+    const { stderr } = await runCli([
+      "gen-cover",
+      "--file", mdPath,
+      "--output", "/tmp/cover.jpg",
+    ])
+
+    // 旧的 --output 参数已移除，commander 应该报 unknown option
+    expect(stderr).toContain("unknown option")
   }, 30000)
 })
