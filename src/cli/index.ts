@@ -13,7 +13,7 @@
 
 import { program } from "commander"
 import { readFileSync, writeFileSync, unlinkSync } from "fs"
-import { resolve } from "path"
+import { resolve, dirname } from "path"
 import { tmpdir } from "os"
 import { randomUUID } from "crypto"
 import { spawn } from "child_process"
@@ -26,8 +26,6 @@ import { PLACEHOLDER_COVER_BASE64, PLACEHOLDER_COVER_FILENAME } from "../convert
 import { OpenAIImageProvider } from "../image/providers/openai.js"
 import { MiniMaxImageProvider } from "../image/providers/minimax.js"
 import { generateImagePrompt } from "../image/prompt-generator.js"
-import { startSelectionServer } from "../image/selection-server.js"
-import { generateGenCoverHtml } from "../image/gen-cover-html.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -464,11 +462,11 @@ program
 
 program
   .command("gen-cover")
-  .description("AI 生成封面图候选，浏览器选图后输出封面图路径")
+  .description("AI 生成封面图候选，写入文件夹，立即退出（无交互）")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-n, --n <number>", "候选图数量（1-4，默认读配置）")
   .option("--style <desc>", "附加风格提示词（追加到自动生成的提示词后）")
-  .option("-o, --output <path>", "封面图输出路径（默认 <tmpdir>/wxp-cover-{uuid}.jpg）")
+  .option("--output-dir <dir>", "候选图写入目录（默认：--file 所在目录）")
   .action(async (opts) => {
     const config = loadConfig()
 
@@ -544,67 +542,28 @@ program
       fail("图片生成失败：API 未返回任何图片，请检查模型配置和 API 配额")
     }
 
-    // 启动选图服务
-    const outputPath = opts.output ?? `${tmpdir()}/wxp-cover-${randomUUID()}.jpg`
-    let resolved = false
+    // 确定输出目录（默认：--file 所在目录）
+    const absFile = resolve(opts.file)
+    const outputDir = opts.outputDir ? resolve(opts.outputDir) : dirname(absFile)
 
-    const server = startSelectionServer(
-      images,
-      (index) => {
-        if (resolved) return
-        resolved = true
-
-        try {
-          writeFileSync(outputPath, images[index])
-        } catch (e) {
-          server.close()
-          fail(`写入封面图失败: ${outputPath}`, String(e))
-        }
-
-        server.close()
-        ok({ cover: outputPath, prompt })
-      },
-      () => {
-        // 用户关闭浏览器而未选图
-        if (resolved) return
-        resolved = true
-        server.close()
-        fail("用户关闭浏览器，未选择封面图")
+    // 写候选图到输出目录
+    const candidatePaths: string[] = []
+    for (let i = 0; i < images.length; i++) {
+      const candidatePath = resolve(outputDir, `cover-${i + 1}.jpg`)
+      try {
+        writeFileSync(candidatePath, images[i])
+        candidatePaths.push(candidatePath)
+      } catch (e) {
+        fail(`写入候选图失败: ${candidatePath}`, String(e))
       }
-    )
+    }
 
-    // 生成选图页 HTML，由 server 直接托管（避免 file:// → http:// CORS 问题）
-    const html = generateGenCoverHtml({
-      port: server.port,
-      imageCount: images.length,
+    process.stderr.write(`${images.length} 张候选图已写入: ${outputDir}\n`)
+    ok({
+      candidates: candidatePaths,
       prompt,
-      filePath: absPath,
+      output_dir: outputDir,
     })
-    server.setHtml(html)
-
-    // 打开浏览器，访问 http://localhost:PORT（同源，无 CORS 问题）
-    const pageUrl = `http://localhost:${server.port}`
-    process.stderr.write(`正在打开浏览器选图页: ${pageUrl}\n`)
-    const openCmd = process.platform === "darwin" ? "open"
-      : process.platform === "win32" ? "start"
-      : "xdg-open"
-    spawn(openCmd, [pageUrl], {
-      detached: true,
-      stdio: "ignore",
-      shell: process.platform === "win32",
-    }).unref()
-
-    process.stderr.write(`选图页已打开，请在浏览器中选择封面图。\n`)
-
-    // 等待用户选图（最多 10 分钟）
-    const timeout = setTimeout(() => {
-      if (!resolved) {
-        resolved = true
-        server.close()
-        fail("超时（10分钟未选图）")
-      }
-    }, 10 * 60 * 1000)
-    timeout.unref()
   })
 
 program.parse()
