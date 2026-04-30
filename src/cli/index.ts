@@ -257,6 +257,14 @@ program
           required_flags: ["--file"],
           optional_flags: ["--theme", "--output"],
         },
+        "gen-cover": {
+          description: "AI 并发生成封面图候选，写入文件夹，立即退出（无交互）",
+          required_config: ["image_provider", "image_api_key"],
+          required_flags: ["--file"],
+          optional_flags: ["--n", "--style", "--output-dir"],
+          output: "candidates 数组（绝对路径），prompt，output_dir",
+          workflow: "生成后由人工在 Finder 查看，选定路径传给 wxp publish --cover <path>",
+        },
         "config set": {
           description: "设置配置项",
           keys: ["wechat_appid", "wechat_secret", "default_theme"],
