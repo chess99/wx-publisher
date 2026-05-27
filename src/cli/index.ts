@@ -55,6 +55,7 @@ program
   .option("--cover-url <url>", "封面图 URL（与 --cover 二选一）")
   .option("--title <title>", "文章标题（默认从 Markdown h1 提取）")
   .option("--author <author>", "作者名")
+  .option("--digest <text>", "文章摘要（120 字以内，显示在转发卡片等位置）")
   .option("--no-upload-images", "不自动上传文章中的外链图片")
   .action(async (opts) => {
     const config = loadConfig()
@@ -79,6 +80,10 @@ program
 
     // 提取标题（从 Markdown 第一个 h1，或用文件名）
     const title = opts.title ?? extractTitle(markdown) ?? opts.file
+    const digest = typeof opts.digest === "string" && opts.digest.trim() ? opts.digest.trim() : undefined
+    if (digest && Array.from(digest).length > 120) {
+      fail("摘要不能超过 120 个字符", { length: Array.from(digest).length, max: 120 })
+    }
 
     // 处理封面图
     let thumbMediaId: string
@@ -140,6 +145,7 @@ program
         content: finalHtml,
         thumb_media_id: thumbMediaId,
         author: opts.author,
+        digest,
         show_cover_pic: 1,
         need_open_comment: 0,
       },
@@ -148,6 +154,7 @@ program
     ok({
       media_id: draft.media_id,
       title,
+      digest,
       theme,
       images_detected: imageCount,
       images_uploaded: uploadedImageCount,
@@ -258,7 +265,7 @@ program
           description: "完整流程：Markdown → HTML → 上传图片 → 创建草稿",
           required_config: ["wechat_appid", "wechat_secret"],
           required_flags: ["--file"],
-          optional_flags: ["--theme", "--title", "--author", "--no-upload-images", "--cover", "--cover-url"],
+          optional_flags: ["--theme", "--title", "--author", "--digest", "--no-upload-images", "--cover", "--cover-url"],
         },
         convert: {
           description: "仅转换 Markdown 为微信 HTML，不发布",
