@@ -17,9 +17,9 @@ beforeEach(() => {
   vi.spyOn(process, "cwd").mockReturnValue(join(testDir, "project"))
   vi.stubEnv("HOME", join(testDir, "global"))
 
-  // 清除所有 WXP_* 和 OPENAI_API_KEY 环境变量，避免测试间干扰
+  // 清除所有 WXP_* 环境变量，避免测试间干扰
   for (const key of Object.keys(process.env)) {
-    if (key.startsWith("WXP_") || key === "OPENAI_API_KEY" || key === "MINIMAX_API_KEY") {
+    if (key.startsWith("WXP_")) {
       vi.stubEnv(key, "")
     }
   }
@@ -53,37 +53,36 @@ async function freshGetConfigPath() {
 describe("loadConfig", () => {
   it("没有任何配置文件时使用默认值", async () => {
     const config = await freshLoadConfig()
-    expect(config.image_provider).toBe("openai")
-    expect(config.image_model).toBe("gpt-image-2")
-    expect(config.image_size).toBe("1536x1024")
-    expect(config.image_candidates).toBe(4)
+    expect(config.wechat_appid).toBe("")
+    expect(config.wechat_secret).toBe("")
+    expect(config.default_theme).toBe("default")
+    expect(config).not.toHaveProperty("image_provider")
   })
 
   it("全局配置文件生效", async () => {
     writeFileSync(
       join(globalConfigDir, "config.json"),
-      JSON.stringify({ wechat_appid: "wx_global", image_model: "image-01" })
+      JSON.stringify({ wechat_appid: "wx_global", default_theme: "tech" })
     )
     const config = await freshLoadConfig()
     expect(config.wechat_appid).toBe("wx_global")
-    expect(config.image_model).toBe("image-01")
+    expect(config.default_theme).toBe("tech")
   })
 
   it("本地 .wxp.json 覆盖全局配置", async () => {
     writeFileSync(
       join(globalConfigDir, "config.json"),
-      JSON.stringify({ wechat_appid: "wx_global", image_model: "image-01" })
+      JSON.stringify({ wechat_appid: "wx_global", default_theme: "tech" })
     )
     writeFileSync(
       join(testDir, "project", ".wxp.json"),
-      JSON.stringify({ wechat_appid: "wx_local", image_provider: "minimax" })
+      JSON.stringify({ wechat_appid: "wx_local" })
     )
     const config = await freshLoadConfig()
     // 本地覆盖
     expect(config.wechat_appid).toBe("wx_local")
-    expect(config.image_provider).toBe("minimax")
     // 全局提供（本地未覆盖）
-    expect(config.image_model).toBe("image-01")
+    expect(config.default_theme).toBe("tech")
   })
 
   it("没有本地配置时全局配置生效", async () => {
@@ -100,7 +99,7 @@ describe("saveConfig", () => {
   it("写入全局配置，不影响本地 .wxp.json", async () => {
     writeFileSync(
       join(testDir, "project", ".wxp.json"),
-      JSON.stringify({ image_provider: "minimax" })
+      JSON.stringify({ default_theme: "minimal" })
     )
     await freshSaveConfig({ wechat_appid: "wx_saved" })
 
@@ -112,14 +111,14 @@ describe("saveConfig", () => {
     const localRaw = JSON.parse(
       require("fs").readFileSync(join(testDir, "project", ".wxp.json"), "utf-8")
     )
-    expect(localRaw.image_provider).toBe("minimax")
+    expect(localRaw.default_theme).toBe("minimal")
     expect(localRaw.wechat_appid).toBeUndefined()
   })
 
   it("不把本地 .wxp.json 的值合并进全局", async () => {
     writeFileSync(
       join(testDir, "project", ".wxp.json"),
-      JSON.stringify({ image_api_key: "local-secret-key" })
+      JSON.stringify({ wechat_secret: "local-secret-key" })
     )
     await freshSaveConfig({ wechat_appid: "wx_test" })
 
@@ -127,7 +126,7 @@ describe("saveConfig", () => {
       require("fs").readFileSync(join(globalConfigDir, "config.json"), "utf-8")
     )
     // local-secret-key 不应出现在全局配置里
-    expect(globalRaw.image_api_key).toBeUndefined()
+    expect(globalRaw.wechat_secret).toBeUndefined()
     expect(globalRaw.wechat_appid).toBe("wx_test")
   })
 })

@@ -64,14 +64,6 @@ wxp preview --file article.md
 
 `preview` 会生成浏览器预览页，便于人工比较主题效果。自动化流程通常直接使用 `--theme` 参数。
 
-### 生成封面候选图
-
-```bash
-wxp gen-cover --file article.md --n 4
-```
-
-该命令是可选能力，需要配置图片生成服务相关配置。生成后可把候选图片路径传给 `wxp publish --cover <path>`。
-
 ## JSON 输出契约
 
 成功：
@@ -155,7 +147,6 @@ src/
 │   └── placeholder-cover.ts        # 内置占位封面图
 ├── wechat/client.ts                # 微信 API 客户端
 ├── config/index.ts                 # 配置读写
-└── image/                          # 可选封面生成能力
 test/                               # vitest 单元测试
 ```
 

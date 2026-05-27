@@ -12,8 +12,8 @@
  */
 
 import { program } from "commander"
-import { readFileSync, writeFileSync, unlinkSync, mkdirSync } from "fs"
-import { resolve, dirname } from "path"
+import { readFileSync, writeFileSync, unlinkSync } from "fs"
+import { dirname, isAbsolute, resolve } from "path"
 import { tmpdir } from "os"
 import { randomUUID } from "crypto"
 import { spawn } from "child_process"
@@ -23,9 +23,6 @@ import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
 import { listThemes, getTheme } from "../converter/themes.js"
 import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
-import { OpenAIImageProvider } from "../image/providers/openai.js"
-import { MiniMaxImageProvider } from "../image/providers/minimax.js"
-import { generateImagePrompt } from "../image/prompt-generator.js"
 import { formatCliError } from "./errors.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
@@ -66,8 +63,10 @@ program
 
     // 读取 Markdown
     let markdown: string
+    const articlePath = resolve(opts.file)
+    const articleDir = dirname(articlePath)
     try {
-      markdown = readFileSync(resolve(opts.file), "utf-8")
+      markdown = readFileSync(articlePath, "utf-8")
     } catch (e) {
       fail(`读取文件失败: ${opts.file}`, String(e))
     }
@@ -76,7 +75,7 @@ program
     const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
 
     // 转换 Markdown
-    const { html, externalImages } = await convertMarkdown(markdown, { theme })
+    const { html, externalImages, localImages } = await convertMarkdown(markdown, { theme })
 
     // 提取标题（从 Markdown 第一个 h1，或用文件名）
     const title = opts.title ?? extractTitle(markdown) ?? opts.file
@@ -103,9 +102,10 @@ program
       }
     }
 
-    // 上传文章内外链图片，替换为微信 URL
+    // 上传文章内图片，替换为微信素材 URL
     let finalHtml = html
-    if (opts.uploadImages !== false && externalImages.length > 0) {
+    const imageCount = externalImages.length + localImages.length
+    if (opts.uploadImages !== false && imageCount > 0) {
       const imageMap = new Map<string, string>()
       for (const imgUrl of externalImages) {
         try {
@@ -114,6 +114,15 @@ program
         } catch (e) {
           // 上传失败不中断，保留原 URL（微信可能无法显示）
           console.error(JSON.stringify({ warning: `图片上传失败，保留原 URL: ${imgUrl}`, error: String(e) }))
+        }
+      }
+      for (const imgPath of localImages) {
+        const absPath = isAbsolute(imgPath) ? imgPath : resolve(articleDir, imgPath)
+        try {
+          const result = await client.uploadImage(absPath)
+          imageMap.set(imgPath, result.url)
+        } catch (e) {
+          console.error(JSON.stringify({ warning: `图片上传失败，保留原路径: ${imgPath}`, error: String(e) }))
         }
       }
       // 替换 HTML 中的图片 URL
@@ -138,7 +147,9 @@ program
       media_id: draft.media_id,
       title,
       theme,
-      images_uploaded: externalImages.length,
+      images_uploaded: imageCount,
+      external_images: externalImages,
+      local_images: localImages,
       message: "草稿已创建，请在微信公众号后台发布",
       used_placeholder_cover: usedPlaceholderCover,
       ...(usedPlaceholderCover && { warning: "未提供封面图，已使用内置占位图。建议用 --cover 或 --cover-url 指定真实封面图后重新发布。" }),
@@ -163,12 +174,12 @@ program
 
     const config = loadConfig()
     const theme = opts.theme ?? config.default_theme
-    const { html, externalImages } = await convertMarkdown(markdown, { theme })
+    const { html, externalImages, localImages } = await convertMarkdown(markdown, { theme })
 
     if (opts.output) {
       const { writeFileSync } = await import("fs")
       writeFileSync(resolve(opts.output), html, "utf-8")
-      ok({ output: opts.output, theme, external_images: externalImages })
+      ok({ output: opts.output, theme, external_images: externalImages, local_images: localImages })
     } else {
       // 直接输出 HTML（不包 JSON），方便 pipe
       process.stdout.write(html)
@@ -201,13 +212,6 @@ configCmd
       wechat_appid:       config.wechat_appid || "(未设置)",
       wechat_secret:      config.wechat_secret ? "***" : "(未设置)",
       default_theme:      config.default_theme,
-      image_provider:     config.image_provider,
-      image_provider_url: config.image_provider_url,
-      image_api_key:      config.image_api_key ? "***" : "(未设置)",
-      image_model:        config.image_model,
-      image_text_model:   config.image_text_model,
-      image_size:         config.image_size,
-      image_candidates:   config.image_candidates,
       config_path:        getConfigPath(),
     })
   })
@@ -258,14 +262,6 @@ program
           required_flags: ["--file"],
           optional_flags: ["--theme", "--output"],
         },
-        "gen-cover": {
-          description: "生成封面图候选，写入文件夹，立即退出（无交互）",
-          required_config: ["image_provider", "image_api_key"],
-          required_flags: ["--file"],
-          optional_flags: ["--n", "--style", "--output-dir"],
-          output: "candidates 数组（绝对路径），prompt，output_dir",
-          workflow: "生成后由人工在 Finder 查看，选定路径传给 wxp publish --cover <path>",
-        },
         "config set": {
           description: "设置配置项",
           keys: ["wechat_appid", "wechat_secret", "default_theme"],
@@ -281,7 +277,8 @@ program
       themes: listThemes(),
       notes: [
         "封面图可选：--cover 本地路径 或 --cover-url 公网 URL；不提供则自动使用内置占位图，JSON 输出含 warning 字段",
-        "文章中的外链图片会自动下载并上传到微信素材库",
+        "文章中的外链图片和本地图片会自动上传到微信素材库",
+        "本地相对图片路径按 Markdown 文件所在目录解析",
         "微信公众号草稿创建后需在后台手动发布",
         "access_token 自动缓存，有效期内不重复请求",
       ],
@@ -458,116 +455,6 @@ program
       path: outputPath,
       themes: results.map(r => ({ theme: r.theme, ok: !r.error, error: r.error })),
       message: opts.open !== false ? "已在浏览器中打开预览" : "预览文件已生成",
-    })
-  })
-
-// ── gen-cover：生成封面图候选，写入文件夹 ───────────────────────────────────
-
-program
-  .command("gen-cover")
-  .description("生成封面图候选，写入文件夹，立即退出（无交互）")
-  .requiredOption("-f, --file <path>", "Markdown 文件路径")
-  .option("-n, --n <number>", "候选图数量（1-4，默认读配置）")
-  .option("--style <desc>", "附加风格提示词（追加到自动生成的提示词后）")
-  .option("--output-dir <dir>", "候选图写入目录（默认：--file 所在目录）")
-  .action(async (opts) => {
-    const config = loadConfig()
-
-    // 检查 provider 支持
-    const supportedProviders = ["openai", "minimax"]
-    if (!supportedProviders.includes(config.image_provider)) {
-      process.stderr.write(
-        `不支持的 image_provider: ${config.image_provider}\n` +
-        `支持的值：${supportedProviders.join(", ")}\n` +
-        `如需接入其他 OpenAI 兼容服务，设置 image_provider: openai 并配置 image_provider_url。\n`
-      )
-      process.exit(1)
-    }
-
-    const apiKey = config.image_api_key
-    if (!apiKey) {
-      const envHint = config.image_provider === "minimax"
-        ? "请设置 MINIMAX_API_KEY 环境变量，或运行：\n  wxp config set image_api_key <your-key>"
-        : "请设置 OPENAI_API_KEY 环境变量，或运行：\n  wxp config set image_api_key sk-..."
-      process.stderr.write(`未找到 API key。${envHint}\n`)
-      process.exit(1)
-    }
-
-    // 校验 --n 参数
-    if (opts.n !== undefined && !/^\d+$/.test(String(opts.n))) {
-      process.stderr.write(`--n 必须为 1-4 的整数，收到: ${opts.n}\n`)
-      process.exit(1)
-    }
-    const n = opts.n ? Math.min(4, Math.max(1, parseInt(opts.n, 10))) : config.image_candidates
-
-    // 读取文章
-    const absPath = resolve(opts.file)
-    let markdown: string
-    try {
-      markdown = readFileSync(absPath, "utf-8")
-    } catch (e) {
-      fail(`读取文件失败: ${opts.file}`, String(e))
-    }
-
-    // 生成提示词（通过 image_provider_url 的 OpenAI 兼容 chat endpoint）
-    // MiniMax 支持 OpenAI 兼容格式：baseURL=https://api.minimaxi.com/v1，模型=MiniMax-M2.7
-    process.stderr.write("正在生成图像提示词...\n")
-    let prompt: string
-    try {
-      prompt = await generateImagePrompt(markdown, apiKey, {
-        baseURL: config.image_provider_url,
-        textModel: config.image_text_model,
-      })
-      if (opts.style) prompt = `${prompt}, ${opts.style}`
-    } catch (e) {
-      fail("提示词生成失败", String(e))
-    }
-    process.stderr.write(`提示词：${prompt}\n`)
-
-    // 选择生图 provider 实例
-    const provider = config.image_provider === "minimax"
-      ? new MiniMaxImageProvider(apiKey, config.image_model)
-      : new OpenAIImageProvider(apiKey, config.image_provider_url, config.image_model)
-    let images: Buffer[]
-    try {
-      const results = await provider.generateImages(prompt, {
-        n,
-        size: config.image_size,
-      })
-      // Issue #7: 过滤掉 b64_json 为空的项（某些兼容层可能返回 null）
-      images = results.filter(r => r.data.length > 0).map(r => r.data)
-    } catch (e) {
-      fail("图片生成失败", String(e))
-    }
-
-    // Issue #6: API 返回空数组时提前退出，避免挂起 10 分钟
-    if (images.length === 0) {
-      fail("图片生成失败：API 未返回任何图片，请检查模型配置和 API 配额")
-    }
-
-    // 确定输出目录（默认：--file 所在目录）
-    const outputDir = opts.outputDir ? resolve(opts.outputDir) : dirname(absPath)
-
-    // 确保输出目录存在
-    mkdirSync(outputDir, { recursive: true })
-
-    // 写候选图到输出目录
-    const candidatePaths: string[] = []
-    for (let i = 0; i < images.length; i++) {
-      const candidatePath = resolve(outputDir, `cover-${i + 1}.jpg`)
-      try {
-        writeFileSync(candidatePath, images[i])
-        candidatePaths.push(candidatePath)
-      } catch (e) {
-        fail(`写入候选图失败: ${candidatePath}`, String(e))
-      }
-    }
-
-    process.stderr.write(`${images.length} 张候选图已写入: ${outputDir}\n`)
-    ok({
-      candidates: candidatePaths,
-      prompt,
-      output_dir: outputDir,
     })
   })
 
