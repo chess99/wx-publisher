@@ -72,6 +72,7 @@ export interface ConvertOptions {
 export interface ConvertResult {
   html: string
   externalImages: string[]
+  localImages: string[]
 }
 
 
@@ -79,6 +80,7 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
   const { theme: themeName = "default", stripLinks = true } = options
   const theme = getTheme(themeName)
   const externalImages: string[] = []
+  const localImages: string[] = []
 
   // 剥离 Hexo/Jekyll front matter
   const stripped = markdown.replace(/^---\n[\s\S]*?\n---\n?/, "").trimStart()
@@ -88,7 +90,7 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(() => (tree: Root) => {
-      inlineStyles(tree, theme.styles, externalImages, stripLinks)
+      inlineStyles(tree, theme.styles, externalImages, localImages, stripLinks)
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
 
@@ -96,7 +98,7 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
   const inner = String(result)
   const html = `<section style="${theme.styles.wrapper}">${inner}</section>`
 
-  return { html, externalImages }
+  return { html, externalImages, localImages }
 }
 
 /**
@@ -191,6 +193,7 @@ function inlineStyles(
   tree: Root,
   styles: NodeStyles,
   externalImages: string[],
+  localImages: string[],
   stripLinks: boolean
 ): void {
   visit(tree, "element", (node: Element, index, parent) => {
@@ -291,7 +294,11 @@ function inlineStyles(
       case "img": {
         applyStyle(node, styles.img)
         const src = node.properties?.src as string | undefined
-        if (src && isExternalUrl(src)) externalImages.push(src)
+        if (src && isExternalUrl(src)) {
+          externalImages.push(src)
+        } else if (src && isLocalImagePath(src)) {
+          localImages.push(src)
+        }
         break
       }
 
@@ -327,4 +334,8 @@ function applyStyle(node: Element, style: string): void {
 
 function isExternalUrl(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://")
+}
+
+function isLocalImagePath(url: string): boolean {
+  return !url.startsWith("data:") && !url.startsWith("blob:") && !url.startsWith("//")
 }

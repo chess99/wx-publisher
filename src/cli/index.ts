@@ -105,6 +105,7 @@ program
     // 上传文章内图片，替换为微信素材 URL
     let finalHtml = html
     const imageCount = externalImages.length + localImages.length
+    let uploadedImageCount = 0
     if (opts.uploadImages !== false && imageCount > 0) {
       const imageMap = new Map<string, string>()
       for (const imgUrl of externalImages) {
@@ -129,6 +130,7 @@ program
       for (const [original, wxUrl] of imageMap) {
         finalHtml = finalHtml.replaceAll(original, wxUrl)
       }
+      uploadedImageCount = imageMap.size
     }
 
     // 创建草稿
@@ -147,7 +149,8 @@ program
       media_id: draft.media_id,
       title,
       theme,
-      images_uploaded: imageCount,
+      images_detected: imageCount,
+      images_uploaded: uploadedImageCount,
       external_images: externalImages,
       local_images: localImages,
       message: "草稿已创建，请在微信公众号后台发布",
