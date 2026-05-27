@@ -6,11 +6,11 @@
 
 **What:** 在 `wxp themes` 和 `wxp capabilities` 的 JSON 输出里，为每个主题加入 `sample_html` 字段——对一段标准 Markdown 片段（含 h1/h2/代码块/列表）调用 `convertMarkdown()` 后的 HTML 片段。
 
-**Why:** 当前 AI Agent 选择主题时只能依赖文字描述（"蓝色强调，深色代码块"），无法感知实际渲染风格。加入 `sample_html` 后，Agent 可以通过读取实际 HTML 来判断主题是否适合当前文章风格。
+**Why:** 当前自动化调用方选择主题时只能依赖文字描述（"蓝色强调，深色代码块"），无法感知实际渲染风格。加入 `sample_html` 后，脚本可以通过读取实际 HTML 来判断主题是否适合当前文章风格。
 
 **Pros:**
-- Agent 选主题更准确，减少"先发布再调整"的循环
-- 不需要 Agent 运行 `wxp preview`（无头环境友好）
+- 自动化选主题更准确，减少"先发布再调整"的循环
+- 不需要运行 `wxp preview`（无头环境友好）
 
 **Cons:**
 - `wxp themes` 和 `wxp capabilities` 输出体积增大（每个主题约 2-5KB 的 HTML）

@@ -187,7 +187,7 @@ export class WechatClient {
 
   /**
    * 获取草稿列表（最新的 N 篇）
-   * 返回包含 media_id 的列表，用于 QA Agent 定位最新草稿
+   * 返回包含 media_id 的列表
    */
   async listDrafts(count = 5): Promise<Array<{ media_id: string; update_time: number; title: string }>> {
     const token = await this.getAccessToken()

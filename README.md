@@ -32,15 +32,30 @@ wxp config set wechat_secret 你的AppSecret
 # 发布到草稿箱
 wxp publish --file article.md --cover cover.jpg
 
-# 在浏览器中预览所有主题效果（人类用）
+# 在浏览器中预览所有主题效果（手动比较）
 wxp preview --file article.md
 
-# 仅转换，输出到文件（AI Agent / 脚本用）
+# 仅转换，输出到文件（脚本/自动化用）
 wxp convert --file article.md --theme tech --output preview.html
 
 # 查看可用主题
 wxp themes
 ```
+
+## 常见错误
+
+如果发布时报：
+
+```text
+获取 access_token 失败: invalid ip <当前出口 IP>, not in whitelist
+```
+
+说明当前机器的出口 IP 不在公众号 API IP 白名单中。处理路径已经迁移到微信开发者平台：
+
+1. 打开[微信开发者平台](https://developers.weixin.qq.com/platform)，管理员扫码登录
+2. 「我的业务与服务」→「公众号」→ 选择目标公众号
+3. 进入「基础信息 / 开发接口管理」里的「API IP 白名单」
+4. 添加当前出口 IP 后重试 `wxp publish`
 
 ## 主题
 
@@ -61,8 +76,8 @@ wxp preview --file article.md
 
 浏览器打开后进程立即退出，不阻塞终端。切换 tab 查看不同主题，填入封面图路径后底部命令即可直接复制执行。
 
-> AI Agent 不需要预览，直接用 `--theme` 参数即可。
+自动化流程通常不需要预览，直接用 `--theme` 参数即可。
 
-## AI Agent 使用
+## 自动化调用
 
 见 [AGENTS.md](./AGENTS.md)。

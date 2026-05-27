@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * wx-publisher CLI
- * 命令行入口，所有输出为 JSON，方便 AI Agent 解析
+ * 命令行入口，默认输出 JSON，方便脚本解析
  *
  * 用法：
  *   wxp publish --file article.md [--theme tech] [--cover /path/to/cover.jpg]
@@ -22,10 +22,11 @@ import { generatePreviewHtml } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
 import { listThemes, getTheme } from "../converter/themes.js"
-import { PLACEHOLDER_COVER_BASE64, PLACEHOLDER_COVER_FILENAME } from "../converter/placeholder-cover.js"
+import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
 import { OpenAIImageProvider } from "../image/providers/openai.js"
 import { MiniMaxImageProvider } from "../image/providers/minimax.js"
 import { generateImagePrompt } from "../image/prompt-generator.js"
+import { formatCliError } from "./errors.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ function ok(data: unknown): never {
 }
 
 function fail(message: string, details?: unknown): never {
-  console.error(JSON.stringify({ success: false, error: message, details }, null, 2))
+  console.error(JSON.stringify(formatCliError(message, details), null, 2))
   process.exit(1)
 }
 
@@ -235,11 +236,11 @@ program
     ok({ themes, count: themes.length })
   })
 
-// ── capabilities：供 AI Agent 查询本工具能力 ──────────────────────────────────
+// ── capabilities：供脚本查询本工具能力 ───────────────────────────────────────
 
 program
   .command("capabilities")
-  .description("输出本工具的能力描述（供 AI Agent 使用）")
+  .description("输出本工具的能力描述（供脚本使用）")
   .action(() => {
     ok({
       tool: "wx-publisher",
@@ -258,7 +259,7 @@ program
           optional_flags: ["--theme", "--output"],
         },
         "gen-cover": {
-          description: "AI 并发生成封面图候选，写入文件夹，立即退出（无交互）",
+          description: "生成封面图候选，写入文件夹，立即退出（无交互）",
           required_config: ["image_provider", "image_api_key"],
           required_flags: ["--file"],
           optional_flags: ["--n", "--style", "--output-dir"],
@@ -293,7 +294,7 @@ const draftCmd = program.command("draft").description("草稿箱管理")
 
 draftCmd
   .command("list")
-  .description("列出最新草稿（供 QA Agent 获取 appmsgid）")
+  .description("列出最新草稿")
   .option("-n, --count <n>", "获取数量", "5")
   .action(async (opts) => {
     const config = loadConfig()
@@ -301,20 +302,14 @@ draftCmd
     if (errors.length > 0) fail("配置不完整", errors)
     const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
     const drafts = await client.listDrafts(parseInt(opts.count)).catch(e => fail("获取草稿列表失败", String(e)))
-    ok({
-      drafts: drafts.map(d => ({
-        ...d,
-        edit_url_template: `https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid={appmsgid}&token={token}&lang=zh_CN`,
-        note: "appmsgid 需从草稿箱页面获取，media_id 是 API 标识符",
-      })),
-    })
+    ok({ drafts })
   })
 
-// ── validate：静态检查本地 HTML，不需要 CDP ────────────────────────────────────
+// ── validate：静态检查本地 HTML ───────────────────────────────────────────────
 
 program
   .command("validate")
-  .description("静态检查本地 HTML 文件的已知微信渲染问题（不需要 CDP）")
+  .description("静态检查本地 HTML 文件的已知微信渲染问题")
   .requiredOption("-f, --file <path>", "要检查的 HTML 文件路径（由 convert 命令生成）")
   .action((opts) => {
     let html: string
@@ -405,7 +400,7 @@ program
       skip_count: skipCount,
       checks: checkList,
       recommendation: failCount === 0
-        ? "静态检查通过，建议用 CDP QA 做最终验证"
+        ? "静态检查通过"
         : `需要修复: ${checkList.filter(c => c.status === "FAIL").map(c => c.id).join(", ")}`,
     })
   })
@@ -414,7 +409,7 @@ program
 
 program
   .command("preview")
-  .description("在浏览器中预览所有主题效果（人类用，AI Agent 直接用 --theme 参数）")
+  .description("在浏览器中预览所有主题效果")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-o, --output <path>", "输出 HTML 路径（默认写入系统临时目录）")
   .option("--no-open", "生成 HTML 但不自动打开浏览器")
@@ -466,11 +461,11 @@ program
     })
   })
 
-// ── gen-cover：AI 生成封面图候选，写入文件夹 ─────────────────────────────────
+// ── gen-cover：生成封面图候选，写入文件夹 ───────────────────────────────────
 
 program
   .command("gen-cover")
-  .description("AI 生成封面图候选，写入文件夹，立即退出（无交互）")
+  .description("生成封面图候选，写入文件夹，立即退出（无交互）")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-n, --n <number>", "候选图数量（1-4，默认读配置）")
   .option("--style <desc>", "附加风格提示词（追加到自动生成的提示词后）")
