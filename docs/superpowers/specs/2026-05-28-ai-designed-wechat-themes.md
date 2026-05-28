@@ -162,6 +162,8 @@ skills/wechat-article-design/
 │   ├── rendering-toolkit.md
 │   └── publishing-api.md
 └── examples/
+    ├── benchmark.md
+    ├── creative-rendered.html
     ├── minimal-render.mjs
     ├── article.md
     └── rendered.html
@@ -169,23 +171,40 @@ skills/wechat-article-design/
 
 This skill is a lower-level toolkit and knowledge package. It does not define an editorial process and does not require callers to write a design brief. Upstream workflows decide creative direction and orchestration.
 
+The main Stage 2 path is HTML-first:
+
+```bash
+# Upstream AI creates rendered.html directly, using its own creative approach.
+node skills/wechat-article-design/scripts/validate-wechat-html.mjs --file rendered.html
+node skills/wechat-article-design/scripts/preview-wechat-html.mjs --file rendered.html --output preview.html
+node skills/wechat-article-design/scripts/publish-wechat-draft.mjs \
+  --html rendered.html \
+  --cover cover.jpg \
+  --title "..."
+```
+
+`render-wechat-article.mjs` is a helper for callers that want reusable Markdown parsing and rendering utilities. It is not the required entry point.
+
 ### Skill Responsibilities
 
 `SKILL.md` explains:
 
-- The skill provides tools for WeChat-compatible article HTML rendering, validation, preview, and draft creation.
+- The skill provides tools for WeChat-compatible article HTML validation, preview, draft creation, and optional rendering helpers.
 - Upstream callers own article understanding, creative direction, layout decisions, cover generation, and publish decisions.
-- The final publishable artifact is WeChat-compatible HTML.
+- Upstream callers may generate the final HTML directly.
+- The final publishable artifact is WeChat-compatible HTML with inline styles.
+- Validation and preview are the core safety rails for creative HTML output.
 - Publishing only creates a draft. It never directly publishes.
 
 ### Scripts
 
 `render-wechat-article.mjs`:
 
-- Exposes reusable rendering utilities and a CLI entry.
-- Can parse Markdown or accept caller-produced intermediate HTML/sections.
+- Provides optional reusable rendering utilities and a CLI entry.
+- Can parse Markdown or accept caller-produced intermediate HTML/sections when the caller wants a structured rendering assist.
 - Helps with HTML escaping, style assembly, code highlighting, image collection, and WeChat-safe output.
 - Allows caller-defined rendering strategy instead of forcing the current `wxp` converter shape.
+- Is not required when an upstream AI directly writes the final `rendered.html`.
 
 `validate-wechat-html.mjs`:
 
@@ -198,6 +217,7 @@ This skill is a lower-level toolkit and knowledge package. It does not define an
 
 - Wraps rendered HTML in a local preview page.
 - Does not require WeChat credentials.
+- Emits a path in JSON so an upstream workflow can archive or open the preview.
 
 `publish-wechat-draft.mjs`:
 
@@ -220,7 +240,9 @@ If the skill path fails validation or produces unsatisfactory output, callers ca
 
 Add focused tests or fixture checks for:
 
-- Minimal render example produces non-empty HTML.
+- The benchmark Markdown fixture covers common Markdown elements: headings, emphasis, inline code, fenced code, unordered and ordered lists, nested lists, blockquotes, tables, horizontal rules, and links.
+- Creative rendered HTML fixture validates successfully or reports only accepted warnings.
+- Optional render helper example produces non-empty HTML.
 - Validation catches dangerous tags and event attributes.
 - Validation catches unresolved local images.
 - Preview generation writes a standalone HTML file.
