@@ -18,12 +18,14 @@ import { tmpdir } from "os"
 import { randomUUID } from "crypto"
 import { spawn } from "child_process"
 import { convertMarkdown } from "../converter/index.js"
-import { generatePreviewHtml } from "../converter/preview-html.js"
+import { generatePreviewHtml, shellQuote } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
-import { listThemes, getTheme } from "../converter/themes.js"
+import { listThemes, getTheme, type Theme } from "../converter/themes.js"
 import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
 import { formatCliError } from "./errors.js"
+import { resolveThemeOption } from "./theme-options.js"
+import { getThemeFileSchema, loadThemeFile } from "../converter/theme-file.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -51,6 +53,7 @@ program
   .description("将 Markdown 文件发布到微信公众号草稿箱")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-t, --theme <name>", "排版主题（默认读配置，fallback: default）")
+  .option("--theme-file <path>", "外部主题 JSON 文件路径（与 --theme 二选一）")
   .option("-c, --cover <path>", "封面图本地路径（不提供则使用内置占位图）")
   .option("--cover-url <url>", "封面图 URL（与 --cover 二选一）")
   .option("--title <title>", "文章标题（默认从 Markdown h1 提取）")
@@ -72,11 +75,23 @@ program
       fail(`读取文件失败: ${opts.file}`, String(e))
     }
 
-    const theme = opts.theme ?? config.default_theme
+    let themeOption: ReturnType<typeof resolveThemeOption>
+    try {
+      themeOption = resolveThemeOption({ theme: opts.theme, themeFile: opts.themeFile }, config.default_theme)
+    } catch (e) {
+      fail("主题参数冲突或主题文件无效", String(e))
+    }
+    if (themeOption.warnings?.length) {
+      console.error(JSON.stringify({ warnings: themeOption.warnings }))
+    }
+    const theme = themeOption.themeName
     const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
 
     // 转换 Markdown
-    const { html, externalImages, localImages } = await convertMarkdown(markdown, { theme })
+    const { html, externalImages, localImages } = await convertMarkdown(markdown, {
+      theme,
+      themeDefinition: themeOption.themeDefinition,
+    })
 
     // 提取标题（从 Markdown 第一个 h1，或用文件名）
     const title = opts.title ?? extractTitle(markdown) ?? opts.file
@@ -173,6 +188,7 @@ program
   .description("将 Markdown 转换为微信 HTML（不发布）")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
   .option("-t, --theme <name>", "排版主题")
+  .option("--theme-file <path>", "外部主题 JSON 文件路径（与 --theme 二选一）")
   .option("-o, --output <path>", "输出 HTML 文件路径（不指定则输出到 stdout）")
   .action(async (opts) => {
     let markdown: string
@@ -183,8 +199,20 @@ program
     }
 
     const config = loadConfig()
-    const theme = opts.theme ?? config.default_theme
-    const { html, externalImages, localImages } = await convertMarkdown(markdown, { theme })
+    let themeOption: ReturnType<typeof resolveThemeOption>
+    try {
+      themeOption = resolveThemeOption({ theme: opts.theme, themeFile: opts.themeFile }, config.default_theme)
+    } catch (e) {
+      fail("主题参数冲突或主题文件无效", String(e))
+    }
+    if (themeOption.warnings?.length) {
+      console.error(JSON.stringify({ warnings: themeOption.warnings }))
+    }
+    const theme = themeOption.themeName
+    const { html, externalImages, localImages } = await convertMarkdown(markdown, {
+      theme,
+      themeDefinition: themeOption.themeDefinition,
+    })
 
     if (opts.output) {
       const { writeFileSync } = await import("fs")
@@ -250,6 +278,37 @@ program
     ok({ themes, count: themes.length })
   })
 
+// ── theme：外部主题文件工具 ───────────────────────────────────────────────────
+
+const themeCmd = program.command("theme").description("外部主题文件工具")
+
+themeCmd
+  .command("schema")
+  .description("输出外部主题 JSON schema")
+  .action(() => {
+    ok({ schema: getThemeFileSchema() })
+  })
+
+themeCmd
+  .command("validate")
+  .description("校验外部主题 JSON 文件")
+  .requiredOption("-f, --file <path>", "外部主题 JSON 文件路径")
+  .action((opts) => {
+    const result = loadThemeFile(resolve(opts.file))
+    if (!result.theme) {
+      fail("主题文件无效", result.errors)
+    }
+
+    ok({
+      valid: true,
+      theme: {
+        name: result.theme.name,
+        description: result.theme.description,
+      },
+      warnings: result.warnings,
+    })
+  })
+
 // ── capabilities：供脚本查询本工具能力 ───────────────────────────────────────
 
 program
@@ -260,17 +319,35 @@ program
       tool: "wx-publisher",
       version: "0.1.0",
       description: "Markdown 转微信公众号草稿，无需第三方 API Key，完全本地转换",
+      features: {
+        external_theme_file: true,
+      },
       commands: {
         publish: {
           description: "完整流程：Markdown → HTML → 上传图片 → 创建草稿",
           required_config: ["wechat_appid", "wechat_secret"],
           required_flags: ["--file"],
-          optional_flags: ["--theme", "--title", "--author", "--digest", "--no-upload-images", "--cover", "--cover-url"],
+          optional_flags: ["--theme", "--theme-file", "--title", "--author", "--digest", "--no-upload-images", "--cover", "--cover-url"],
         },
         convert: {
           description: "仅转换 Markdown 为微信 HTML，不发布",
           required_flags: ["--file"],
-          optional_flags: ["--theme", "--output"],
+          optional_flags: ["--theme", "--theme-file", "--output"],
+        },
+        preview: {
+          description: "生成浏览器主题预览页",
+          required_flags: ["--file"],
+          optional_flags: ["--theme-file", "--output", "--no-open"],
+        },
+        theme: {
+          description: "外部主题文件工具",
+          subcommands: {
+            schema: { description: "输出外部主题 JSON schema" },
+            validate: {
+              description: "校验外部主题 JSON 文件",
+              required_flags: ["--file"],
+            },
+          },
         },
         "config set": {
           description: "设置配置项",
@@ -278,6 +355,11 @@ program
         },
         "config get": { description: "查看当前配置" },
         themes: { description: "列出可用主题" },
+      },
+      external_theme_file: {
+        description: "通过 --theme-file 传入外部主题 JSON，不能与 --theme 同时使用",
+        commands: ["convert", "publish", "preview", "theme schema", "theme validate"],
+        schema: getThemeFileSchema(),
       },
       env_vars: {
         WXP_APPID: "微信公众号 AppID",
@@ -418,6 +500,7 @@ program
   .command("preview")
   .description("在浏览器中预览所有主题效果")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
+  .option("--theme-file <path>", "额外预览的外部主题 JSON 文件路径")
   .option("-o, --output <path>", "输出 HTML 路径（默认写入系统临时目录）")
   .option("--no-open", "生成 HTML 但不自动打开浏览器")
   .action(async (opts) => {
@@ -430,18 +513,41 @@ program
     }
 
     const themes = listThemes()
+    const renderTargets: PreviewRenderTarget[] = themes.map(theme => ({
+      theme,
+      publishCommand: `wxp publish --file ${shellQuote(absPath)} --theme ${shellQuote(theme)}`,
+    }))
+
+    if (opts.themeFile) {
+      const themePath = resolve(opts.themeFile)
+      const result = loadThemeFile(themePath)
+      if (!result.theme) {
+        fail("主题文件无效", result.errors)
+      }
+      if (result.warnings.length) {
+        console.error(JSON.stringify({ warnings: result.warnings }))
+      }
+      renderTargets.push({
+        theme: result.theme.name,
+        themeDefinition: result.theme,
+        publishCommand: `wxp publish --file ${shellQuote(absPath)} --theme-file ${shellQuote(themePath)}`,
+      })
+    }
 
     // 并行渲染所有主题，任一失败不影响其他
     const settled = await Promise.allSettled(
-      themes.map(theme => convertMarkdown(markdown, { theme }))
+      renderTargets.map(target => convertMarkdown(markdown, {
+        theme: target.theme,
+        themeDefinition: target.themeDefinition,
+      }))
     )
 
-    const results = themes.map((theme, i) => {
+    const results = renderTargets.map((target, i) => {
       const r = settled[i]
       if (r.status === "fulfilled") {
-        return { theme, html: r.value.html }
+        return { theme: target.theme, html: r.value.html, publishCommand: target.publishCommand }
       } else {
-        return { theme, html: "", error: String(r.reason) }
+        return { theme: target.theme, html: "", error: String(r.reason), publishCommand: target.publishCommand }
       }
     })
 
@@ -475,4 +581,10 @@ program.parse()
 function extractTitle(markdown: string): string | null {
   const match = markdown.match(/^#\s+(.+)$/m)
   return match?.[1]?.trim() ?? null
+}
+
+interface PreviewRenderTarget {
+  theme: string
+  themeDefinition?: Theme
+  publishCommand: string
 }

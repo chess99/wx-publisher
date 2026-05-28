@@ -1,0 +1,28 @@
+{
+  "name": "warning-theme",
+  "description": "External theme fixture with warnings",
+  "extra": "unknown field should warn",
+  "styles": {
+    "wrapper": "font-family:'RemoteFont';max-width:1200px;margin:0 auto;position:fixed;",
+    "h1": "font-size:26px;animation:fade 1s ease;",
+    "h2": "font-size:20px;font-weight:700;",
+    "h3": "font-size:17px;font-weight:700;",
+    "h4": "font-size:16px;font-weight:700;",
+    "p": "font-size:16px;line-height:1.8;",
+    "strong": "font-weight:700;",
+    "em": "font-style:italic;",
+    "code": "font-family:Consolas,monospace;font-size:13px;",
+    "pre": "background:#111;padding:16px;overflow-x:auto;",
+    "preCode": "font-family:Consolas,monospace;font-size:13px;",
+    "blockquote": "border-left:4px solid #ddd;padding-left:12px;",
+    "ul": "padding-left:20px;",
+    "ol": "padding-left:20px;",
+    "li": "margin:0.2em 0;",
+    "hr": "border:none;border-top:1px solid #ddd;",
+    "img": "max-width:100%;",
+    "a": "color:#06c;",
+    "table": "width:100%;border-collapse:collapse;",
+    "th": "font-weight:700;",
+    "td": "padding:8px;"
+  }
+}

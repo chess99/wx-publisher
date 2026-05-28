@@ -17,7 +17,7 @@ import rehypeStringify from "rehype-stringify"
 import type { Root, Element, Text, ElementContent } from "hast"
 import { visit, SKIP } from "unist-util-visit"
 import hljs from "highlight.js"
-import { getTheme, type NodeStyles } from "./themes.js"
+import { getTheme, type NodeStyles, type Theme } from "./themes.js"
 
 /**
  * hljs token 类型 → inline style 颜色映射
@@ -66,6 +66,7 @@ const HLJS_TOKEN_COLORS: Record<string, string> = {
 
 export interface ConvertOptions {
   theme?: string
+  themeDefinition?: Theme
   stripLinks?: boolean
 }
 
@@ -77,8 +78,8 @@ export interface ConvertResult {
 
 
 export async function convertMarkdown(markdown: string, options: ConvertOptions = {}): Promise<ConvertResult> {
-  const { theme: themeName = "default", stripLinks = true } = options
-  const theme = getTheme(themeName)
+  const { theme: themeName = "default", themeDefinition, stripLinks = true } = options
+  const theme = themeDefinition ?? getTheme(themeName)
   const externalImages: string[] = []
   const localImages: string[] = []
 
@@ -96,7 +97,7 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
 
   const result = await processor.process(stripped)
   const inner = String(result)
-  const html = `<section style="${theme.styles.wrapper}">${inner}</section>`
+  const html = `<section style="${escapeAttr(theme.styles.wrapper)}">${inner}</section>`
 
   return { html, externalImages, localImages }
 }
@@ -186,6 +187,14 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;")
 }
 
+function escapeAttr(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+}
+
 /**
  * 遍历 hast 树，注入内联样式
  */
@@ -271,7 +280,7 @@ function inlineStyles(
           node.children = [
             {
               type: "raw" as never,
-              value: `<code class="language-${lang ?? "plaintext"}" style="${codeStyle}">${formattedHtml}</code>`,
+              value: `<code class="language-${escapeAttr(lang ?? "plaintext")}" style="${escapeAttr(codeStyle)}">${formattedHtml}</code>`,
             } as never,
           ]
         } else {
@@ -287,7 +296,7 @@ function inlineStyles(
         const escaped = escapeHtml(codeText);
         (node as unknown as { type: string; value: string }).type = "raw";
         (node as unknown as { value: string }).value =
-          `<code class="inline-code" style="${styles.code}">${escaped}</code>`
+          `<code class="inline-code" style="${escapeAttr(styles.code)}">${escaped}</code>`
         break
       }
 

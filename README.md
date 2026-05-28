@@ -38,6 +38,12 @@ wxp preview --file article.md
 # 仅转换，输出到文件（脚本/自动化用）
 wxp convert --file article.md --theme tech --output preview.html
 
+# 使用外部主题文件转换
+wxp convert --file article.md --theme-file theme.json --output preview.html
+
+# 使用外部主题文件创建草稿
+wxp publish --file article.md --theme-file theme.json --cover cover.jpg
+
 # 查看可用主题
 wxp themes
 ```
@@ -65,6 +71,49 @@ wxp themes
 | `tech` | 技术文章，蓝色强调，深色代码块 |
 | `elegant` | 优雅深色，金色强调，衬线字体 |
 | `minimal` | 极简，内容优先 |
+
+### 外部主题文件
+
+外部主题文件用于为单篇文章定制排版样式。主题文件是 JSON 格式，包含主题 `name` 和各 Markdown 元素对应的 CSS 内联样式。
+
+最小完整示例：
+
+```json
+{
+  "name": "custom-article",
+  "description": "自定义公众号排版主题",
+  "styles": {
+    "wrapper": "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #222; line-height: 1.8;",
+    "h1": "font-size: 24px; font-weight: 700; margin: 24px 0 16px;",
+    "h2": "font-size: 20px; font-weight: 700; margin: 24px 0 12px;",
+    "h3": "font-size: 18px; font-weight: 700; margin: 20px 0 10px;",
+    "h4": "font-size: 16px; font-weight: 700; margin: 16px 0 8px;",
+    "p": "font-size: 16px; margin: 12px 0;",
+    "strong": "font-weight: 700;",
+    "em": "font-style: italic;",
+    "code": "font-family: Menlo, Consolas, monospace; background: #f5f5f5; padding: 2px 4px; border-radius: 3px;",
+    "pre": "background: #1f2937; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 6px;",
+    "preCode": "font-family: Menlo, Consolas, monospace; font-size: 14px;",
+    "blockquote": "border-left: 4px solid #d0d7de; padding-left: 12px; color: #57606a; margin: 16px 0;",
+    "ul": "padding-left: 24px; margin: 12px 0;",
+    "ol": "padding-left: 24px; margin: 12px 0;",
+    "li": "margin: 6px 0;",
+    "hr": "border: none; border-top: 1px solid #d0d7de; margin: 24px 0;",
+    "img": "max-width: 100%; display: block; margin: 16px auto;",
+    "a": "color: #0969da; text-decoration: none;",
+    "table": "width: 100%; border-collapse: collapse; margin: 16px 0;",
+    "th": "border: 1px solid #d0d7de; padding: 8px; font-weight: 700; background: #f6f8fa;",
+    "td": "border: 1px solid #d0d7de; padding: 8px;"
+  }
+}
+```
+
+使用前可以先校验主题文件，或输出 JSON Schema：
+
+```bash
+wxp theme validate --file theme.json
+wxp theme schema
+```
 
 ## 主题预览
 

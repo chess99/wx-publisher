@@ -8,7 +8,7 @@
 
 - Markdown 到 HTML 的排版转换在本地完成
 - `publish` 只创建草稿，不能直接发布
-- CLI 面向机器调用，成功和失败默认输出 JSON
+- 除 `convert` 未指定 `--output` 时直接输出 HTML 外，CLI 面向机器调用，成功和失败默认输出 JSON
 
 ## 使用前检查
 
@@ -37,6 +37,20 @@ wxp publish \
   --theme tech \
   --title "文章标题"
 ```
+
+### 使用外部主题文件
+
+```bash
+wxp theme validate --file /path/to/theme.json
+
+wxp publish \
+  --file /path/to/article.md \
+  --cover /path/to/cover.jpg \
+  --theme-file /path/to/theme.json \
+  --title "文章标题"
+```
+
+`--theme-file` accepts external Theme JSON; successful publish JSON has `data.theme` equal to the theme file `name`.
 
 封面图也可以使用公网 URL：
 

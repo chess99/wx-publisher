@@ -14,6 +14,12 @@ export interface ThemePreviewResult {
   theme: string
   html: string
   error?: string
+  publishCommand?: string
+}
+
+export function shellQuote(value: string): string {
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) return value
+  return `'${value.replace(/'/g, `'"'"'`)}'`
 }
 
 export function generatePreviewHtml(
@@ -46,7 +52,7 @@ export function generatePreviewHtml(
   const commandsJson = JSON.stringify(
     Object.fromEntries(results.filter(r => !r.error).map(r => [
       r.theme,
-      `wxp publish --file ${filePath} --theme ${r.theme}`,
+      r.publishCommand ?? `wxp publish --file ${shellQuote(filePath)} --theme ${shellQuote(r.theme)}`,
     ]))
   )
 
@@ -122,12 +128,17 @@ export function generatePreviewHtml(
   const COMMANDS = ${commandsJson};
   let activeTheme = ${JSON.stringify(firstTheme)};
 
+  function shellQuote(value) {
+    if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) return value;
+    return "'" + value.replace(/'/g, "'\"'\"'") + "'";
+  }
+
   function updateCommand() {
     const cover = document.getElementById('coverInput').value.trim();
     let cmd = COMMANDS[activeTheme] || '';
     if (cover) {
       const isUrl = cover.startsWith('http://') || cover.startsWith('https://');
-      cmd += isUrl ? ' --cover-url ' + cover : ' --cover ' + cover;
+      cmd += isUrl ? ' --cover-url ' + shellQuote(cover) : ' --cover ' + shellQuote(cover);
     }
     document.getElementById('cmdText').textContent = cmd;
   }
