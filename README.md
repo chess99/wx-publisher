@@ -32,6 +32,9 @@ wxp config set wechat_secret 你的AppSecret
 # 发布到草稿箱
 wxp publish --file article.md --cover cover.jpg
 
+# 打开本地 Studio：编辑、预览、复制并创建草稿
+wxp studio --file article.md
+
 # 在浏览器中预览所有主题效果（手动比较）
 wxp preview --file article.md
 
@@ -46,6 +49,25 @@ wxp publish --file article.md --theme-file theme.json --cover cover.jpg
 
 # 查看可用主题
 wxp themes
+```
+
+## Studio 本地工作台
+
+`wxp studio --file article.md` 会启动只监听 `127.0.0.1` 的本地网页工作台，并自动打开浏览器。
+
+Studio 支持：
+
+- 左侧编辑 Markdown，中间手机预览，右侧设置和发布面板
+- 切换内置主题，调整主题色、字号、字体和代码块风格
+- 复制微信富文本、复制 HTML、导出 HTML
+- 使用本地配置创建微信公众号草稿
+
+发布仍然在本机后端完成：AppSecret 不会发送给浏览器，也不会出现在页面状态接口里。Studio 只创建草稿，不会直接发布文章。
+
+可选参数：
+
+```bash
+wxp studio --file article.md --port 8787 --no-open
 ```
 
 ## 常见错误

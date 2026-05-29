@@ -26,6 +26,7 @@ import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
 import { formatCliError } from "./errors.js"
 import { resolveThemeOption } from "./theme-options.js"
 import { getThemeFileSchema, loadThemeFile } from "../converter/theme-file.js"
+import { createStudioServer } from "../studio/server.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -278,6 +279,44 @@ program
     ok({ themes, count: themes.length })
   })
 
+// ── studio：本地网页工作台 ───────────────────────────────────────────────────
+
+program
+  .command("studio")
+  .description("启动本地网页工作台，编辑、预览、复制并创建微信公众号草稿")
+  .requiredOption("-f, --file <path>", "Markdown 文件路径")
+  .option("-p, --port <number>", "本地监听端口（默认随机可用端口）")
+  .option("--no-open", "启动后不自动打开浏览器")
+  .action(async (opts) => {
+    try {
+      const parsedPort = opts.port === undefined ? 0 : Number.parseInt(opts.port, 10)
+      if (Number.isNaN(parsedPort) || parsedPort < 0 || parsedPort > 65535) {
+        throw new Error(`无效端口: ${opts.port}`)
+      }
+
+      const server = await createStudioServer({
+        articlePath: resolve(opts.file),
+        host: "127.0.0.1",
+        port: parsedPort,
+        openBrowser: opts.open !== false,
+      })
+
+      console.log(JSON.stringify({
+        success: true,
+        data: {
+          url: server.url,
+          file: resolve(opts.file),
+          host: server.host,
+          port: server.port,
+          message: "Studio 已启动。按 Ctrl+C 退出。",
+        },
+      }, null, 2))
+    } catch (e) {
+      console.error(JSON.stringify(formatCliError("启动 Studio 失败", String(e)), null, 2))
+      process.exit(1)
+    }
+  })
+
 // ── theme：外部主题文件工具 ───────────────────────────────────────────────────
 
 const themeCmd = program.command("theme").description("外部主题文件工具")
@@ -338,6 +377,11 @@ program
           description: "生成浏览器主题预览页",
           required_flags: ["--file"],
           optional_flags: ["--theme-file", "--output", "--no-open"],
+        },
+        studio: {
+          description: "启动本地网页工作台，支持编辑、预览、复制和创建微信公众号草稿",
+          required_flags: ["--file"],
+          optional_flags: ["--port", "--no-open"],
         },
         theme: {
           description: "外部主题文件工具",

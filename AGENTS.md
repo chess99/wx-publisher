@@ -38,6 +38,22 @@ wxp publish \
   --title "文章标题"
 ```
 
+### 本地 Studio 工作台
+
+```bash
+wxp studio --file /path/to/article.md
+```
+
+`studio` 会启动只监听 `127.0.0.1` 的本地网页工作台，适合人工编辑、主题微调、复制富文本和点击创建草稿。它不是无头自动化接口；脚本自动化仍优先使用 `convert`、`preview` 和 `publish`。
+
+可用于自动化启动但不打开浏览器：
+
+```bash
+wxp studio --file /path/to/article.md --port 8787 --no-open
+```
+
+成功启动时 stdout 输出 JSON，包含 `data.url`。进程会持续运行，调用方需要在不再使用时结束该进程。
+
 ### 使用外部主题文件
 
 ```bash
@@ -159,8 +175,12 @@ src/
 │   ├── themes.ts                   # 主题定义
 │   ├── preview-html.ts             # 浏览器预览页生成
 │   └── placeholder-cover.ts        # 内置占位封面图
+├── studio/
+│   ├── server.ts                    # 本地 Studio HTTP 服务
+│   └── theme-settings.ts            # Studio 主题派生
 ├── wechat/client.ts                # 微信 API 客户端
 ├── config/index.ts                 # 配置读写
+studio-app/                         # Vite + Vanilla TS Studio 前端
 test/                               # vitest 单元测试
 ```
 

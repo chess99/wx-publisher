@@ -7,8 +7,10 @@
     "wxp": "./dist/cli/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:studio && tsc",
+    "build:studio": "vite build studio-app --outDir ../dist/studio-app --emptyOutDir",
     "dev": "tsx src/cli/index.ts",
+    "dev:studio": "vite --host 127.0.0.1 studio-app",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -25,6 +27,7 @@
     "@types/node": "^20.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
+    "vite": "^8.0.14",
     "vitest": "^4.1.1"
   }
 }
