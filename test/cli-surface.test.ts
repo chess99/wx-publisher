@@ -33,6 +33,18 @@ describe("CLI surface", () => {
     expect(payload.data.commands).not.toHaveProperty("gen-cover")
   })
 
+  it("advertises advanced layout and local API capabilities", async () => {
+    const { stdout, exitCode } = await runCli(["capabilities"])
+    const payload = JSON.parse(stdout)
+
+    expect(exitCode).toBe(0)
+    expect(payload.data.features.advanced_layout).toBe(true)
+    expect(payload.data.features.gfm_alerts).toBe(true)
+    expect(payload.data.features.footnotes).toBe(true)
+    expect(payload.data.commands.serve.endpoints).toContain("POST /api/v1/convert")
+    expect(payload.data.themes).toContain("studio")
+  })
+
   it("config get does not expose image generation config", async () => {
     const { stdout, exitCode } = await runCli(["config", "get"])
     const payload = JSON.parse(stdout)
