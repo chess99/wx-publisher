@@ -23,6 +23,18 @@ PART 01 | Opening | Explain the point | accent
 Reuse | 34 modules | Works across themes | accent
 :::
 
+:::steps[Steps]
+01 | Start | Put the conclusion first | Good for process summaries
+:::
+
+:::compare[Compare]
+Before | Long explanations | After | Structured modules | accent
+:::
+
+:::timeline[Timeline]
+2024 | Prototype | First local renderer
+:::
+
 :::infographic
 eyebrow: Graphic
 title: Make|one point|visible
@@ -35,6 +47,25 @@ note: Good for transitions
 title: Fit
 fit: Long-form writers | Product teams
 avoid: Short updates
+:::
+
+:::bridge
+label: Next
+title: Evidence should follow judgment
+body: The next section carries proof.
+next: Continue
+:::
+
+:::manifesto
+label: Belief
+title: Structure before decoration
+body: Good layout clarifies meaning.
+believe: Structure first | Text is the lead
+against: Random templates | Visual noise
+:::
+
+:::myth-fact[Myth Fact]
+More modules means better | Only useful modules should remain
 :::
 
 :::verdict
@@ -179,6 +210,56 @@ title: Start with advanced modules.
 note: BUILD WITH STRUCTURE
 :::
 
+:::callout[Callout]
+Tip | Keep it focused | One module should solve one reading task
+:::
+
+:::changelog
+title: Update log
+version: v2
+date: 2026.05
+Added: More modules
+Fixed: Stable rendering
+:::
+
+:::comparison-table
+columns: Item | Before | After
+Speed | Slow | Fast
+Clarity | Low | High
+:::
+
+:::definition
+label: Definition
+term: Advanced layout
+body: A structured expression layer.
+note: Used for narrow-screen reading.
+:::
+
+:::question
+title: Why use modules?
+body: To make judgment and evidence easier to scan.
+:::
+
+:::quote-card
+quote: Structure is a reading promise.
+source: wx-publisher
+:::
+
+:::resource-list[Resources]
+Docs | Advanced layout guide | Syntax and examples | https://example.com
+:::
+
+:::stat-row
+Modules | 43 | Public set
+Themes | 40 | Professional set
+:::
+
+:::tweet
+author: Product Notes
+handle: @wxp
+body: A good article should be readable before it is decorative.
+:::
+
 :::gallery[Gallery]
 ![A](${IMAGE_URL})
 :::
@@ -223,12 +304,14 @@ describe("advanced layout conversion", () => {
     const result = await convertMarkdown(SAMPLE_MODULES, { theme: "studio", stripLinks: false })
 
     const modules = [
-      "hero", "cards", "metrics", "infographic", "audience-fit", "verdict",
-      "people", "cases", "pricing", "faq", "logos", "part", "label-title",
-      "quote", "image-text", "image-compare", "image-annotate", "toc",
-      "checklist", "toolbox", "specs", "image-steps", "notice", "dialogue",
-      "summary", "author-card", "series", "subscribe", "cta", "gallery",
-      "longimage",
+      "hero", "cards", "metrics", "steps", "compare", "timeline",
+      "infographic", "audience-fit", "bridge", "manifesto", "myth-fact",
+      "verdict", "people", "cases", "pricing", "faq", "logos", "part",
+      "label-title", "quote", "image-text", "image-compare", "image-annotate",
+      "toc", "checklist", "toolbox", "specs", "image-steps", "notice",
+      "dialogue", "summary", "author-card", "series", "subscribe", "cta",
+      "callout", "changelog", "comparison-table", "definition", "question",
+      "quote-card", "resource-list", "stat-row", "tweet", "gallery", "longimage",
     ]
 
     for (const module of modules) {
@@ -239,13 +322,13 @@ describe("advanced layout conversion", () => {
     expect(result.externalImages).toContain(IMAGE_URL)
   })
 
-  it("renders documented advanced layout aliases", async () => {
+  it("renders formerly aliased modules as first-class modules", async () => {
     const result = await convertMarkdown(`:::steps[Steps]\n01 | Do it | Follow the path | ${IMAGE_URL} | Note\n:::\n\n:::compare\nleft_title: Old\nleft_image: ${IMAGE_URL}\nright_title: New\nright_image: ${IMAGE_URL}\n:::\n\n:::bridge\ntitle: Bridge title\nbody: Connect sections.\n:::\n\n:::manifesto\ntitle: Believe this\nbody: A memorable position.\n:::`, { theme: "studio" })
 
-    expect(result.html).toContain('data-mpa-action-id="image-steps"')
-    expect(result.html).toContain('data-mpa-action-id="image-compare"')
-    expect(result.html).toContain('data-mpa-action-id="summary"')
-    expect(result.html).toContain('data-mpa-action-id="quote"')
+    expect(result.html).toContain('data-mpa-action-id="steps"')
+    expect(result.html).toContain('data-mpa-action-id="compare"')
+    expect(result.html).toContain('data-mpa-action-id="bridge"')
+    expect(result.html).toContain('data-mpa-action-id="manifesto"')
   })
 
   it("renders GFM alerts and styled footnotes", async () => {

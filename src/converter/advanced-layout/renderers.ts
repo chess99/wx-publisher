@@ -32,8 +32,14 @@ export function renderAdvancedModule(module: AdvancedModule, p: AdvancedPalette)
     case "hero": return renderHero(module, p)
     case "cards": return renderCards(module, p)
     case "metrics": return renderMetrics(module, p)
+    case "steps": return renderSteps(module, p)
+    case "compare": return renderCompare(module, p)
+    case "timeline": return renderTimeline(module, p)
     case "infographic": return renderInfographic(module, p)
     case "audience-fit": return renderAudienceFit(module, p)
+    case "bridge": return renderBridge(module, p)
+    case "manifesto": return renderManifesto(module, p)
+    case "myth-fact": return renderMythFact(module, p)
     case "verdict": return renderVerdict(module, p)
     case "people": return renderPeople(module, p)
     case "cases": return renderCases(module, p)
@@ -58,6 +64,15 @@ export function renderAdvancedModule(module: AdvancedModule, p: AdvancedPalette)
     case "series": return renderSeries(module, p)
     case "subscribe": return renderSubscribe(module, p)
     case "cta": return renderCta(module, p)
+    case "callout": return renderCallout(module, p)
+    case "changelog": return renderChangelog(module, p)
+    case "comparison-table": return renderComparisonTable(module, p)
+    case "definition": return renderDefinition(module, p)
+    case "question": return renderQuestion(module, p)
+    case "quote-card": return renderQuoteCard(module, p)
+    case "resource-list": return renderResourceList(module, p)
+    case "stat-row": return renderStatRow(module, p)
+    case "tweet": return renderTweet(module, p)
     case "gallery": return renderGallery(module, p)
     case "longimage": return renderLongImage(module, p)
     default: return ""
@@ -103,6 +118,28 @@ function renderMetrics(module: AdvancedModule, p: AdvancedPalette): string {
   }).join(""))
 }
 
+function renderSteps(module: AdvancedModule, p: AdvancedPalette): string {
+  return stackedRows("steps", module.title, p, module.rows.map(row => {
+    const [index, title, body, note] = row
+    return `<section style="display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid ${p.mutedBorder};"><p style="margin:0;width:34px;height:34px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};color:${p.accentDark};font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${esc(index)}</p><section style="flex:1 1 0%;min-width:0;"><p style="margin:0 0 4px;font-size:17px;font-weight:850;color:${p.text};line-height:1.5;">${esc(title)}</p>${paragraph(body ?? "", p, `color:${p.textStrong};`)}${note ? `<p style="margin:6px 0 0;font-size:13px;color:${p.muted};line-height:1.55;">${esc(note)}</p>` : ""}</section></section>`
+  }).join("")) 
+}
+
+function renderCompare(module: AdvancedModule, p: AdvancedPalette): string {
+  return titledGrid("compare", module.title, p, module.rows.map(row => {
+    const [leftTitle, leftBody, rightTitle, rightBody, variant] = row
+    const accent = variant === "accent"
+    return `<section style="${cardStyle(p, accent)}display:grid;grid-template-columns:1fr;gap:10px;"><section style="padding:11px 12px;border-radius:10px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};"><p style="margin:0 0 4px;font-size:13px;font-weight:800;color:${p.muted};letter-spacing:0.8px;">${esc(leftTitle)}</p><p style="margin:0;font-size:15px;color:${p.text};line-height:1.65;">${esc(leftBody)}</p></section><section style="padding:11px 12px;border-radius:10px;background:${p.accentSoft};border:1px solid ${p.border};"><p style="margin:0 0 4px;font-size:13px;font-weight:800;color:${p.accentDark};letter-spacing:0.8px;">${esc(rightTitle)}</p><p style="margin:0;font-size:15px;color:${p.text};line-height:1.65;">${esc(rightBody)}</p></section></section>`
+  }).join(""))
+}
+
+function renderTimeline(module: AdvancedModule, p: AdvancedPalette): string {
+  return stackedRows("timeline", module.title, p, module.rows.map(row => {
+    const [time, title, body] = row
+    return `<section style="display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:start;padding:0 0 14px;border-bottom:1px solid ${p.mutedBorder};"><p style="margin:0;font-size:13px;font-weight:900;color:${p.accentDark};letter-spacing:0.6px;">${esc(time)}</p><section style="position:relative;padding-left:14px;border-left:2px solid ${p.border};"><span style="position:absolute;left:-5px;top:0;width:8px;height:8px;border-radius:999px;background:${p.accentDark};"></span><p style="margin:0 0 4px;font-size:17px;font-weight:850;color:${p.text};line-height:1.45;">${esc(title)}</p>${paragraph(body ?? "", p, `color:${p.muted};`)}</section></section>`
+  }).join(""))
+}
+
 function renderInfographic(module: AdvancedModule, p: AdvancedPalette): string {
   const f = module.fields
   const [a, b, c] = (f.title ?? "").split("|")
@@ -122,6 +159,20 @@ function renderAudienceFit(module: AdvancedModule, p: AdvancedPalette): string {
   return `<section data-mpa-action-id="audience-fit" style="margin:0 0 30px;padding:18px;background:linear-gradient(180deg, ${p.surface} 0%, ${p.surfaceAlt} 100%);border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};">
 <p style="margin:0 0 14px;font-size:17px;font-weight:900;color:${p.text};line-height:1.42;">${esc(f.title)}</p>
 <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">${fitBox("适合", splitList(f.fit), true, p)}${fitBox("不适合", splitList(f.avoid), false, p)}</section></section>`
+}
+
+function renderBridge(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  return `<section data-mpa-action-id="bridge" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;gap:10px;margin:0 0 10px;">${label(f.label ?? "继续阅读", p, `border:1px solid ${p.border};`)}<span style="height:1px;flex:1 1 0%;background:${p.mutedBorder};"></span></section><p style="margin:0;font-size:18px;font-weight:900;color:${p.text};line-height:1.45;">${esc(f.title)}</p>${paragraph(f.body ?? "", p, "margin:8px 0 0;")}${f.next ? `<p style="margin:12px 0 0;padding:10px 12px;border-radius:10px;background:${p.accentSoft};border:1px solid ${p.border};color:${p.accentDark};font-size:14px;font-weight:850;line-height:1.55;">${esc(f.next)}</p>` : ""}</section>`
+}
+
+function renderManifesto(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  return `<section data-mpa-action-id="manifesto" style="margin:0 0 32px;padding:20px 18px;background:linear-gradient(135deg, ${p.accentSoft} 0%, ${p.surface} 58%, ${p.surfaceAlt} 100%);border:1px solid ${p.border};border-radius:16px;box-shadow:${p.shadow};">${label(f.label ?? "", p, `margin:0 0 10px;background:${p.surface};`)}<p style="margin:0;font-size:20px;font-weight:950;color:${p.text};line-height:1.35;">${esc(f.title)}</p>${paragraph(f.body ?? "", p, "margin:10px 0 0;")}<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:16px 0 0;">${manifestoList("相信", splitList(f.believe), true, p)}${manifestoList("反对", splitList(f.against), false, p)}</section>${f.note ? `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${p.mutedBorder};font-size:13px;color:${p.muted};line-height:1.55;">${esc(f.note)}</p>` : ""}</section>`
+}
+
+function renderMythFact(module: AdvancedModule, p: AdvancedPalette): string {
+  return stackedRows("myth-fact", module.title, p, module.rows.map(row => `<section style="display:grid;grid-template-columns:1fr;gap:8px;padding:12px 0;border-bottom:1px solid ${p.mutedBorder};"><section style="padding:10px 12px;border-radius:10px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};"><p style="margin:0 0 3px;font-size:13px;font-weight:900;color:${p.muted};">误区</p><p style="margin:0;font-size:15px;color:${p.text};line-height:1.65;">${esc(row[0])}</p></section><section style="padding:10px 12px;border-radius:10px;background:${p.accentSoft};border:1px solid ${p.border};"><p style="margin:0 0 3px;font-size:13px;font-weight:900;color:${p.accentDark};">事实</p><p style="margin:0;font-size:15px;color:${p.text};line-height:1.65;">${esc(row[1])}</p></section></section>`).join(""))
 }
 
 function renderVerdict(module: AdvancedModule, p: AdvancedPalette): string {
@@ -260,6 +311,51 @@ function renderCta(module: AdvancedModule, p: AdvancedPalette): string {
   return `<section data-mpa-action-id="cta" style="background:linear-gradient(135deg, ${p.accentSoft} 0%, ${p.surface} 44%, ${p.surfaceAlt} 100%);border:1px solid ${p.border};border-radius:16px;padding:18px 18px 16px;text-align:left;box-shadow:${p.shadow};margin:0 0 24px;"><p style="font-size:17px;font-weight:800;color:${p.text};margin:0 0 14px;line-height:1.45;">${esc(f.title)}</p><section style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px;">${["保存灵感", "直接套用", "继续体验"].map((text, i) => `<section style="text-align:center;color:${i === 2 ? "#ffffff" : p.text};min-width:0;background:${i === 2 ? `linear-gradient(135deg, ${p.accentDark}, ${p.accentDark})` : p.surfaceAlt};border:1px solid ${i === 2 ? p.border : p.mutedBorder};border-radius:12px;padding:12px 8px;${i === 2 ? `box-shadow:${p.accentShadow};` : ""}"><span style="font-size:13px;font-weight:700;">${text}</span></section>`).join("")}</section>${f.note ? `<p style="font-size:13px;color:${p.muted};letter-spacing:0.8px;margin:0;padding-top:12px;border-top:1px solid ${p.mutedBorder};text-transform:uppercase;">${esc(f.note)}</p>` : ""}</section>`
 }
 
+function renderCallout(module: AdvancedModule, p: AdvancedPalette): string {
+  const rows = module.rows.length ? module.rows : [[module.fields.type ?? "提示", module.fields.title ?? "", module.fields.body ?? module.body]]
+  return stackedRows("callout", module.title, p, rows.map(row => `<section style="padding:14px 16px;background:${p.accentSoft};border:1px solid ${p.border};border-left:4px solid ${p.accentDark};border-radius:12px;box-shadow:${p.shadow};"><p style="margin:0 0 5px;font-size:13px;font-weight:900;color:${p.accentDark};letter-spacing:0.8px;">${esc(row[0])}</p><p style="margin:0 0 4px;font-size:17px;font-weight:850;color:${p.text};line-height:1.45;">${esc(row[1])}</p><p style="margin:0;font-size:15px;color:${p.text};line-height:1.7;">${esc(row[2])}</p></section>`).join(""))
+}
+
+function renderChangelog(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  const rows = module.rows.length ? module.rows : Object.entries(f).filter(([key]) => !["title", "version", "date"].includes(key)).map(([key, value]) => [key, value])
+  return `<section data-mpa-action-id="changelog" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;flex-wrap:wrap;"><p style="margin:0;font-size:18px;font-weight:900;color:${p.text};line-height:1.35;">${esc(f.title ?? module.title)}</p><span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};color:${p.accentDark};font-size:13px;font-weight:850;">${esc([f.version, f.date].filter(Boolean).join(" · "))}</span></section><section style="display:flex;flex-direction:column;gap:10px;">${rows.map(row => `<section style="display:flex;align-items:flex-start;gap:10px;padding-bottom:10px;border-bottom:1px solid ${p.mutedBorder};"><span style="margin-top:0.58em;width:7px;height:7px;border-radius:999px;background:${p.accentDark};flex-shrink:0;"></span><section><p style="margin:0 0 2px;font-size:15px;font-weight:850;color:${p.text};line-height:1.55;">${esc(row[0])}</p><p style="margin:0;font-size:15px;color:${p.muted};line-height:1.6;">${esc(row[1])}</p></section></section>`).join("")}</section></section>`
+}
+
+function renderComparisonTable(module: AdvancedModule, p: AdvancedPalette): string {
+  const headers = splitList(module.fields.columns || module.fields.headers || "项目 | 方案 A | 方案 B")
+  return `<section data-mpa-action-id="comparison-table" style="margin:0 0 30px;">${sectionTitle(module.fields.title ?? module.title, p)}<section style="overflow-x:auto;border:1px solid ${p.mutedBorder};border-radius:12px;background:${p.surface};box-shadow:${p.shadow};"><table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr>${headers.map(head => `<th style="padding:10px 12px;background:${p.accentSoft};border-bottom:1px solid ${p.border};color:${p.accentDark};font-weight:900;text-align:left;">${esc(head)}</th>`).join("")}</tr></thead><tbody>${module.rows.map(row => `<tr>${headers.map((_, i) => `<td style="padding:10px 12px;border-bottom:1px solid ${p.mutedBorder};color:${i === 0 ? p.text : p.muted};font-weight:${i === 0 ? "800" : "500"};line-height:1.55;">${esc(row[i])}</td>`).join("")}</tr>`).join("")}</tbody></table></section></section>`
+}
+
+function renderDefinition(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  return `<section data-mpa-action-id="definition" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};">${label(f.label ?? "定义", p, `margin:0 0 10px;`)}<p style="margin:0;font-size:22px;font-weight:950;color:${p.text};line-height:1.25;">${esc(f.term ?? f.title ?? module.title)}</p>${paragraph(f.body ?? f.definition ?? module.body, p, "margin:10px 0 0;")} ${f.note ? `<p style="margin:12px 0 0;padding:10px 12px;border-radius:10px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};font-size:13px;color:${p.muted};line-height:1.55;">${esc(f.note)}</p>` : ""}</section>`
+}
+
+function renderQuestion(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  return `<section data-mpa-action-id="question" style="margin:0 0 30px;padding:18px;background:linear-gradient(180deg, ${p.surface} 0%, ${p.surfaceAlt} 100%);border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><p style="margin:0 0 8px;font-size:13px;font-weight:900;color:${p.accentDark};letter-spacing:1px;">QUESTION</p><p style="margin:0;font-size:20px;font-weight:950;color:${p.text};line-height:1.42;">${esc(f.title ?? f.question ?? module.title)}</p>${paragraph(f.body ?? f.answer ?? module.body, p, "margin:10px 0 0;")}</section>`
+}
+
+function renderQuoteCard(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  return `<section data-mpa-action-id="quote-card" style="margin:0 0 30px;padding:20px;background:linear-gradient(135deg, ${p.accentSoft} 0%, ${p.surface} 62%, ${p.surfaceAlt} 100%);border:1px solid ${p.border};border-radius:16px;box-shadow:${p.shadow};"><p style="margin:0 0 12px;font-size:36px;line-height:0.8;color:${p.accentDark};font-weight:900;">“</p><p style="margin:0;font-size:20px;font-weight:900;color:${p.text};line-height:1.65;">${esc(f.quote ?? f.title ?? module.body)}</p>${f.source ? `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${p.mutedBorder};font-size:13px;font-weight:850;color:${p.muted};">-- ${esc(f.source)}</p>` : ""}</section>`
+}
+
+function renderResourceList(module: AdvancedModule, p: AdvancedPalette): string {
+  const rows = module.rows.length ? module.rows : splitList(module.fields.items).map(item => item.split(",").map(part => part.trim()))
+  return stackedRows("resource-list", module.fields.title ?? module.title, p, rows.map(row => `<section style="padding:14px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:12px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 5px;"><p style="margin:0;font-size:13px;font-weight:850;color:${p.accentDark};background:${p.accentSoft};padding:2px 8px;border-radius:999px;">${esc(row[0])}</p>${row[3] ? `<a href="${attr(safeUrl(row[3]))}" style="font-size:13px;color:${p.muted};text-decoration:none;">↗</a>` : ""}</section><p style="margin:0 0 3px;font-size:17px;font-weight:850;color:${p.text};line-height:1.45;">${esc(row[1])}</p><p style="margin:0;font-size:15px;color:${p.muted};line-height:1.6;">${esc(row[2])}</p></section>`).join(""))
+}
+
+function renderStatRow(module: AdvancedModule, p: AdvancedPalette): string {
+  return `<section data-mpa-action-id="stat-row" style="margin:0 0 30px;padding:14px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;">${module.rows.map(row => `<section style="text-align:center;padding:12px 8px;border-radius:12px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};"><p style="margin:0 0 5px;font-size:22px;font-weight:950;color:${p.accentDark};line-height:1;">${esc(row[1] ?? row[0])}</p><p style="margin:0;font-size:13px;font-weight:800;color:${p.muted};line-height:1.35;">${esc(row[0])}</p>${row[2] ? `<p style="margin:5px 0 0;font-size:12px;color:${p.muted};line-height:1.45;">${esc(row[2])}</p>` : ""}</section>`).join("")}</section></section>`
+}
+
+function renderTweet(module: AdvancedModule, p: AdvancedPalette): string {
+  const f = module.fields
+  return `<section data-mpa-action-id="tweet" style="margin:0 0 30px;padding:16px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;gap:10px;margin:0 0 12px;"><span style="width:36px;height:36px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};display:flex;align-items:center;justify-content:center;color:${p.accentDark};font-weight:900;">${esc((f.author ?? f.name ?? "T").slice(0, 1))}</span><section><p style="margin:0;font-size:15px;font-weight:900;color:${p.text};">${esc(f.author ?? f.name ?? "观点摘录")}</p><p style="margin:0;font-size:12px;color:${p.muted};">${esc(f.handle ?? f.meta ?? "")}</p></section></section><p style="margin:0;font-size:16px;color:${p.text};line-height:1.75;">${esc(f.body ?? f.text ?? module.body)}</p>${f.note ? `<p style="margin:12px 0 0;padding-top:10px;border-top:1px solid ${p.mutedBorder};font-size:13px;color:${p.muted};">${esc(f.note)}</p>` : ""}</section>`
+}
+
 function renderGallery(module: AdvancedModule, p: AdvancedPalette): string {
   const images = parseMarkdownImages(module.body)
   return `<section data-mpa-action-id="gallery" style="margin:0 0 30px;">${label(module.title, p, "margin:0 0 12px;")}<section style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;-webkit-overflow-scrolling:touch;">${images.map(img => `<section style="flex:0 0 78%;border-radius:12px;overflow:hidden;border:1px solid ${p.mutedBorder};background:${p.surfaceAlt};box-shadow:${p.shadow};">${imageTag(img.src, img.alt, "width:100% !important;height:auto !important;display:block;")}</section>`).join("")}</section></section>`
@@ -284,6 +380,10 @@ function keyValueRows(id: string, title: string, rows: string[][], p: AdvancedPa
 
 function fitBox(title: string, items: string[], accent: boolean, p: AdvancedPalette): string {
   return `<section style="padding:13px;border-radius:12px;background:${accent ? p.accentSoft : p.surface};border:1px solid ${accent ? p.border : p.mutedBorder};"><p style="display:inline-block;margin:0 0 9px;padding:3px 9px;border-radius:999px;background:${accent ? p.surface : p.surfaceAlt};border:1px solid ${accent ? p.border : p.mutedBorder};color:${accent ? p.accentDark : p.muted};font-size:13px;font-weight:900;line-height:1.4;">${title}</p>${items.map(item => `<section style="display:flex;align-items:flex-start;gap:8px;margin:0 0 7px;font-size:15px;font-weight:750;color:${p.text};line-height:1.65;"><span style="margin-top:0.62em;display:inline-block;width:6px;height:6px;border-radius:999px;background:${accent ? p.accentDark : p.muted};opacity:${accent ? "1" : "0.58"};flex-shrink:0;"></span><p style="margin:0;">${esc(item)}</p></section>`).join("")}</section>`
+}
+
+function manifestoList(title: string, items: string[], accent: boolean, p: AdvancedPalette): string {
+  return `<section style="padding:12px;border-radius:12px;background:${accent ? p.surface : p.surfaceAlt};border:1px solid ${accent ? p.border : p.mutedBorder};"><p style="margin:0 0 8px;font-size:13px;font-weight:900;color:${accent ? p.accentDark : p.muted};letter-spacing:0.8px;">${title}</p>${items.map(item => `<p style="margin:0 0 6px;font-size:15px;color:${p.text};line-height:1.58;">${esc(item)}</p>`).join("")}</section>`
 }
 
 function chip(text: string, p: AdvancedPalette, accent = false): string {

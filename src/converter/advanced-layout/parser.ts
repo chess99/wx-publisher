@@ -18,19 +18,20 @@ export interface ParseAdvancedLayoutResult {
   modules: AdvancedModule[]
 }
 
-export const MODULE_ALIASES: Record<string, string> = {
-  steps: "image-steps",
-  compare: "image-compare",
-  bridge: "summary",
-  manifesto: "quote",
-}
+export const MODULE_ALIASES: Record<string, string> = {}
 
 export const SUPPORTED_ADVANCED_MODULES = new Set([
   "hero",
   "cards",
   "metrics",
+  "steps",
+  "compare",
+  "timeline",
   "infographic",
   "audience-fit",
+  "bridge",
+  "manifesto",
+  "myth-fact",
   "verdict",
   "people",
   "cases",
@@ -55,6 +56,15 @@ export const SUPPORTED_ADVANCED_MODULES = new Set([
   "series",
   "subscribe",
   "cta",
+  "callout",
+  "changelog",
+  "comparison-table",
+  "definition",
+  "question",
+  "quote-card",
+  "resource-list",
+  "stat-row",
+  "tweet",
   "gallery",
   "longimage",
   ...Object.keys(MODULE_ALIASES),
