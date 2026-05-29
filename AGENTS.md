@@ -191,6 +191,12 @@ API IP 白名单路径：微信开发者平台 → 我的业务与服务 → 公
 | `elegant` | 深度内容，金色强调，衬线字体 |
 | `minimal` | 内容优先，无装饰，简洁 |
 | `studio` | 暖橙作品风，高级模块和品牌化长文 |
+| `minimal-*` | 专业极简系列，如 `minimal-blue` |
+| `focus-*` | 专业居中强调系列，如 `focus-green` |
+| `elegant-*` | 专业层次系列，如 `elegant-gold` |
+| `bold-*` | 专业强视觉系列，如 `bold-red` |
+| `sspai-red` / `wechat-native` | 精选主题 |
+| `studio` | 暖橙作品风，高级模块和品牌化长文 |
 
 查看主题：
 
@@ -217,11 +223,11 @@ PART 02 | 证据模块 | 用数据、对比、步骤支撑结论 | default
 :::
 ```
 
-常用模块：
+公开高级模块共 43 个：
 
-`hero`, `cards`, `metrics`, `toc`, `image-steps`, `notice`, `checklist`, `summary`, `author-card`, `subscribe`, `cta`。
+`hero`, `cards`, `metrics`, `steps`, `compare`, `timeline`, `infographic`, `audience-fit`, `bridge`, `manifesto`, `myth-fact`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `callout`, `changelog`, `comparison-table`, `definition`, `question`, `quote-card`, `resource-list`, `stat-row`, `tweet`。
 
-兼容别名：`steps`、`compare`、`bridge`、`manifesto`。
+增强模块：`dialogue`, `gallery`, `longimage`。
 
 也支持 GFM 提示框和脚注：
 

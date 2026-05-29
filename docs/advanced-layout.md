@@ -86,16 +86,23 @@ field: value
 
 ## 模块目录
 
+当前公开高级模块共 43 个。另有 3 个增强模块：`dialogue`, `gallery`, `longimage`。
+
 ### 开场与判断
 
 | 模块 | 类型 | 字段 |
 | --- | --- | --- |
 | `hero` | 字段型 | `eyebrow`, `meta`, `kicker`, `title`, `subtitle`, `image`, `brand`, `tags` |
-| `infographic` | 字段型 | `type`, `eyebrow`, `title`, `subtitle`, `quote`, `note` |
-| `audience-fit` | 字段型 | `title`, `fit`, `avoid` |
-| `verdict` | 字段型 | `eyebrow`, `title`, `body` |
+| `cards` | 行型 | 标签, 标题, 正文, 样式 |
+| `toc` | 行型 | 序号, 标题, 说明 |
 | `part` | 字段型 | `index`, `title`, `subtitle` |
 | `label-title` | 字段型 | `label`, `title` |
+| `infographic` | 字段型 | `type`, `eyebrow`, `title`, `subtitle`, `quote`, `note` |
+| `audience-fit` | 字段型 | `title`, `fit`, `avoid` |
+| `bridge` | 字段型 | `label`, `title`, `body`, `next` |
+| `manifesto` | 字段型 | `label`, `title`, `body`, `believe`, `against`, `note` |
+| `myth-fact` | 行型 | 误区, 事实 |
+| `verdict` | 字段型 | `eyebrow`, `title`, `body` |
 | `quote` | 字段型 | `eyebrow`, `quote`, `source`, `note` |
 
 示例：
@@ -118,18 +125,22 @@ title: 让|一句判断|先被读者看到
 
 | 模块 | 行字段顺序 |
 | --- | --- |
-| `cards` | 标签, 标题, 正文, 样式 |
 | `metrics` | 标签, 数值, 说明, 样式 |
+| `steps` | 序号, 标题, 说明, 备注 |
+| `compare` | 左标题, 左说明, 右标题, 右说明, 样式 |
+| `timeline` | 时间, 标题, 说明 |
 | `people` | 姓名, 角色, 说明, 样式 |
 | `cases` | 案例名, 指标, 说明, 样式 |
 | `pricing` | 方案名, 价格, 斜杠分隔的权益, 样式 |
 | `faq` | 问题, 回答 |
 | `logos` | 名称, 说明 |
-| `toc` | 序号, 标题, 说明 |
 | `checklist` | 状态, 标题, 说明 |
 | `toolbox` | 标签, 标题, 说明, 链接 |
 | `specs` | 标签, 值, 说明 |
 | `notice` | 标签, 值, 说明 |
+| `callout` | 类型, 标题, 说明 |
+| `resource-list` | 类型, 标题, 说明, 链接 |
+| `stat-row` | 标签, 数值, 说明 |
 
 样式列支持 `accent` 和 `default`。`checklist` 的状态支持 `done`、`pending`、`warn`。
 
@@ -174,6 +185,12 @@ point: 02 | 74 | 36 | 指标区 | 适合讲关键数字、结果和变化
 | 模块 | 类型 | 字段 |
 | --- | --- | --- |
 | `summary` | 字段型 | `eyebrow`, `highlight`, `body` |
+| `changelog` | 字段型/行型 | `title`, `version`, `date`；或每行 变更类型, 说明 |
+| `comparison-table` | 字段型/行型 | `columns`；每行对应表格单元格 |
+| `definition` | 字段型 | `label`, `term`, `body`, `note` |
+| `question` | 字段型 | `title`, `body` |
+| `quote-card` | 字段型 | `quote`, `source` |
+| `tweet` | 字段型 | `author`, `handle`, `body`, `note` |
 | `author-card` | 字段型 | `name`, `role`, `bio`, `tags`, `note`, `link` |
 | `series` | 字段型 | `name`, `issue`, `title`, `desc`, `tags`, `next` |
 | `subscribe` | 字段型 | `label`, `title`, `subtitle`, `primary`, `secondary`, `note` |
@@ -191,16 +208,22 @@ AI：不复杂，一行一个角色和内容即可。
 :::
 ```
 
-## 兼容别名
+## 主题矩阵
 
-| 别名 | 实际渲染 |
-| --- | --- |
-| `steps` | `image-steps` |
-| `compare` | `image-compare` |
-| `bridge` | `summary` |
-| `manifesto` | `quote` |
+内置主题包含兼容主题和专业主题矩阵。
 
-新文章建议使用正式模块名。
+兼容主题：
+
+`default`, `tech`, `elegant`, `minimal`, `warm-tech`, `studio`
+
+专业主题系列：
+
+- Basic：`default`, `bytedance`, `apple`, `sports`, `chinese`, `cyber`
+- Minimal：`minimal-gold`, `minimal-green`, `minimal-blue`, `minimal-orange`, `minimal-red`, `minimal-navy`, `minimal-gray`, `minimal-sky`
+- Focus：`focus-gold`, `focus-green`, `focus-blue`, `focus-orange`, `focus-red`, `focus-navy`, `focus-gray`, `focus-sky`
+- Elegant：`elegant-gold`, `elegant-green`, `elegant-blue`, `elegant-orange`, `elegant-red`, `elegant-navy`, `elegant-gray`, `elegant-sky`
+- Bold：`bold-gold`, `bold-green`, `bold-blue`, `bold-orange`, `bold-red`, `bold-navy`, `bold-gray`, `bold-sky`
+- Featured：`sspai-red`, `wechat-native`
 
 ## GFM 提示框与脚注
 

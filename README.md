@@ -93,13 +93,11 @@ wxp studio --file article.md --port 8787 --no-open
 
 ## 主题
 
-| 主题 | 说明 |
-|------|------|
-| `default` | 微信经典风，绿色强调 |
-| `tech` | 技术文章，蓝色强调，深色代码块 |
-| `elegant` | 优雅深色，金色强调，衬线字体 |
-| `minimal` | 极简，内容优先 |
-| `studio` | 暖橙作品风，适合高级模块和品牌化长文 |
+内置主题分为兼容主题和专业主题矩阵：
+
+- 兼容主题：`default`, `tech`, `elegant`, `minimal`, `warm-tech`, `studio`
+- 专业主题：40 个主题 ID，覆盖 `basic`, `minimal`, `focus`, `elegant`, `bold`, `featured` 系列
+- 系列主题示例：`minimal-blue`, `focus-green`, `elegant-gold`, `bold-red`, `sspai-red`, `wechat-native`
 
 ## 高级排版模块
 
@@ -123,11 +121,11 @@ PART 02 | 证据模块 | 用数据、对比、步骤支撑结论 | default
 :::
 ```
 
-首版已覆盖的模块包括：
+已覆盖 43 个公开高级模块：
 
-`hero`, `cards`, `metrics`, `infographic`, `audience-fit`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `dialogue`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `gallery`, `longimage`。
+`hero`, `cards`, `metrics`, `steps`, `compare`, `timeline`, `infographic`, `audience-fit`, `bridge`, `manifesto`, `myth-fact`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `callout`, `changelog`, `comparison-table`, `definition`, `question`, `quote-card`, `resource-list`, `stat-row`, `tweet`。
 
-兼容别名：`steps` → `image-steps`，`compare` → `image-compare`，`bridge` → `summary`，`manifesto` → `quote`。字段必须使用英文冒号 `:`，行型模块使用 `|` 分隔列。
+增强模块：`dialogue`, `gallery`, `longimage`。字段必须使用英文冒号 `:`，行型模块使用 `|` 分隔列。
 
 同时支持 GitHub 风格提示框和脚注：
 

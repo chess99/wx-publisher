@@ -20,7 +20,7 @@ export interface ParseAdvancedLayoutResult {
 
 export const MODULE_ALIASES: Record<string, string> = {}
 
-export const SUPPORTED_ADVANCED_MODULES = new Set([
+export const PUBLIC_ADVANCED_MODULES = [
   "hero",
   "cards",
   "metrics",
@@ -50,7 +50,6 @@ export const SUPPORTED_ADVANCED_MODULES = new Set([
   "specs",
   "image-steps",
   "notice",
-  "dialogue",
   "summary",
   "author-card",
   "series",
@@ -65,8 +64,17 @@ export const SUPPORTED_ADVANCED_MODULES = new Set([
   "resource-list",
   "stat-row",
   "tweet",
+]
+
+export const ENHANCED_ADVANCED_MODULES = [
   "gallery",
   "longimage",
+  "dialogue",
+]
+
+export const SUPPORTED_ADVANCED_MODULES = new Set([
+  ...PUBLIC_ADVANCED_MODULES,
+  ...ENHANCED_ADVANCED_MODULES,
   ...Object.keys(MODULE_ALIASES),
 ])
 

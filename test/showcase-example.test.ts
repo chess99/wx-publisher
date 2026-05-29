@@ -35,7 +35,6 @@ const PUBLIC_ADVANCED_MODULES = [
   "specs",
   "image-steps",
   "notice",
-  "dialogue",
   "summary",
   "author-card",
   "series",
@@ -50,6 +49,10 @@ const PUBLIC_ADVANCED_MODULES = [
   "resource-list",
   "stat-row",
   "tweet",
+]
+
+const ENHANCED_ADVANCED_MODULES = [
+  "dialogue",
   "gallery",
   "longimage",
 ]
@@ -66,7 +69,7 @@ describe("advanced layout showcase example", () => {
   it("covers every public advanced module", () => {
     const showcase = readShowcase()
 
-    for (const moduleName of PUBLIC_ADVANCED_MODULES) {
+    for (const moduleName of [...PUBLIC_ADVANCED_MODULES, ...ENHANCED_ADVANCED_MODULES]) {
       expect(showcase).toContain(`:::${moduleName}`)
     }
   })
@@ -74,7 +77,7 @@ describe("advanced layout showcase example", () => {
   it("converts without leaking directive fences", async () => {
     const result = await convertMarkdown(readShowcase(), { theme: "studio", stripLinks: false })
 
-    for (const moduleName of PUBLIC_ADVANCED_MODULES) {
+    for (const moduleName of [...PUBLIC_ADVANCED_MODULES, ...ENHANCED_ADVANCED_MODULES]) {
       expect(result.html).toContain(`data-mpa-action-id="${moduleName}"`)
     }
 

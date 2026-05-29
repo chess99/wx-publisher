@@ -4,7 +4,7 @@
 
 ## 全特性示例
 
-`advanced-layout-showcase.md` 是高级模块和 Markdown 能力的 canonical 示例。重大渲染、语法、主题、API 输出变更时，必须同步维护这个文件。
+`advanced-layout-showcase.md` 是高级模块和 Markdown 能力的 canonical 示例，覆盖 43 个公开高级模块、3 个增强模块和常见 Markdown 语法。重大渲染、语法、主题、API 输出变更时，必须同步维护这个文件。
 
 常用命令：
 

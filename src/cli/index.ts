@@ -29,6 +29,7 @@ import { formatCliError } from "./errors.js"
 import { resolveThemeOption } from "./theme-options.js"
 import { getThemeFileSchema, loadThemeFile } from "../converter/theme-file.js"
 import { createStudioServer } from "../studio/server.js"
+import { ENHANCED_ADVANCED_MODULES, PUBLIC_ADVANCED_MODULES } from "../converter/advanced-layout/parser.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -403,6 +404,20 @@ program
         gfm_alerts: true,
         footnotes: true,
         local_rest_api: true,
+        professional_themes: true,
+      },
+      coverage: {
+        themes: {
+          total: listThemes().length,
+          professional: 40,
+        },
+        advanced_modules: {
+          public: PUBLIC_ADVANCED_MODULES.length,
+          enhanced: ENHANCED_ADVANCED_MODULES.length,
+          total_supported: PUBLIC_ADVANCED_MODULES.length + ENHANCED_ADVANCED_MODULES.length,
+          public_modules: PUBLIC_ADVANCED_MODULES,
+          enhanced_modules: ENHANCED_ADVANCED_MODULES,
+        },
       },
       commands: {
         publish: {
