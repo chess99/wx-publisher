@@ -179,9 +179,9 @@ export const themes: Record<string, Theme> = {
     },
   },
 
-  md2wechat: {
-    name: "md2wechat",
-    description: "仿 md2wechat 暖橙作品风，适合高级模块和品牌化公众号长文",
+  studio: {
+    name: "studio",
+    description: "暖橙作品风，适合高级模块和品牌化公众号长文",
     styles: {
       wrapper: "font-family:'PingFang SC',-apple-system-font,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans GB','Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif;max-width:677px;margin:0 auto;padding:12px;background-color:#faf9f5;",
       h1: "margin:1.5em 8px 0.75em 0;padding:0.8em 1.5em;background:rgb(200,100,66);font-size:22px;font-weight:bold;line-height:1.2;color:#ffffff;text-align:center;border-radius:8px;box-shadow:0 2px 8px rgba(200,100,66,0.2);",

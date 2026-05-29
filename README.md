@@ -38,8 +38,8 @@ wxp preview --file article.md
 # 仅转换，输出到文件（脚本/自动化用）
 wxp convert --file article.md --theme tech --output preview.html
 
-# 使用仿 md2wechat 高级模块主题
-wxp convert --file article.md --theme md2wechat --output preview.html
+# 使用高级模块主题
+wxp convert --file article.md --theme studio --output preview.html
 
 # 启动本地 REST API
 wxp serve --port 8080
@@ -77,11 +77,13 @@ wxp themes
 | `tech` | 技术文章，蓝色强调，深色代码块 |
 | `elegant` | 优雅深色，金色强调，衬线字体 |
 | `minimal` | 极简，内容优先 |
-| `md2wechat` | 暖橙作品风，适合高级模块和品牌化长文 |
+| `studio` | 暖橙作品风，适合高级模块和品牌化长文 |
 
 ## 高级排版模块
 
-`wx-publisher` 支持 `:::` 高级模块语法，转换时会生成微信公众号兼容的内联 HTML。模块语法分为字段型和行型：
+`wx-publisher` 支持 `:::` 高级模块语法，转换时会生成微信公众号兼容的内联 HTML。完整字段、模块目录、场景选型和本地 API 说明见 [高级模块与本地 API 使用指南](./docs/advanced-layout.md)。
+
+模块语法分为字段型和行型：
 
 ```md
 :::hero
@@ -99,13 +101,11 @@ PART 02 | 证据模块 | 用数据、对比、步骤支撑结论 | default
 :::
 ```
 
-已覆盖的模块包括：
+首版已覆盖的模块包括：
 
 `hero`, `cards`, `metrics`, `infographic`, `audience-fit`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `dialogue`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `gallery`, `longimage`。
 
-兼容别名：`steps` → `image-steps`，`compare` → `image-compare`，`bridge` → `summary`，`manifesto` → `quote`。
-
-字段必须使用英文冒号 `:`，行型模块使用 `|` 分隔列。无法识别的模块会保留为普通 Markdown 文本，不会中断转换。
+兼容别名：`steps` → `image-steps`，`compare` → `image-compare`，`bridge` → `summary`，`manifesto` → `quote`。字段必须使用英文冒号 `:`，行型模块使用 `|` 分隔列。
 
 同时支持 GitHub 风格提示框和脚注：
 
@@ -175,6 +175,8 @@ wxp preview --file article.md
 
 ## 本地 REST API
 
+完整 API 请求/响应和草稿示例见 [高级模块与本地 API 使用指南](./docs/advanced-layout.md)。
+
 启动服务：
 
 ```bash
@@ -186,7 +188,7 @@ wxp serve --port 8080
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
   -H "Content-Type: application/json" \
-  -d '{"markdown":"# Hello\n\nBody","theme":"md2wechat","fontSize":"medium","convertVersion":"v1"}'
+  -d '{"markdown":"# Hello\n\nBody","theme":"studio","fontSize":"medium","convertVersion":"v1"}'
 ```
 
 可用端点：

@@ -220,7 +220,7 @@ describe("advanced layout parser", () => {
 
 describe("advanced layout conversion", () => {
   it("renders every documented sample module without leaking directive fences", async () => {
-    const result = await convertMarkdown(SAMPLE_MODULES, { theme: "md2wechat", stripLinks: false })
+    const result = await convertMarkdown(SAMPLE_MODULES, { theme: "studio", stripLinks: false })
 
     const modules = [
       "hero", "cards", "metrics", "infographic", "audience-fit", "verdict",
@@ -239,8 +239,8 @@ describe("advanced layout conversion", () => {
     expect(result.externalImages).toContain(IMAGE_URL)
   })
 
-  it("renders aliases used by md2wechat API docs", async () => {
-    const result = await convertMarkdown(`:::steps[Steps]\n01 | Do it | Follow the path | ${IMAGE_URL} | Note\n:::\n\n:::compare\nleft_title: Old\nleft_image: ${IMAGE_URL}\nright_title: New\nright_image: ${IMAGE_URL}\n:::\n\n:::bridge\ntitle: Bridge title\nbody: Connect sections.\n:::\n\n:::manifesto\ntitle: Believe this\nbody: A memorable position.\n:::`, { theme: "md2wechat" })
+  it("renders documented advanced layout aliases", async () => {
+    const result = await convertMarkdown(`:::steps[Steps]\n01 | Do it | Follow the path | ${IMAGE_URL} | Note\n:::\n\n:::compare\nleft_title: Old\nleft_image: ${IMAGE_URL}\nright_title: New\nright_image: ${IMAGE_URL}\n:::\n\n:::bridge\ntitle: Bridge title\nbody: Connect sections.\n:::\n\n:::manifesto\ntitle: Believe this\nbody: A memorable position.\n:::`, { theme: "studio" })
 
     expect(result.html).toContain('data-mpa-action-id="image-steps"')
     expect(result.html).toContain('data-mpa-action-id="image-compare"')
@@ -250,7 +250,7 @@ describe("advanced layout conversion", () => {
 
   it("renders GFM alerts and styled footnotes", async () => {
     const markdown = `> [!NOTE]\n> **提示**: remember this\n\nFootnote here[^1].\n\n[^1]: Footnote body`
-    const result = await convertMarkdown(markdown, { theme: "md2wechat", stripLinks: false })
+    const result = await convertMarkdown(markdown, { theme: "studio", stripLinks: false })
 
     expect(result.html).toContain("markdown-alert-note")
     expect(result.html).toContain("引用链接")

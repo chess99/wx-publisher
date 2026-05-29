@@ -42,7 +42,7 @@ describe("CLI surface", () => {
     expect(payload.data.features.gfm_alerts).toBe(true)
     expect(payload.data.features.footnotes).toBe(true)
     expect(payload.data.commands.serve.endpoints).toContain("POST /api/v1/convert")
-    expect(payload.data.themes).toContain("md2wechat")
+    expect(payload.data.themes).toContain("studio")
   })
 
   it("config get does not expose image generation config", async () => {

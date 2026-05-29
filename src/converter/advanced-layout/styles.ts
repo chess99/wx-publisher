@@ -18,7 +18,7 @@ export interface AdvancedPalette {
 }
 
 export function getAdvancedPalette(theme: Theme): AdvancedPalette {
-  if (theme.name === "md2wechat") {
+  if (theme.name === "studio") {
     return {
       background: "#faf9f5",
       surface: "#faf9f5",

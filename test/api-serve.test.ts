@@ -41,7 +41,7 @@ describe("wxp serve API", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           markdown: ":::hero\ntitle: API Title\nsubtitle: API body\n:::",
-          theme: "md2wechat",
+          theme: "studio",
           fontSize: "medium",
           convertVersion: "v1",
         }),
@@ -53,7 +53,7 @@ describe("wxp serve API", () => {
 
       expect(res.status).toBe(200)
       expect(payload.success).toBe(true)
-      expect(payload.data.theme).toBe("md2wechat")
+      expect(payload.data.theme).toBe("studio")
       expect(payload.data.html).toContain('data-mpa-action-id="hero"')
       expect(payload.data.warnings).toEqual([])
     } finally {
@@ -78,7 +78,7 @@ describe("wxp serve API", () => {
       const res = await fetch(`http://127.0.0.1:${port}/api/v1/article-draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown: "# Title", theme: "md2wechat" }),
+        body: JSON.stringify({ markdown: "# Title", theme: "studio" }),
       })
       const payload = await res.json() as { success: boolean; error: string; details: string[] }
 
