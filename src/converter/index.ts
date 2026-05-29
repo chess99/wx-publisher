@@ -18,6 +18,9 @@ import type { Root, Element, Text, ElementContent } from "hast"
 import { visit, SKIP } from "unist-util-visit"
 import hljs from "highlight.js"
 import { getTheme, type NodeStyles, type Theme } from "./themes.js"
+import { parseAdvancedLayoutBlocks } from "./advanced-layout/parser.js"
+import { renderAdvancedModules, type RenderedAdvancedBlock } from "./advanced-layout/renderers.js"
+import { collectAdvancedModuleImages } from "./advanced-layout/images.js"
 
 /**
  * hljs token 类型 → inline style 颜色映射
@@ -85,21 +88,47 @@ export async function convertMarkdown(markdown: string, options: ConvertOptions 
 
   // 剥离 Hexo/Jekyll front matter
   const stripped = markdown.replace(/^---\n[\s\S]*?\n---\n?/, "").trimStart()
+  const advanced = parseAdvancedLayoutBlocks(stripped)
+  const advancedBlocks = renderAdvancedModules(advanced.modules, theme)
+  const advancedImages = collectAdvancedModuleImages(advanced.modules)
+  externalImages.push(...advancedImages.externalImages)
+  localImages.push(...advancedImages.localImages)
 
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(() => (tree: Root) => {
+      injectAdvancedBlocks(tree, advancedBlocks)
       inlineStyles(tree, theme.styles, externalImages, localImages, stripLinks)
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
 
-  const result = await processor.process(stripped)
+  const result = await processor.process(advanced.markdown)
   const inner = String(result)
   const html = `<section style="${escapeAttr(theme.styles.wrapper)}">${inner}</section>`
 
   return { html, externalImages, localImages }
+}
+
+function injectAdvancedBlocks(tree: Root, blocks: RenderedAdvancedBlock[]): void {
+  if (blocks.length === 0) return
+  const blockMap = new Map(blocks.map(block => [block.marker, block.html]))
+
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (!parent || typeof index !== "number" || node.tagName !== "p") return
+    const text = node.children.length === 1 && node.children[0]?.type === "text"
+      ? node.children[0].value.trim()
+      : ""
+    const html = blockMap.get(text)
+    if (!html) return
+
+    parent.children[index] = {
+      type: "raw" as never,
+      value: html,
+    } as never
+    return SKIP
+  })
 }
 
 /**
@@ -256,7 +285,19 @@ function inlineStyles(
       case "table":      applyStyle(node, styles.table);      break
       case "th":         applyStyle(node, styles.th);         break
       case "td":         applyStyle(node, styles.td);         break
-      case "blockquote": applyStyle(node, styles.blockquote); break
+      case "blockquote": {
+        if (styleGfmAlert(node, styles)) return SKIP
+        applyStyle(node, styles.blockquote)
+        break
+      }
+      case "section": {
+        styleFootnotes(node, styles)
+        break
+      }
+      case "sup": {
+        styleFootnoteReference(node)
+        break
+      }
 
       case "pre": {
         const codeChild = node.children.find(
@@ -323,6 +364,91 @@ function inlineStyles(
       }
     }
   })
+}
+
+const ALERTS: Record<string, { title: string; color: string; icon: string }> = {
+  NOTE: { title: "提示", color: "#478be6", icon: "ⓘ" },
+  TIP: { title: "技巧", color: "#57ab5a", icon: "💡" },
+  IMPORTANT: { title: "重要", color: "#a855f7", icon: "!" },
+  WARNING: { title: "警告", color: "#f59e0b", icon: "⚠" },
+  CAUTION: { title: "注意", color: "#ef4444", icon: "!" },
+}
+
+function styleGfmAlert(node: Element, styles: NodeStyles): boolean {
+  const first = node.children.find((child): child is Element => child.type === "element" && child.tagName === "p")
+  if (!first) return false
+  const text = extractText(first)
+  const match = text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)]\s*\n?/)
+  if (!match) return false
+
+  const alert = ALERTS[match[1]]
+  const remaining = text.replace(match[0], "").trim()
+  node.properties = {
+    class: `markdown-alert markdown-alert-${match[1].toLowerCase()}`,
+    style: `margin:1.5em 0 2em;padding:1.2em 1.5em;border-left:4px solid ${alert.color};background:linear-gradient(135deg, ${hexToRgba(alert.color, 0.08)}, rgba(255,255,255,0.95));border:1px solid ${hexToRgba(alert.color, 0.2)};border-radius:8px;color:rgb(60,60,60);`,
+  }
+  node.children = [
+    {
+      type: "element",
+      tagName: "p",
+      properties: {
+        class: "markdown-alert-title",
+        style: `color:${alert.color};margin:0 0 8px;font-size:15px;font-weight:800;line-height:1.5;`,
+      },
+      children: [{ type: "text", value: `${alert.icon} ${alert.title}` }],
+    },
+    {
+      type: "element",
+      tagName: "p",
+      properties: { style: styles.p },
+      children: [{ type: "text", value: remaining }],
+    },
+  ]
+  return true
+}
+
+function styleFootnotes(node: Element, styles: NodeStyles): void {
+  if (!("dataFootnotes" in (node.properties ?? {}))) return
+  applyStyle(node, "margin-top:2em;padding-top:1.5em;border-top:1px solid #e5e5e5;")
+  node.properties = {
+    ...node.properties,
+    role: "doc-footnotes",
+    ariaLabel: "引用链接",
+  }
+
+  for (const child of node.children) {
+    if (child.type === "element" && child.tagName === "h2") {
+      child.tagName = "h4"
+      child.properties = { style: styles.h4 }
+      child.children = [{ type: "text", value: "引用链接" }]
+    }
+    if (child.type === "element" && child.tagName === "ol") {
+      child.properties = { style: "list-style-type:decimal;margin:0;padding-left:1em;padding-right:0;" }
+    }
+  }
+}
+
+function styleFootnoteReference(node: Element): void {
+  const text = extractText(node).trim()
+  if (!/^\d+$/.test(text)) return
+  node.properties = {
+    ...node.properties,
+    style: "font-size:0.75em;line-height:0;vertical-align:super;margin:0;padding:0;display:inline;",
+  }
+  node.children = [{
+    type: "text",
+    value: `[${text}]`,
+  }]
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace("#", "")
+  const n = Number.parseInt(normalized, 16)
+  if (Number.isNaN(n)) return `rgba(0,0,0,${alpha})`
+  const r = (n >> 16) & 255
+  const g = (n >> 8) & 255
+  const b = n & 255
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
 /** 递归提取节点的纯文本内容 */

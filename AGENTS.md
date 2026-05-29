@@ -28,6 +28,23 @@ AppID / AppSecret 获取路径：微信开发者平台 → 我的业务与服务
 
 ## 常用流程
 
+### 本地 API 转换
+
+```bash
+wxp serve --port 8080
+
+curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown":"# 标题\n\n正文","theme":"md2wechat","fontSize":"medium","convertVersion":"v1"}'
+```
+
+本地 API 端点：
+
+- `POST /api/v1/convert`
+- `POST /api/v1/article-draft`
+- `POST /api/v1/newspic-draft`
+- `POST /api/v1/batch-upload`
+
 ### 发布到草稿箱
 
 ```bash
@@ -141,11 +158,46 @@ API IP 白名单路径：微信开发者平台 → 我的业务与服务 → 公
 | `tech` | 技术文章，蓝色强调，代码高亮深色背景 |
 | `elegant` | 深度内容，金色强调，衬线字体 |
 | `minimal` | 内容优先，无装饰，简洁 |
+| `md2wechat` | 暖橙作品风，高级模块和品牌化长文 |
 
 查看主题：
 
 ```bash
 wxp themes
+```
+
+## 高级模块语法
+
+`wxp convert`、`wxp publish` 和本地 `POST /api/v1/convert` 都支持 `:::` 高级模块。字段必须使用英文冒号，行型模块使用 `|` 分列。
+
+```md
+:::hero
+title: 模块负责信息骨架 | 主题负责阅读气质
+subtitle: 让公众号长文更有结构
+tags: 结构化 | 可复用
+:::
+
+:::cards[高级排版模块]
+PART 01 | 开场模块 | 先交代判断和阅读入口 | accent
+PART 02 | 证据模块 | 用数据、对比、步骤支撑结论 | default
+:::
+```
+
+支持模块：
+
+`hero`, `cards`, `metrics`, `infographic`, `audience-fit`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `dialogue`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `gallery`, `longimage`。
+
+兼容别名：`steps`、`compare`、`bridge`、`manifesto`。
+
+也支持 GFM 提示框和脚注：
+
+```md
+> [!NOTE]
+> 这是提示。
+
+正文引用脚注[^1]。
+
+[^1]: 脚注内容。
 ```
 
 ## 开发参考
