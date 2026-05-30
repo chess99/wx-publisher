@@ -331,9 +331,10 @@ program
     const port = Number.isFinite(requestedPort) ? requestedPort : 8080
     const server = createServer((req, res) => {
       handleApiRequest(req, res).catch(error => {
-        sendJson(res, 500, {
+        const status = error instanceof ApiRequestError ? error.status : 500
+        sendJson(res, status, {
           success: false,
-          error: "内部错误",
+          error: error instanceof ApiRequestError ? error.message : "内部错误",
           details: String(error),
         })
       })
@@ -780,9 +781,6 @@ async function handleDraftApi(body: ConvertApiBody, res: ServerResponse): Promis
   }
 
   const theme = body.theme || config.default_theme || "default"
-  const result = await convertMarkdown(body.markdown, { theme })
-  const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
-  const thumbMediaId = await resolveApiCover(body, client)
   const title = body.title || extractTitle(body.markdown) || "Untitled"
   const digest = typeof body.digest === "string" && body.digest.trim() ? body.digest.trim() : undefined
   if (digest && Array.from(digest).length > 120) {
@@ -790,9 +788,20 @@ async function handleDraftApi(body: ConvertApiBody, res: ServerResponse): Promis
     return
   }
 
+  const result = await convertMarkdown(body.markdown, { theme })
+  const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
+  const finalArticle = await uploadAndRewriteArticleImages(
+    result.html,
+    result.externalImages,
+    result.localImages,
+    client,
+    process.cwd(),
+  )
+  const thumbMediaId = await resolveApiCover(body, client)
+
   const draft = await client.createDraft([{
     title,
-    content: result.html,
+    content: finalArticle.html,
     thumb_media_id: thumbMediaId.mediaId,
     author: body.author,
     digest,
@@ -807,6 +816,8 @@ async function handleDraftApi(body: ConvertApiBody, res: ServerResponse): Promis
       title,
       digest,
       theme,
+      images_detected: result.externalImages.length + result.localImages.length,
+      images_uploaded: finalArticle.uploadedImageCount,
       external_images: result.externalImages,
       local_images: result.localImages,
       used_placeholder_cover: thumbMediaId.usedPlaceholder,
@@ -838,6 +849,42 @@ async function handleBatchUploadApi(body: ConvertApiBody, res: ServerResponse): 
   }
 
   sendJson(res, 200, { success: true, data: { uploads } })
+}
+
+async function uploadAndRewriteArticleImages(
+  html: string,
+  externalImages: string[],
+  localImages: string[],
+  client: WechatClient,
+  baseDir: string,
+): Promise<{ html: string; uploadedImageCount: number }> {
+  let finalHtml = html
+  const imageMap = new Map<string, string>()
+
+  for (const imgUrl of externalImages) {
+    try {
+      const result = await client.uploadImageFromUrl(imgUrl)
+      imageMap.set(imgUrl, result.url)
+    } catch (e) {
+      console.error(JSON.stringify({ warning: `图片上传失败，保留原 URL: ${imgUrl}`, error: String(e) }))
+    }
+  }
+
+  for (const imgPath of localImages) {
+    const absPath = isAbsolute(imgPath) ? imgPath : resolve(baseDir, imgPath)
+    try {
+      const result = await client.uploadImage(absPath)
+      imageMap.set(imgPath, result.url)
+    } catch (e) {
+      console.error(JSON.stringify({ warning: `图片上传失败，保留原路径: ${imgPath}`, error: String(e) }))
+    }
+  }
+
+  for (const [original, wxUrl] of imageMap) {
+    finalHtml = finalHtml.replaceAll(original, wxUrl)
+  }
+
+  return { html: finalHtml, uploadedImageCount: imageMap.size }
 }
 
 async function resolveApiCover(
@@ -874,6 +921,12 @@ function apiWarnings(body: ConvertApiBody): string[] {
   return warnings
 }
 
+class ApiRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message)
+  }
+}
+
 function readJsonBody(req: IncomingMessage): Promise<ConvertApiBody> {
   return new Promise((resolveBody, reject) => {
     let raw = ""
@@ -881,7 +934,7 @@ function readJsonBody(req: IncomingMessage): Promise<ConvertApiBody> {
     req.on("data", chunk => {
       raw += chunk
       if (raw.length > 10 * 1024 * 1024) {
-        reject(new Error("request body too large"))
+        reject(new ApiRequestError("request body too large", 413))
         req.destroy()
       }
     })
@@ -893,7 +946,7 @@ function readJsonBody(req: IncomingMessage): Promise<ConvertApiBody> {
       try {
         resolveBody(JSON.parse(raw))
       } catch {
-        reject(new Error("invalid JSON body"))
+        reject(new ApiRequestError("invalid JSON body", 400))
       }
     })
     req.on("error", reject)

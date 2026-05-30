@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto"
+
 export interface AdvancedModule {
   marker: string
   name: string
@@ -119,7 +121,7 @@ export function parseAdvancedLayoutBlocks(
     }
 
     const bodyLines = lines.slice(i + 1, end)
-    const marker = `WXP_ADVANCED_LAYOUT_BLOCK_${modules.length}`
+    const marker = `WXP_ADVANCED_LAYOUT_BLOCK_${modules.length}_${randomUUID()}`
     modules.push(parseModule(marker, canonical, originalName, start[2] ?? "", bodyLines))
     output.push("")
     output.push(marker)

@@ -61,6 +61,68 @@ describe("wxp serve API", () => {
     }
   })
 
+  it("sanitizes unsafe URLs through POST /api/v1/convert", async () => {
+    const port = 21000 + Math.floor(Math.random() * 1000)
+    const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
+      cwd: "/Users/zcs/code2/wx-publisher",
+      env: {
+        ...process.env,
+        WXP_APPID: "",
+        WXP_SECRET: "",
+        WXP_THEME: "",
+      },
+    })
+
+    try {
+      await waitForServer(port, proc)
+      const res = await fetch(`http://127.0.0.1:${port}/api/v1/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          markdown: "[bad](javascript:alert(1))\n\n![bad](javascript:alert(1))",
+          theme: "studio",
+        }),
+      })
+      const payload = await res.json() as { success: boolean; data: { html: string } }
+
+      expect(res.status).toBe(200)
+      expect(payload.success).toBe(true)
+      expect(payload.data.html).not.toContain("javascript:")
+      expect(payload.data.html).toContain("[图片已移除: bad]")
+    } finally {
+      proc.kill()
+    }
+  })
+
+  it("returns 400 for invalid JSON", async () => {
+    const port = 22000 + Math.floor(Math.random() * 1000)
+    const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
+      cwd: "/Users/zcs/code2/wx-publisher",
+      env: {
+        ...process.env,
+        WXP_APPID: "",
+        WXP_SECRET: "",
+        WXP_THEME: "",
+      },
+    })
+
+    try {
+      await waitForServer(port, proc)
+      const res = await fetch(`http://127.0.0.1:${port}/api/v1/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{not-json",
+      })
+      const payload = await res.json() as { success: boolean; error: string }
+
+      expect(res.status).toBe(400)
+      expect(payload.success).toBe(false)
+      expect(payload.error).toBe("invalid JSON body")
+    } finally {
+      proc.kill()
+    }
+  })
+
   it("returns JSON config errors for draft endpoints", async () => {
     const port = 20000 + Math.floor(Math.random() * 1000)
     const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {

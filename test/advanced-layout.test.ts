@@ -332,12 +332,44 @@ describe("advanced layout conversion", () => {
   })
 
   it("renders GFM alerts and styled footnotes", async () => {
-    const markdown = `> [!NOTE]\n> **提示**: remember this\n\nFootnote here[^1].\n\n[^1]: Footnote body`
+    const markdown = `> [!NOTE]\n> **提示**: remember this\n>\n> Second paragraph\n\nFootnote here[^1].\n\n[^1]: Footnote body`
     const result = await convertMarkdown(markdown, { theme: "studio", stripLinks: false })
 
     expect(result.html).toContain("markdown-alert-note")
+    expect(result.html).toContain("<strong")
+    expect(result.html).toContain("Second paragraph")
     expect(result.html).toContain("引用链接")
     expect(result.html).not.toContain("Footnotes")
     expect(result.html).toContain("[1]")
+  })
+
+  it("removes unsafe Markdown links and images when links are preserved", async () => {
+    const result = await convertMarkdown(
+      `[bad](javascript:alert(1))\n\n[data](data:text/html,<svg>)\n\n![x](javascript:alert(1))\n\n[ok](https://example.com/path)\n\n![ok](./local.png)`,
+      { theme: "studio", stripLinks: false },
+    )
+
+    expect(result.html).not.toContain("javascript:")
+    expect(result.html).not.toContain("data:text/html")
+    expect(result.html).toContain('href="https://example.com/path"')
+    expect(result.html).toContain("[图片已移除: x]")
+    expect(result.localImages).toContain("./local.png")
+  })
+
+  it("does not let user text collide with advanced block markers", async () => {
+    const result = await convertMarkdown(
+      `WXP_ADVANCED_LAYOUT_BLOCK_0\n\n:::summary\neyebrow: Summary\nhighlight: Safe marker\nbody: Only one rendered block.\n:::\n\nWXP_ADVANCED_LAYOUT_BLOCK_0`,
+      { theme: "studio" },
+    )
+
+    expect(result.html.match(/data-mpa-action-id="summary"/g)).toHaveLength(1)
+    expect(result.html.match(/WXP_ADVANCED_LAYOUT_BLOCK_0/g)).toHaveLength(2)
+  })
+
+  it("collects raw image URLs from image-steps rows", async () => {
+    const rowImage = "https://example.com/image-steps-only.png"
+    const result = await convertMarkdown(`:::image-steps[Steps]\n01 | Open | Body | ${rowImage} | Note\n:::`, { theme: "studio" })
+
+    expect(result.externalImages).toContain(rowImage)
   })
 })

@@ -123,6 +123,7 @@ function injectAdvancedBlocks(tree: Root, blocks: RenderedAdvancedBlock[]): void
     const html = blockMap.get(text)
     if (!html) return
 
+    blockMap.delete(text)
     parent.children[index] = {
       type: "raw" as never,
       value: html,
@@ -342,8 +343,20 @@ function inlineStyles(
       }
 
       case "img": {
+        const src = sanitizeImageUrl(node.properties?.src as string | undefined)
+        if (!src) {
+          if (parent && typeof index === "number") {
+            parent.children[index] = {
+              type: "element",
+              tagName: "span",
+              properties: { style: styles.em },
+              children: [{ type: "text", value: `[图片已移除${imageAltText(node)}]` }],
+            } as Element
+          }
+          return SKIP
+        }
+        node.properties = { ...node.properties, src }
         applyStyle(node, styles.img)
-        const src = node.properties?.src as string | undefined
         if (src && isExternalUrl(src)) {
           externalImages.push(src)
         } else if (src && isLocalImagePath(src)) {
@@ -353,13 +366,7 @@ function inlineStyles(
       }
 
       case "a": {
-        if (stripLinks) {
-          node.tagName = "span"
-          applyStyle(node, styles.a)
-          delete node.properties?.href
-        } else {
-          applyStyle(node, styles.a)
-        }
+        styleLinkNode(node, styles, stripLinks)
         break
       }
     }
@@ -382,7 +389,9 @@ function styleGfmAlert(node: Element, styles: NodeStyles): boolean {
   if (!match) return false
 
   const alert = ALERTS[match[1]]
-  const remaining = text.replace(match[0], "").trim()
+  stripAlertMarker(first, match[0])
+  const preservedChildren = node.children.filter(child => child !== first || !isEmptyElement(first))
+  for (const child of preservedChildren) styleAlertContent(child, styles)
   node.properties = {
     class: `markdown-alert markdown-alert-${match[1].toLowerCase()}`,
     style: `margin:1.5em 0 2em;padding:1.2em 1.5em;border-left:4px solid ${alert.color};background:linear-gradient(135deg, ${hexToRgba(alert.color, 0.08)}, rgba(255,255,255,0.95));border:1px solid ${hexToRgba(alert.color, 0.2)};border-radius:8px;color:rgb(60,60,60);`,
@@ -397,14 +406,45 @@ function styleGfmAlert(node: Element, styles: NodeStyles): boolean {
       },
       children: [{ type: "text", value: `${alert.icon} ${alert.title}` }],
     },
-    {
-      type: "element",
-      tagName: "p",
-      properties: { style: styles.p },
-      children: [{ type: "text", value: remaining }],
-    },
+    ...preservedChildren,
   ]
   return true
+}
+
+function stripAlertMarker(first: Element, marker: string): void {
+  let remaining = marker.length
+  const children: ElementContent[] = []
+
+  for (const child of first.children) {
+    if (remaining > 0 && child.type === "text") {
+      const value = child.value.slice(Math.min(remaining, child.value.length)).replace(/^\s+/, "")
+      remaining -= Math.min(remaining, child.value.length)
+      if (value) children.push({ ...child, value })
+      continue
+    }
+    children.push(child)
+  }
+
+  first.children = children
+}
+
+function isEmptyElement(node: Element): boolean {
+  return node.children.every(child => child.type === "text" ? child.value.trim() === "" : false)
+}
+
+function styleAlertContent(child: ElementContent, styles: NodeStyles): void {
+  if (child.type !== "element") return
+  switch (child.tagName) {
+    case "p": applyStyle(child, styles.p); break
+    case "strong": applyStyle(child, styles.strong); break
+    case "em": applyStyle(child, styles.em); break
+    case "code": applyStyle(child, styles.code); break
+    case "a": styleLinkNode(child, styles, false); break
+    case "ul": applyStyle(child, styles.ul); break
+    case "ol": applyStyle(child, styles.ol); break
+    case "li": applyStyle(child, styles.li); break
+  }
+  for (const nested of child.children) styleAlertContent(nested, styles)
 }
 
 function styleFootnotes(node: Element, styles: NodeStyles): void {
@@ -467,10 +507,60 @@ function applyStyle(node: Element, style: string): void {
   node.properties.style = existing ? `${existing};${style}` : style
 }
 
+function styleLinkNode(node: Element, styles: NodeStyles, stripLinks: boolean): void {
+  const href = sanitizeHref(node.properties?.href as string | undefined)
+  if (stripLinks || !href) {
+    node.tagName = "span"
+    node.properties = { ...node.properties }
+    delete node.properties.href
+    applyStyle(node, styles.a)
+    return
+  }
+
+  node.properties = { ...node.properties, href }
+  applyStyle(node, styles.a)
+}
+
+function imageAltText(node: Element): string {
+  const alt = typeof node.properties?.alt === "string" ? node.properties.alt.trim() : ""
+  return alt ? `: ${alt}` : ""
+}
+
+function sanitizeHref(value: string | undefined): string | undefined {
+  return sanitizeUrl(value, { allowAnchor: true, allowRelative: true })
+}
+
+function sanitizeImageUrl(value: string | undefined): string | undefined {
+  return sanitizeUrl(value, { allowAnchor: false, allowRelative: true })
+}
+
+function sanitizeUrl(
+  value: string | undefined,
+  options: { allowAnchor: boolean; allowRelative: boolean },
+): string | undefined {
+  if (typeof value !== "string") return undefined
+  const url = value.trim()
+  if (!url || /[\u0000-\u001F\u007F]/.test(url)) return undefined
+  if (options.allowAnchor && url.startsWith("#")) return url
+  if (url.startsWith("//")) return undefined
+
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(url)) {
+    try {
+      const parsed = new URL(url)
+      return parsed.protocol === "http:" || parsed.protocol === "https:" ? url : undefined
+    } catch {
+      return undefined
+    }
+  }
+
+  if (!options.allowRelative || url.startsWith("#")) return undefined
+  return url
+}
+
 function isExternalUrl(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://")
 }
 
 function isLocalImagePath(url: string): boolean {
-  return !url.startsWith("data:") && !url.startsWith("blob:") && !url.startsWith("//")
+  return Boolean(sanitizeImageUrl(url)) && !isExternalUrl(url)
 }
