@@ -17,6 +17,8 @@ import { dirname, isAbsolute, resolve } from "path"
 import { tmpdir } from "os"
 import { randomUUID } from "crypto"
 import { spawn } from "child_process"
+import { createServer, type IncomingMessage, type ServerResponse } from "http"
+import type { AddressInfo } from "net"
 import { convertMarkdown } from "../converter/index.js"
 import { generatePreviewHtml, shellQuote } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
@@ -27,6 +29,7 @@ import { formatCliError } from "./errors.js"
 import { resolveThemeOption } from "./theme-options.js"
 import { getThemeFileSchema, loadThemeFile } from "../converter/theme-file.js"
 import { createStudioServer } from "../studio/server.js"
+import { ENHANCED_ADVANCED_MODULES, PUBLIC_ADVANCED_MODULES } from "../converter/advanced-layout/parser.js"
 
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
@@ -317,6 +320,43 @@ program
     }
   })
 
+// ── serve：本地 REST API（自动化集成） ───────────────────────────────────────
+
+program
+  .command("serve")
+  .description("启动本地 REST API 服务")
+  .option("-p, --port <port>", "监听端口", "8080")
+  .action((opts) => {
+    const requestedPort = Number.parseInt(opts.port, 10)
+    const port = Number.isFinite(requestedPort) ? requestedPort : 8080
+    const server = createServer((req, res) => {
+      handleApiRequest(req, res).catch(error => {
+        sendJson(res, 500, {
+          success: false,
+          error: "内部错误",
+          details: String(error),
+        })
+      })
+    })
+
+    server.listen(port, "127.0.0.1", () => {
+      const address = server.address() as AddressInfo
+      console.log(JSON.stringify({
+        success: true,
+        data: {
+          url: `http://127.0.0.1:${address.port}`,
+          port: address.port,
+          endpoints: [
+            "POST /api/v1/convert",
+            "POST /api/v1/article-draft",
+            "POST /api/v1/newspic-draft",
+            "POST /api/v1/batch-upload",
+          ],
+        },
+      }))
+    })
+  })
+
 // ── theme：外部主题文件工具 ───────────────────────────────────────────────────
 
 const themeCmd = program.command("theme").description("外部主题文件工具")
@@ -360,6 +400,24 @@ program
       description: "Markdown 转微信公众号草稿，无需第三方 API Key，完全本地转换",
       features: {
         external_theme_file: true,
+        advanced_layout: true,
+        gfm_alerts: true,
+        footnotes: true,
+        local_rest_api: true,
+        professional_themes: true,
+      },
+      coverage: {
+        themes: {
+          total: listThemes().length,
+          professional: 40,
+        },
+        advanced_modules: {
+          public: PUBLIC_ADVANCED_MODULES.length,
+          enhanced: ENHANCED_ADVANCED_MODULES.length,
+          total_supported: PUBLIC_ADVANCED_MODULES.length + ENHANCED_ADVANCED_MODULES.length,
+          public_modules: PUBLIC_ADVANCED_MODULES,
+          enhanced_modules: ENHANCED_ADVANCED_MODULES,
+        },
       },
       commands: {
         publish: {
@@ -382,6 +440,16 @@ program
           description: "启动本地网页工作台，支持编辑、预览、复制和创建微信公众号草稿",
           required_flags: ["--file"],
           optional_flags: ["--port", "--no-open"],
+        },
+        serve: {
+          description: "启动本地 REST API 服务",
+          optional_flags: ["--port"],
+          endpoints: [
+            "POST /api/v1/convert",
+            "POST /api/v1/article-draft",
+            "POST /api/v1/newspic-draft",
+            "POST /api/v1/batch-upload",
+          ],
         },
         theme: {
           description: "外部主题文件工具",
@@ -631,4 +699,208 @@ interface PreviewRenderTarget {
   theme: string
   themeDefinition?: Theme
   publishCommand: string
+}
+
+interface ConvertApiBody {
+  markdown?: string
+  theme?: string
+  fontSize?: string
+  convertVersion?: string
+  title?: string
+  author?: string
+  digest?: string
+  cover?: string
+  coverUrl?: string
+  images?: string[]
+}
+
+async function handleApiRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (req.method === "GET" && req.url === "/health") {
+    sendJson(res, 200, { success: true, data: { status: "ok" } })
+    return
+  }
+
+  if (req.method !== "POST") {
+    sendJson(res, 405, { success: false, error: "Method Not Allowed" })
+    return
+  }
+
+  const path = req.url?.split("?")[0] ?? ""
+  const body = await readJsonBody(req)
+
+  if (path === "/api/v1/convert") {
+    await handleConvertApi(body, res)
+    return
+  }
+  if (path === "/api/v1/article-draft" || path === "/api/v1/newspic-draft") {
+    await handleDraftApi(body, res)
+    return
+  }
+  if (path === "/api/v1/batch-upload") {
+    await handleBatchUploadApi(body, res)
+    return
+  }
+
+  sendJson(res, 404, { success: false, error: "Not Found" })
+}
+
+async function handleConvertApi(body: ConvertApiBody, res: ServerResponse): Promise<void> {
+  if (typeof body.markdown !== "string") {
+    sendJson(res, 400, { success: false, error: "markdown is required" })
+    return
+  }
+
+  const warnings = apiWarnings(body)
+  const config = loadConfig()
+  const theme = body.theme || config.default_theme || "default"
+  const result = await convertMarkdown(body.markdown, { theme, stripLinks: false })
+
+  sendJson(res, 200, {
+    success: true,
+    data: {
+      html: result.html,
+      theme,
+      external_images: result.externalImages,
+      local_images: result.localImages,
+      warnings,
+    },
+  })
+}
+
+async function handleDraftApi(body: ConvertApiBody, res: ServerResponse): Promise<void> {
+  const config = loadConfig()
+  const errors = validateConfig(config)
+  if (errors.length > 0) {
+    sendJson(res, 400, { success: false, error: "配置不完整", details: errors })
+    return
+  }
+  if (typeof body.markdown !== "string") {
+    sendJson(res, 400, { success: false, error: "markdown is required" })
+    return
+  }
+
+  const theme = body.theme || config.default_theme || "default"
+  const result = await convertMarkdown(body.markdown, { theme })
+  const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
+  const thumbMediaId = await resolveApiCover(body, client)
+  const title = body.title || extractTitle(body.markdown) || "Untitled"
+  const digest = typeof body.digest === "string" && body.digest.trim() ? body.digest.trim() : undefined
+  if (digest && Array.from(digest).length > 120) {
+    sendJson(res, 400, { success: false, error: "摘要不能超过 120 个字符" })
+    return
+  }
+
+  const draft = await client.createDraft([{
+    title,
+    content: result.html,
+    thumb_media_id: thumbMediaId.mediaId,
+    author: body.author,
+    digest,
+    show_cover_pic: 1,
+    need_open_comment: 0,
+  }])
+
+  sendJson(res, 200, {
+    success: true,
+    data: {
+      media_id: draft.media_id,
+      title,
+      digest,
+      theme,
+      external_images: result.externalImages,
+      local_images: result.localImages,
+      used_placeholder_cover: thumbMediaId.usedPlaceholder,
+      warnings: apiWarnings(body),
+    },
+  })
+}
+
+async function handleBatchUploadApi(body: ConvertApiBody, res: ServerResponse): Promise<void> {
+  const config = loadConfig()
+  const errors = validateConfig(config)
+  if (errors.length > 0) {
+    sendJson(res, 400, { success: false, error: "配置不完整", details: errors })
+    return
+  }
+  if (!Array.isArray(body.images)) {
+    sendJson(res, 400, { success: false, error: "images must be an array" })
+    return
+  }
+
+  const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
+  const uploads = []
+  for (const image of body.images) {
+    if (typeof image !== "string") continue
+    const result = image.startsWith("http://") || image.startsWith("https://")
+      ? await client.uploadImageFromUrl(image)
+      : await client.uploadImage(resolve(image))
+    uploads.push({ source: image, ...result })
+  }
+
+  sendJson(res, 200, { success: true, data: { uploads } })
+}
+
+async function resolveApiCover(
+  body: ConvertApiBody,
+  client: WechatClient,
+): Promise<{ mediaId: string; usedPlaceholder: boolean }> {
+  if (body.cover) {
+    const result = await client.uploadImage(resolve(body.cover))
+    return { mediaId: result.media_id, usedPlaceholder: false }
+  }
+  if (body.coverUrl) {
+    const result = await client.uploadImageFromUrl(body.coverUrl)
+    return { mediaId: result.media_id, usedPlaceholder: false }
+  }
+
+  const tmpPath = resolve(tmpdir(), `wx-publisher-placeholder-${randomUUID()}.png`)
+  writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_COVER_BASE64, "base64"))
+  try {
+    const result = await client.uploadImage(tmpPath)
+    return { mediaId: result.media_id, usedPlaceholder: true }
+  } finally {
+    try { unlinkSync(tmpPath) } catch {}
+  }
+}
+
+function apiWarnings(body: ConvertApiBody): string[] {
+  const warnings: string[] = []
+  if (body.fontSize && !["small", "medium", "large"].includes(body.fontSize)) {
+    warnings.push(`unsupported fontSize ignored: ${body.fontSize}`)
+  }
+  if (body.convertVersion && body.convertVersion !== "v1") {
+    warnings.push(`unsupported convertVersion ignored: ${body.convertVersion}`)
+  }
+  return warnings
+}
+
+function readJsonBody(req: IncomingMessage): Promise<ConvertApiBody> {
+  return new Promise((resolveBody, reject) => {
+    let raw = ""
+    req.setEncoding("utf8")
+    req.on("data", chunk => {
+      raw += chunk
+      if (raw.length > 10 * 1024 * 1024) {
+        reject(new Error("request body too large"))
+        req.destroy()
+      }
+    })
+    req.on("end", () => {
+      if (!raw.trim()) {
+        resolveBody({})
+        return
+      }
+      try {
+        resolveBody(JSON.parse(raw))
+      } catch {
+        reject(new Error("invalid JSON body"))
+      }
+    })
+    req.on("error", reject)
+  })
+}
+
+function sendJson(res: ServerResponse, status: number, payload: unknown): void {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" })
+  res.end(JSON.stringify(payload, null, 2))
 }

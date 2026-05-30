@@ -41,6 +41,12 @@ wxp preview --file article.md
 # 仅转换，输出到文件（脚本/自动化用）
 wxp convert --file article.md --theme tech --output preview.html
 
+# 使用高级模块主题
+wxp convert --file article.md --theme studio --output preview.html
+
+# 启动本地 REST API
+wxp serve --port 8080
+
 # 使用外部主题文件转换
 wxp convert --file article.md --theme-file theme.json --output preview.html
 
@@ -87,12 +93,50 @@ wxp studio --file article.md --port 8787 --no-open
 
 ## 主题
 
-| 主题 | 说明 |
-|------|------|
-| `default` | 微信经典风，绿色强调 |
-| `tech` | 技术文章，蓝色强调，深色代码块 |
-| `elegant` | 优雅深色，金色强调，衬线字体 |
-| `minimal` | 极简，内容优先 |
+内置主题分为兼容主题和专业主题矩阵：
+
+- 兼容主题：`default`, `tech`, `elegant`, `minimal`, `warm-tech`, `studio`
+- 专业主题：40 个主题 ID，覆盖 `basic`, `minimal`, `focus`, `elegant`, `bold`, `featured` 系列
+- 系列主题示例：`minimal-blue`, `focus-green`, `elegant-gold`, `bold-red`, `sspai-red`, `wechat-native`
+
+## 高级排版模块
+
+`wx-publisher` 支持 `:::` 高级模块语法，转换时会生成微信公众号兼容的内联 HTML。完整字段、模块目录、场景选型和本地 API 说明见 [高级模块与本地 API 使用指南](./docs/advanced-layout.md)。
+
+模块语法分为字段型和行型：
+
+```md
+:::hero
+eyebrow: FEATURE
+title: 模块负责信息骨架 | 主题负责阅读气质
+subtitle: 用结构和主题组织公众号长文
+image: https://example.com/cover.png
+brand: wx-publisher
+tags: 结构化 | 可复用
+:::
+
+:::cards[高级排版模块]
+PART 01 | 开场模块 | 先交代判断和阅读入口 | accent
+PART 02 | 证据模块 | 用数据、对比、步骤支撑结论 | default
+:::
+```
+
+已覆盖 43 个公开高级模块：
+
+`hero`, `cards`, `metrics`, `steps`, `compare`, `timeline`, `infographic`, `audience-fit`, `bridge`, `manifesto`, `myth-fact`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `callout`, `changelog`, `comparison-table`, `definition`, `question`, `quote-card`, `resource-list`, `stat-row`, `tweet`。
+
+增强模块：`dialogue`, `gallery`, `longimage`。字段必须使用英文冒号 `:`，行型模块使用 `|` 分隔列。
+
+同时支持 GitHub 风格提示框和脚注：
+
+```md
+> [!NOTE]
+> 这是一条提示。
+
+正文引用脚注[^1]。
+
+[^1]: 脚注内容。
+```
 
 ### 外部主题文件
 
@@ -148,6 +192,33 @@ wxp preview --file article.md
 浏览器打开后进程立即退出，不阻塞终端。切换 tab 查看不同主题，填入封面图路径后底部命令即可直接复制执行。
 
 自动化流程通常不需要预览，直接用 `--theme` 参数即可。
+
+## 本地 REST API
+
+完整 API 请求/响应和草稿示例见 [高级模块与本地 API 使用指南](./docs/advanced-layout.md)。
+
+启动服务：
+
+```bash
+wxp serve --port 8080
+```
+
+转换 Markdown：
+
+```bash
+curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown":"# Hello\n\nBody","theme":"studio","fontSize":"medium","convertVersion":"v1"}'
+```
+
+可用端点：
+
+- `POST /api/v1/convert`：返回 `{ success, data: { html, theme, external_images, local_images, warnings } }`
+- `POST /api/v1/article-draft`：转换并创建微信公众号草稿
+- `POST /api/v1/newspic-draft`：单图文草稿别名
+- `POST /api/v1/batch-upload`：批量上传本地或远程图片
+
+草稿和上传端点需要先配置 `wechat_appid` 和 `wechat_secret`。
 
 ## 自动化调用
 

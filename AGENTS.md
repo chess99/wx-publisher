@@ -10,6 +10,22 @@
 - `publish` 只创建草稿，不能直接发布
 - 除 `convert` 未指定 `--output` 时直接输出 HTML 外，CLI 面向机器调用，成功和失败默认输出 JSON
 
+## 迭代提交规则
+
+AI 助手完成每次明确的代码或文档迭代后，应自行运行必要验证并创建 git commit，不必等待人类开发者再说“commit”。提交前只 stage 本轮相关文件，不要把已有未跟踪文件或无关改动带入提交。
+
+## 示例文件维护规则
+
+`examples/advanced-layout-showcase.md` 是长期维护的全特性验收文章，覆盖普通 Markdown、高级模块、提示框、脚注、代码、表格、图片、画廊和长图等能力。
+
+当渲染语法、主题视觉、高级模块、图片处理、API 输出结构或微信公众号草稿效果发生重大变化时，必须同步更新这个示例文件，并运行转换验证，避免示例与真实能力漂移。
+
+目录规范：
+
+- `examples/`：放可运行、可人工验收的完整示例文章和示例说明
+- `docs/`：放设计说明、接口说明、语法说明和实现文档
+- `test/fixtures/`：放测试专用的最小输入，不复制完整示例文章
+
 ## 使用前检查
 
 ```bash
@@ -27,6 +43,23 @@ wxp config set wechat_secret 你的AppSecret
 AppID / AppSecret 获取路径：微信开发者平台 → 我的业务与服务 → 公众号 → 选择目标公众号 → 基础信息。
 
 ## 常用流程
+
+### 本地 API 转换
+
+```bash
+wxp serve --port 8080
+
+curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown":"# 标题\n\n正文","theme":"studio","fontSize":"medium","convertVersion":"v1"}'
+```
+
+本地 API 端点：
+
+- `POST /api/v1/convert`
+- `POST /api/v1/article-draft`
+- `POST /api/v1/newspic-draft`
+- `POST /api/v1/batch-upload`
 
 ### 发布到草稿箱
 
@@ -157,11 +190,54 @@ API IP 白名单路径：微信开发者平台 → 我的业务与服务 → 公
 | `tech` | 技术文章，蓝色强调，代码高亮深色背景 |
 | `elegant` | 深度内容，金色强调，衬线字体 |
 | `minimal` | 内容优先，无装饰，简洁 |
+| `studio` | 暖橙作品风，高级模块和品牌化长文 |
+| `minimal-*` | 专业极简系列，如 `minimal-blue` |
+| `focus-*` | 专业居中强调系列，如 `focus-green` |
+| `elegant-*` | 专业层次系列，如 `elegant-gold` |
+| `bold-*` | 专业强视觉系列，如 `bold-red` |
+| `sspai-red` / `wechat-native` | 精选主题 |
+| `studio` | 暖橙作品风，高级模块和品牌化长文 |
 
 查看主题：
 
 ```bash
 wxp themes
+```
+
+## 高级模块语法
+
+`wxp convert`、`wxp publish` 和本地 `POST /api/v1/convert` 都支持 `:::` 高级模块。字段必须使用英文冒号，行型模块使用 `|` 分列。
+
+完整模块目录、字段、别名、API 请求/响应和故障排查见 [`docs/advanced-layout.md`](./docs/advanced-layout.md)。
+
+```md
+:::hero
+title: 模块负责信息骨架 | 主题负责阅读气质
+subtitle: 让公众号长文更有结构
+tags: 结构化 | 可复用
+:::
+
+:::cards[高级排版模块]
+PART 01 | 开场模块 | 先交代判断和阅读入口 | accent
+PART 02 | 证据模块 | 用数据、对比、步骤支撑结论 | default
+:::
+```
+
+公开高级模块共 43 个：
+
+`hero`, `cards`, `metrics`, `steps`, `compare`, `timeline`, `infographic`, `audience-fit`, `bridge`, `manifesto`, `myth-fact`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `callout`, `changelog`, `comparison-table`, `definition`, `question`, `quote-card`, `resource-list`, `stat-row`, `tweet`。
+
+增强模块：`dialogue`, `gallery`, `longimage`。
+
+也支持 GFM 提示框和脚注：
+
+```md
+> [!NOTE]
+> 这是提示。
+
+正文引用脚注[^1]。
+
+[^1]: 脚注内容。
 ```
 
 ## 开发参考
