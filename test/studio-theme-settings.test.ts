@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { deriveStudioTheme } from "../src/studio/theme-settings.js"
 import { getTheme } from "../src/converter/themes.js"
+import { getAdvancedPalette } from "../src/converter/advanced-layout/styles.js"
 
 describe("deriveStudioTheme", () => {
   it("applies primary color, font size, font family, and code block style without mutating the base theme", () => {
@@ -33,5 +34,11 @@ describe("deriveStudioTheme", () => {
     expect(derived.name).toBe("minimal-studio")
     expect(derived.styles).toEqual(base.styles)
     expect(derived.styles).not.toBe(base.styles)
+  })
+
+  it("keeps the Studio advanced module palette after deriving settings", () => {
+    const derived = deriveStudioTheme(getTheme("studio"), {})
+    expect(getAdvancedPalette(derived).background).toBe("#faf9f5")
+    expect(getAdvancedPalette(derived).accent).toBe("#c86442")
   })
 })

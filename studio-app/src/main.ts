@@ -12,6 +12,11 @@ type StudioState = {
     markdown: string
   }
   themes: ThemeOption[]
+  advancedModules: {
+    public: string[]
+    enhanced: string[]
+    total: number
+  }
   config: {
     wechat_appid: string
     wechat_secret_configured: boolean
@@ -50,13 +55,17 @@ const state = {
   html: "",
   activeTheme: "default",
   themeSettings: {
-    primaryColor: "#d66a45",
     fontSize: 16,
     fontFamily: "system",
     codeBlockStyle: "dark",
   } as StudioThemeSettings,
   settingsOpen: false,
   themes: [] as ThemeOption[],
+  advancedModules: {
+    public: [] as string[],
+    enhanced: [] as string[],
+    total: 0,
+  },
   articleName: "",
   articlePath: "",
   config: {
@@ -131,7 +140,14 @@ root.innerHTML = `
 
       <section class="setting-group">
         <h3>主题色</h3>
+        <button class="subtle-button" data-action="reset-color" title="恢复当前主题原色">使用主题原色</button>
         <div class="swatches"></div>
+      </section>
+
+      <section class="setting-group">
+        <h3>高级模块</h3>
+        <p class="muted-text" data-bind="module-count">读取中</p>
+        <div class="module-tags"></div>
       </section>
 
       <section class="setting-group compact-grid">
@@ -197,6 +213,7 @@ async function boot(): Promise<void> {
     state.articleName = payload.data.article.name
     state.articlePath = payload.data.article.path
     state.themes = payload.data.themes
+    state.advancedModules = payload.data.advancedModules
     state.config = payload.data.config
     state.activeTheme = payload.data.config.default_theme || payload.data.themes[0]?.name || "default"
 
@@ -204,6 +221,7 @@ async function boot(): Promise<void> {
     root.querySelector(".file-name")!.textContent = payload.data.article.name
     renderThemeCards()
     renderSwatches()
+    renderAdvancedModules()
     syncControls()
     bindEvents()
     await convertNow()
@@ -228,6 +246,7 @@ function bindEvents(): void {
     if (action === "copy-html") void copyHtml()
     if (action === "copy-rich") void copyRich()
     if (action === "export-html") exportHtml()
+    if (action === "reset-color") resetThemeColor()
     if (action === "publish") void publishDraft()
   })
 
@@ -272,6 +291,20 @@ function renderSwatches(): void {
       void convertNow()
     })
   })
+}
+
+function renderAdvancedModules(): void {
+  const tags = root.querySelector<HTMLElement>(".module-tags")!
+  const moduleCount = root.querySelector<HTMLElement>('[data-bind="module-count"]')!
+  const featured = [...state.advancedModules.public.slice(0, 8), ...state.advancedModules.enhanced]
+  moduleCount.textContent = `${state.advancedModules.total} 个模块可用，支持封面、卡片、数据、图文、FAQ、画廊和对话等结构。`
+  tags.innerHTML = featured.map(name => `<span>${escapeHtml(name)}</span>`).join("")
+}
+
+function resetThemeColor(): void {
+  state.themeSettings.primaryColor = undefined
+  renderSwatches()
+  void convertNow()
 }
 
 function syncControls(): void {

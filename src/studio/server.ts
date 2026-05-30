@@ -11,6 +11,7 @@ import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
 import { loadConfig, validateConfig } from "../config/index.js"
 import { WechatClient } from "../wechat/client.js"
 import { formatCliError } from "../cli/errors.js"
+import { ENHANCED_ADVANCED_MODULES, PUBLIC_ADVANCED_MODULES } from "../converter/advanced-layout/parser.js"
 import { deriveStudioTheme, type StudioThemeSettings } from "./theme-settings.js"
 
 export interface CreateStudioServerOptions {
@@ -115,6 +116,11 @@ function buildState(articlePath: string): { success: true; data: unknown } {
         const theme = getTheme(name)
         return { name: theme.name, description: theme.description }
       }),
+      advancedModules: {
+        public: PUBLIC_ADVANCED_MODULES,
+        enhanced: ENHANCED_ADVANCED_MODULES,
+        total: PUBLIC_ADVANCED_MODULES.length + ENHANCED_ADVANCED_MODULES.length,
+      },
       config: {
         wechat_appid: config.wechat_appid || "(未设置)",
         wechat_secret_configured: Boolean(config.wechat_secret),

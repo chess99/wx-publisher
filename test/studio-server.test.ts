@@ -43,6 +43,7 @@ describe("Studio server", () => {
       success: boolean
       data: {
         article: { markdown: string }
+        advancedModules: { public: string[]; enhanced: string[]; total: number }
         config: { wechat_appid: string; wechat_secret_configured: boolean }
       }
     }
@@ -52,6 +53,11 @@ describe("Studio server", () => {
     expect(payload.data.article.markdown).toBe("# Hello")
     expect(payload.data.config.wechat_appid).toBe("wx_test_app")
     expect(payload.data.config.wechat_secret_configured).toBe(true)
+    expect(payload.data.advancedModules.public).toContain("hero")
+    expect(payload.data.advancedModules.enhanced).toContain("dialogue")
+    expect(payload.data.advancedModules.total).toBe(
+      payload.data.advancedModules.public.length + payload.data.advancedModules.enhanced.length,
+    )
     expect(JSON.stringify(payload)).not.toContain("secret_should_not_leave_server")
   })
 

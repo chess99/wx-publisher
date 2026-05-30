@@ -116,6 +116,22 @@ button {
   font-weight: 700;
 }
 
+.subtle-button {
+  min-height: 32px;
+  margin: 0 0 12px;
+  border: 1px solid #eadfd5;
+  border-radius: 7px;
+  background: #fffaf5;
+  color: #68727f;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.subtle-button:hover {
+  color: #26313d;
+  border-color: #d66a45;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(360px, 1.1fr) minmax(360px, 0.86fr) minmax(330px, 380px);
@@ -295,6 +311,31 @@ h3 {
 
 .swatch.active {
   outline: 2px solid #26313d;
+}
+
+.muted-text {
+  margin: 0 0 12px;
+  color: #68727f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.module-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.module-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #eadfd5;
+  border-radius: 999px;
+  background: #fffaf5;
+  color: #26313d;
+  font-size: 12px;
 }
 
 .compact-grid {
