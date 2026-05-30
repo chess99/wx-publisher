@@ -944,13 +944,22 @@ function readJsonBody(req: IncomingMessage): Promise<ConvertApiBody> {
         return
       }
       try {
-        resolveBody(JSON.parse(raw))
+        const parsed: unknown = JSON.parse(raw)
+        if (!isJsonObject(parsed)) {
+          reject(new ApiRequestError("JSON body must be an object", 400))
+          return
+        }
+        resolveBody(parsed)
       } catch {
         reject(new ApiRequestError("invalid JSON body", 400))
       }
     })
     req.on("error", reject)
   })
+}
+
+function isJsonObject(value: unknown): value is ConvertApiBody {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function sendJson(res: ServerResponse, status: number, payload: unknown): void {

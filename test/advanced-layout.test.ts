@@ -356,6 +356,38 @@ describe("advanced layout conversion", () => {
     expect(result.localImages).toContain("./local.png")
   })
 
+  it("sanitizes and collects Markdown links and images inside GFM alerts", async () => {
+    const result = await convertMarkdown(
+      `> [!NOTE]\n> [bad](javascript:alert(1))\n> ![bad](javascript:alert(1))\n> [ok](https://example.com/path)\n> ![ok](./alert-local.png)`,
+      { theme: "studio", stripLinks: false },
+    )
+
+    expect(result.html).not.toContain("javascript:")
+    expect(result.html).toContain('href="https://example.com/path"')
+    expect(result.html).toContain("[图片已移除: bad]")
+    expect(result.localImages).toContain("./alert-local.png")
+  })
+
+  it("strips Markdown links inside GFM alerts by default", async () => {
+    const result = await convertMarkdown(
+      `> [!NOTE]\n> [ok](https://example.com/path)`,
+      { theme: "studio" },
+    )
+
+    expect(result.html).not.toContain('href="https://example.com/path"')
+    expect(result.html).toContain("ok")
+  })
+
+  it("does not render protocol-relative advanced module image URLs", async () => {
+    const result = await convertMarkdown(
+      `:::hero\ntitle: Unsafe image\nimage: //cdn.example.com/unsafe.png\n:::`,
+      { theme: "studio" },
+    )
+
+    expect(result.html).not.toContain("//cdn.example.com/unsafe.png")
+    expect(result.externalImages).not.toContain("//cdn.example.com/unsafe.png")
+  })
+
   it("does not let user text collide with advanced block markers", async () => {
     const result = await convertMarkdown(
       `WXP_ADVANCED_LAYOUT_BLOCK_0\n\n:::summary\neyebrow: Summary\nhighlight: Safe marker\nbody: Only one rendered block.\n:::\n\nWXP_ADVANCED_LAYOUT_BLOCK_0`,

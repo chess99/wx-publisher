@@ -103,6 +103,8 @@ export function imageTag(src: string, alt: string, style: string): string {
 export function safeUrl(url: string): string {
   const value = url.trim()
   if (!value) return ""
+  if (/[\u0000-\u001F\u007F]/.test(value) || value.startsWith("//")) return ""
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(value) && !/^https?:\/\//i.test(value)) return ""
   if (/^(https?:\/\/|\/|#|\.\.?\/)/i.test(value)) return value
   if (/^[A-Za-z0-9_./-]+\.(png|jpe?g|gif|webp|svg)$/i.test(value)) return value
   return ""

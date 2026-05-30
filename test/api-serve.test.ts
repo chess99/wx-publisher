@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { spawn, type ChildProcessWithoutNullStreams } from "child_process"
+import { dirname, resolve } from "path"
+import { fileURLToPath } from "url"
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
 function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -25,7 +29,7 @@ describe("wxp serve API", () => {
   it("converts markdown through POST /api/v1/convert", async () => {
     const port = 19000 + Math.floor(Math.random() * 1000)
     const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
-      cwd: "/Users/zcs/code2/wx-publisher",
+      cwd: REPO_ROOT,
       env: {
         ...process.env,
         WXP_APPID: "",
@@ -64,7 +68,7 @@ describe("wxp serve API", () => {
   it("sanitizes unsafe URLs through POST /api/v1/convert", async () => {
     const port = 21000 + Math.floor(Math.random() * 1000)
     const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
-      cwd: "/Users/zcs/code2/wx-publisher",
+      cwd: REPO_ROOT,
       env: {
         ...process.env,
         WXP_APPID: "",
@@ -97,7 +101,7 @@ describe("wxp serve API", () => {
   it("returns 400 for invalid JSON", async () => {
     const port = 22000 + Math.floor(Math.random() * 1000)
     const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
-      cwd: "/Users/zcs/code2/wx-publisher",
+      cwd: REPO_ROOT,
       env: {
         ...process.env,
         WXP_APPID: "",
@@ -123,10 +127,39 @@ describe("wxp serve API", () => {
     }
   })
 
+  it("returns 400 for non-object JSON bodies", async () => {
+    const port = 23000 + Math.floor(Math.random() * 1000)
+    const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
+      cwd: REPO_ROOT,
+      env: {
+        ...process.env,
+        WXP_APPID: "",
+        WXP_SECRET: "",
+        WXP_THEME: "",
+      },
+    })
+
+    try {
+      await waitForServer(port, proc)
+      const res = await fetch(`http://127.0.0.1:${port}/api/v1/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "null",
+      })
+      const payload = await res.json() as { success: boolean; error: string }
+
+      expect(res.status).toBe(400)
+      expect(payload.success).toBe(false)
+      expect(payload.error).toBe("JSON body must be an object")
+    } finally {
+      proc.kill()
+    }
+  })
+
   it("returns JSON config errors for draft endpoints", async () => {
     const port = 20000 + Math.floor(Math.random() * 1000)
     const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
-      cwd: "/Users/zcs/code2/wx-publisher",
+      cwd: REPO_ROOT,
       env: {
         ...process.env,
         WXP_APPID: "",

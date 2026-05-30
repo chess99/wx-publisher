@@ -287,7 +287,7 @@ function inlineStyles(
       case "th":         applyStyle(node, styles.th);         break
       case "td":         applyStyle(node, styles.td);         break
       case "blockquote": {
-        if (styleGfmAlert(node, styles)) return SKIP
+        if (styleGfmAlert(node, styles, externalImages, localImages, stripLinks)) return SKIP
         applyStyle(node, styles.blockquote)
         break
       }
@@ -343,26 +343,8 @@ function inlineStyles(
       }
 
       case "img": {
-        const src = sanitizeImageUrl(node.properties?.src as string | undefined)
-        if (!src) {
-          if (parent && typeof index === "number") {
-            parent.children[index] = {
-              type: "element",
-              tagName: "span",
-              properties: { style: styles.em },
-              children: [{ type: "text", value: `[图片已移除${imageAltText(node)}]` }],
-            } as Element
-          }
-          return SKIP
-        }
-        node.properties = { ...node.properties, src }
-        applyStyle(node, styles.img)
-        if (src && isExternalUrl(src)) {
-          externalImages.push(src)
-        } else if (src && isLocalImagePath(src)) {
-          localImages.push(src)
-        }
-        break
+        styleImageNode(node, styles, externalImages, localImages, parent, index)
+        return SKIP
       }
 
       case "a": {
@@ -381,7 +363,13 @@ const ALERTS: Record<string, { title: string; color: string; icon: string }> = {
   CAUTION: { title: "注意", color: "#ef4444", icon: "!" },
 }
 
-function styleGfmAlert(node: Element, styles: NodeStyles): boolean {
+function styleGfmAlert(
+  node: Element,
+  styles: NodeStyles,
+  externalImages: string[],
+  localImages: string[],
+  stripLinks: boolean,
+): boolean {
   const first = node.children.find((child): child is Element => child.type === "element" && child.tagName === "p")
   if (!first) return false
   const text = extractText(first)
@@ -391,7 +379,9 @@ function styleGfmAlert(node: Element, styles: NodeStyles): boolean {
   const alert = ALERTS[match[1]]
   stripAlertMarker(first, match[0])
   const preservedChildren = node.children.filter(child => child !== first || !isEmptyElement(first))
-  for (const child of preservedChildren) styleAlertContent(child, styles)
+  for (const child of preservedChildren) {
+    styleAlertContent(child, styles, externalImages, localImages, stripLinks)
+  }
   node.properties = {
     class: `markdown-alert markdown-alert-${match[1].toLowerCase()}`,
     style: `margin:1.5em 0 2em;padding:1.2em 1.5em;border-left:4px solid ${alert.color};background:linear-gradient(135deg, ${hexToRgba(alert.color, 0.08)}, rgba(255,255,255,0.95));border:1px solid ${hexToRgba(alert.color, 0.2)};border-radius:8px;color:rgb(60,60,60);`,
@@ -432,19 +422,28 @@ function isEmptyElement(node: Element): boolean {
   return node.children.every(child => child.type === "text" ? child.value.trim() === "" : false)
 }
 
-function styleAlertContent(child: ElementContent, styles: NodeStyles): void {
+function styleAlertContent(
+  child: ElementContent,
+  styles: NodeStyles,
+  externalImages: string[],
+  localImages: string[],
+  stripLinks: boolean,
+): void {
   if (child.type !== "element") return
   switch (child.tagName) {
     case "p": applyStyle(child, styles.p); break
     case "strong": applyStyle(child, styles.strong); break
     case "em": applyStyle(child, styles.em); break
     case "code": applyStyle(child, styles.code); break
-    case "a": styleLinkNode(child, styles, false); break
+    case "a": styleLinkNode(child, styles, stripLinks); break
+    case "img": styleImageNode(child, styles, externalImages, localImages); break
     case "ul": applyStyle(child, styles.ul); break
     case "ol": applyStyle(child, styles.ol); break
     case "li": applyStyle(child, styles.li); break
   }
-  for (const nested of child.children) styleAlertContent(nested, styles)
+  for (const nested of child.children) {
+    styleAlertContent(nested, styles, externalImages, localImages, stripLinks)
+  }
 }
 
 function styleFootnotes(node: Element, styles: NodeStyles): void {
@@ -519,6 +518,41 @@ function styleLinkNode(node: Element, styles: NodeStyles, stripLinks: boolean): 
 
   node.properties = { ...node.properties, href }
   applyStyle(node, styles.a)
+}
+
+function styleImageNode(
+  node: Element,
+  styles: NodeStyles,
+  externalImages: string[],
+  localImages: string[],
+  parent?: Root | Element,
+  index?: number,
+): void {
+  const src = sanitizeImageUrl(node.properties?.src as string | undefined)
+  if (!src) {
+    const replacement: Element = {
+      type: "element",
+      tagName: "span",
+      properties: { style: styles.em },
+      children: [{ type: "text", value: `[图片已移除${imageAltText(node)}]` }],
+    }
+    if (parent && typeof index === "number") {
+      parent.children[index] = replacement as never
+    } else {
+      node.tagName = replacement.tagName
+      node.properties = replacement.properties
+      node.children = replacement.children
+    }
+    return
+  }
+
+  node.properties = { ...node.properties, src }
+  applyStyle(node, styles.img)
+  if (isExternalUrl(src)) {
+    externalImages.push(src)
+  } else if (isLocalImagePath(src)) {
+    localImages.push(src)
+  }
 }
 
 function imageAltText(node: Element): string {
