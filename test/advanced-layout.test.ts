@@ -353,6 +353,20 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain("grid-template-columns:minmax(0,1fr) minmax(0,1fr)")
   })
 
+  it("matches competitor details for statement and manifesto modules", async () => {
+    const result = await convertMarkdown(
+      `:::infographic\ntype: statement\neyebrow: Graphic\ntitle: Make|one point|visible\nsubtitle: Short explanation\nquote: One screen, one judgment.\nnote: Good for transitions\n:::\n\n:::manifesto\nlabel: Belief\ntitle: Structure before decoration\nbody: Good layout clarifies meaning.\nbelieve: Structure first | Text is the lead\nagainst: Random templates | Visual noise\nnote: Keep it useful\n:::\n\n:::myth-fact[Myth Fact]\nMore modules means better | Useful modules should remain\n:::`,
+      { theme: "studio", stripLinks: false },
+    )
+
+    expect(result.html).toContain('data-infographic-type="statement"')
+    expect(result.html).toContain('aria-hidden="true"')
+    expect(result.html).toContain("justify-content:space-between")
+    expect(result.html).toContain("我相信")
+    expect(result.html).toContain("我拒绝")
+    expect(result.html).toContain("background:linear-gradient(135deg, #f1e6df 0%, #faf9f5 70%, #f7f7f7 100%)")
+  })
+
   it("matches competitor structure for JSON-backed modules", async () => {
     const result = await convertMarkdown(
       `:::changelog\n{"version":"v2","date":"2026.05","added":["More modules"],"fixed":["Stable rendering"]}\n:::\n\n:::comparison-table\n{"left":{"title":"Before","items":["Slow"]},"right":{"title":"After","items":["Fast"]}}\n:::\n\n:::definition\n{"term":"Advanced layout","def":"A structured expression layer.","termLabel":"Definition"}\n:::\n\n:::question\n[{"q":"Why use modules?","a":"To make judgment easier to scan."}]\n:::\n\n:::quote-card\n{"text":"Structure is a reading promise.","source":"Guide"}\n:::\n\n:::resource-list\n[{"name":"Docs","url":"https://example.com","desc":"Syntax and examples","icon":"Guide"}]\n:::\n\n:::stat-row\n[{"value":"43","label":"Modules","note":"Public set"}]\n:::\n\n:::tweet\n{"name":"Product Notes","handle":"@local","text":"Readable before decorative.","timestamp":"2026-05"}\n:::`,

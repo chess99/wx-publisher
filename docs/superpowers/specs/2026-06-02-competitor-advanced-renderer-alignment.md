@@ -75,6 +75,8 @@ Keep current `gallery` and `longimage` rendering:
 
 For `subscribe`, keep the current non-button markup unless a later WeChat draft check proves `<button>` is accepted and better. The competitor uses button-like markup, but static spans are safer in copied WeChat rich text and preserve the same visual role.
 
+For `dialogue`, keep the current lightweight wrapper structure. The competitor output wraps the same chat bubbles in repeated `mpa-from-tpl` / template sections. That metadata does not improve the rendered reader experience, increases HTML size, and is unnecessary for local conversion.
+
 ## Testing Strategy
 
 Tests should avoid brittle full-HTML snapshots. Instead, they should assert structural invariants that prove alignment:
