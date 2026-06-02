@@ -324,6 +324,53 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain('data-mpa-action-id="manifesto"')
   })
 
+  it("keeps enhanced image modules rendered instead of copying competitor placeholders", async () => {
+    const result = await convertMarkdown(
+      `:::gallery[Gallery]\n![A](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
+      { theme: "studio" },
+    )
+
+    expect(result.html).toContain('data-mpa-action-id="gallery"')
+    expect(result.html).toContain('data-mpa-action-id="longimage"')
+    expect(result.html).toContain('class="rich_pages wxw-img"')
+    expect(result.html).not.toContain("[IMAGE:")
+  })
+
+  it("matches competitor structure for process and comparison modules", async () => {
+    const result = await convertMarkdown(
+      `:::steps[Steps]\n01 | Start | Body | Note\n02 | Continue | More body | More note\n:::\n\n:::timeline[Timeline]\nStage 1 | Build | First pass\nStage 2 | Verify | Second pass\n:::\n\n:::bridge\nlabel: Next\ntitle: Evidence follows judgment\nbody: The next section carries proof.\nnext: Continue\n:::\n\n:::myth-fact[Myth Fact]\nMore modules means better | Useful modules should remain\n:::`,
+      { theme: "studio", stripLinks: false },
+    )
+
+    expect(result.html).toContain('data-mpa-action-id="steps"')
+    expect(result.html).toContain("align-items:stretch")
+    expect(result.html).toContain("width:2px")
+    expect(result.html).toContain('data-mpa-action-id="timeline"')
+    expect(result.html).toContain("box-shadow:0 0 0 3px")
+    expect(result.html).toContain('data-mpa-action-id="bridge"')
+    expect(result.html).toContain("width:3px")
+    expect(result.html).toContain('data-mpa-action-id="myth-fact"')
+    expect(result.html).toContain("grid-template-columns:minmax(0,1fr) minmax(0,1fr)")
+  })
+
+  it("matches competitor structure for JSON-backed modules", async () => {
+    const result = await convertMarkdown(
+      `:::changelog\n{"version":"v2","date":"2026.05","added":["More modules"],"fixed":["Stable rendering"]}\n:::\n\n:::comparison-table\n{"left":{"title":"Before","items":["Slow"]},"right":{"title":"After","items":["Fast"]}}\n:::\n\n:::definition\n{"term":"Advanced layout","def":"A structured expression layer.","termLabel":"Definition"}\n:::\n\n:::question\n[{"q":"Why use modules?","a":"To make judgment easier to scan."}]\n:::\n\n:::quote-card\n{"text":"Structure is a reading promise.","source":"Guide"}\n:::\n\n:::resource-list\n[{"name":"Docs","url":"https://example.com","desc":"Syntax and examples","icon":"Guide"}]\n:::\n\n:::stat-row\n[{"value":"43","label":"Modules","note":"Public set"}]\n:::\n\n:::tweet\n{"name":"Product Notes","handle":"@local","text":"Readable before decorative.","timestamp":"2026-05"}\n:::`,
+      { theme: "studio", stripLinks: false },
+    )
+
+    expect(result.html).toContain('data-mpa-action-id="changelog"')
+    expect(result.html).toContain("font-variant-numeric:tabular-nums")
+    expect(result.html).toContain('data-mpa-action-id="comparison-table"')
+    expect(result.html).not.toContain("<table")
+    expect(result.html).toContain('data-mpa-action-id="definition"')
+    expect(result.html).toContain("flex:0 0 30%")
+    expect(result.html).toContain('data-mpa-action-id="question-item"')
+    expect(result.html).toContain('data-mpa-action-id="resource-list-item"')
+    expect(result.html).toContain('data-mpa-action-id="stat-row-cell"')
+    expect(result.html).toContain('data-mpa-action-id="tweet"')
+  })
+
   it("renders GFM alerts and styled footnotes", async () => {
     const markdown = `> [!NOTE]\n> **提示**: remember this\n>\n> Second paragraph\n\nFootnote here[^1].\n\n[^1]: Footnote body`
     const result = await convertMarkdown(markdown, { theme: "studio", stripLinks: false })
