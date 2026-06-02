@@ -324,14 +324,24 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain('data-mpa-action-id="manifesto"')
   })
 
-  it("keeps enhanced image modules rendered instead of copying competitor placeholders", async () => {
+  it("matches competitor structure for gallery and long image modules", async () => {
     const result = await convertMarkdown(
-      `:::gallery[Gallery]\n![A](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
+      `:::gallery[Gallery]\n![A](${IMAGE_URL})\n![B](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
       { theme: "studio" },
     )
 
     expect(result.html).toContain('data-mpa-action-id="gallery"')
+    expect(result.html).toContain("scroll-snap-type:x mandatory")
+    expect(result.html).toContain("aspect-ratio:4/3")
+    expect(result.html).toContain("scroll-snap-align:start")
+    expect(result.html).toContain(">A</p>")
+    expect(result.html).toContain(">B</p>")
+    expect(result.html).toContain(">Gallery</p>")
     expect(result.html).toContain('data-mpa-action-id="longimage"')
+    expect(result.html).toContain('class="longimage-scroll-container"')
+    expect(result.html).toContain("max-height:420px")
+    expect(result.html).toContain("max-height:min(75vh,600px)")
+    expect(result.html).toContain(">Long</p>")
     expect(result.html).toContain('class="rich_pages wxw-img"')
     expect(result.html).not.toContain("[IMAGE:")
   })

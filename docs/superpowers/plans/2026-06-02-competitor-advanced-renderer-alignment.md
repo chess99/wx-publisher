@@ -26,19 +26,29 @@
 **Files:**
 - Modify: `test/advanced-layout.test.ts`
 
-- [ ] **Step 1: Write the failing test for optimized exceptions**
+- [ ] **Step 1: Write the failing test for enhanced image modules**
 
 Add this test inside `describe("advanced layout conversion", () => { ... })`:
 
 ```ts
-  it("keeps enhanced image modules rendered instead of copying competitor placeholders", async () => {
+  it("matches competitor structure for gallery and long image modules", async () => {
     const result = await convertMarkdown(
-      `:::gallery[Gallery]\n![A](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
+      `:::gallery[Gallery]\n![A](${IMAGE_URL})\n![B](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
       { theme: "studio" },
     )
 
     expect(result.html).toContain('data-mpa-action-id="gallery"')
+    expect(result.html).toContain("scroll-snap-type:x mandatory")
+    expect(result.html).toContain("aspect-ratio:4/3")
+    expect(result.html).toContain("scroll-snap-align:start")
+    expect(result.html).toContain(">A</p>")
+    expect(result.html).toContain(">B</p>")
+    expect(result.html).toContain(">Gallery</p>")
     expect(result.html).toContain('data-mpa-action-id="longimage"')
+    expect(result.html).toContain('class="longimage-scroll-container"')
+    expect(result.html).toContain("max-height:420px")
+    expect(result.html).toContain("max-height:min(75vh,600px)")
+    expect(result.html).toContain(">Long</p>")
     expect(result.html).toContain('class="rich_pages wxw-img"')
     expect(result.html).not.toContain("[IMAGE:")
   })
@@ -326,6 +336,6 @@ Expected: commit succeeds with only the test and renderer files staged.
 ## Self-Review Notes
 
 - The plan covers all modules identified in the design as materially different.
-- `gallery` and `longimage` are intentionally preserved as optimized exceptions.
+- `gallery` and `longimage` are aligned to the follow-up competitor baseline while preserving `imageTag` for WeChat compatibility.
 - No raw full-output snapshot is required; structural assertions are less brittle and still prove the important alignment points.
 - The plan keeps parser, themes, and example article unchanged unless verification reveals a direct need.

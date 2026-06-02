@@ -2,7 +2,7 @@
 
 ## Context
 
-The pasted attachment at `/Users/zcs/.codex/attachments/71c0aaa6-befa-4ac5-af00-6ac3685a42d0/pasted-text.txt` is the competitor renderer output for `examples/advanced-layout-showcase.md` using the `studio` visual language. Current `wxp` conversion already renders every documented public advanced module and the enhanced image modules, but several module templates differ from the competitor's structure.
+The pasted attachments are competitor renderer outputs for `examples/advanced-layout-showcase.md` using the `studio` visual language. The first attachment at `/Users/zcs/.codex/attachments/71c0aaa6-befa-4ac5-af00-6ac3685a42d0/pasted-text.txt` covered the public advanced modules. The follow-up attachment at `/Users/zcs/.codex/attachments/8277d153-3a06-43bc-9342-b32a56604287/pasted-text.txt` confirms that the competitor also renders `gallery` and `longimage`. Current `wxp` conversion already renders every documented public advanced module and the enhanced image modules, but several module templates differ from the competitor's structure.
 
 This work aligns `wxp` advanced block rendering with the competitor baseline where the competitor output is structurally sound. It intentionally keeps `wxp` behavior where the competitor has visible bugs, missing support, or worse user experience.
 
@@ -10,7 +10,7 @@ This work aligns `wxp` advanced block rendering with the competitor baseline whe
 
 The competitor output contains these public module ids:
 
-`hero`, `cards`, `metrics`, `steps`, `compare`, `timeline`, `infographic`, `audience-fit`, `bridge`, `manifesto`, `myth-fact`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `callout`, `changelog`, `comparison-table`, `definition`, `question`, `quote-card`, `resource-list`, `stat-row`, `tweet`, `dialogue`, `summary`, `author-card`, `series`, `subscribe`, `cta`.
+`hero`, `cards`, `metrics`, `steps`, `compare`, `timeline`, `infographic`, `audience-fit`, `bridge`, `manifesto`, `myth-fact`, `verdict`, `people`, `cases`, `pricing`, `faq`, `logos`, `part`, `label-title`, `quote`, `image-text`, `image-compare`, `image-annotate`, `toc`, `checklist`, `toolbox`, `specs`, `image-steps`, `notice`, `callout`, `changelog`, `comparison-table`, `definition`, `question`, `quote-card`, `resource-list`, `stat-row`, `tweet`, `dialogue`, `summary`, `author-card`, `series`, `subscribe`, `cta`, `gallery`, `longimage`.
 
 It also emits child ids for richer JSON-backed modules:
 
@@ -18,7 +18,7 @@ It also emits child ids for richer JSON-backed modules:
 - `resource-list-item`
 - `stat-row-cell`
 
-The competitor output does not emit `gallery` or `longimage`; those sections are left as `[IMAGE:...]` placeholders. Current `wxp` renders both enhanced modules as real image modules. That is a competitor gap, not a target to copy.
+The follow-up competitor output emits `gallery` as a horizontal scroll-snap image carousel and `longimage` as an accent card with a constrained vertical scroll container. These are valid baseline structures. `wxp` should match their visual structure while preserving its safer image tag generation for WeChat compatibility and image URL sanitization.
 
 ## Alignment Rules
 
@@ -32,7 +32,6 @@ Use the competitor output as the default baseline for public advanced modules:
 
 Use optimized `wxp` behavior instead of copying the competitor when:
 
-- The competitor leaves a supported module unrendered.
 - The competitor uses a tag or behavior that hurts WeChat compatibility or reader experience.
 - The competitor has duplicated or internally contradictory style declarations where the simpler current style achieves the same visual result.
 
@@ -65,13 +64,16 @@ The second renderer pass should align JSON-heavy modules:
 - `stat-row`: add `data-mpa-action-id="stat-row-cell"` and use a grid separated by a 1px border background.
 - `tweet`: use compact avatar/name/meta/text/footer card structure.
 
+### Enhanced Image Modules
+
+Align `gallery` and `longimage` with the follow-up competitor baseline:
+
+- `gallery`: render a horizontal carousel with `scroll-snap-type`, padded image cards, a fixed `4/3` image frame, per-image captions from Markdown alt text, and the module title below the carousel.
+- `longimage`: render an accent outer card, a `longimage-scroll-container` with `max-height:420px` plus `max-height:min(75vh,600px)`, and the module title as a bottom strip.
+- Keep `imageTag` output instead of the competitor's plain gallery `<img>` tag so images continue to receive WeChat-compatible attributes and URL sanitization.
+- Do not copy the competitor's inline `<style>` block for scrollbar pseudo-elements; inline styles are safer for WeChat rich text.
+
 ### Optimized Exceptions
-
-Keep current `gallery` and `longimage` rendering:
-
-- Current `wxp` renders these enhanced modules with real images.
-- The competitor baseline leaves their source images as placeholder text.
-- Downgrading would reduce functionality and fail the existing enhanced-module contract.
 
 For `subscribe`, keep the current non-button markup unless a later WeChat draft check proves `<button>` is accepted and better. The competitor uses button-like markup, but static spans are safer in copied WeChat rich text and preserve the same visual role.
 
@@ -82,7 +84,7 @@ For `dialogue`, keep the current lightweight wrapper structure. The competitor o
 Tests should avoid brittle full-HTML snapshots. Instead, they should assert structural invariants that prove alignment:
 
 - Public module ids remain present.
-- Optimized exceptions remain rendered for `gallery` and `longimage`.
+- `gallery` and `longimage` include the competitor carousel and scroll-container structure while still using `imageTag`.
 - `steps` contains connector-oriented step structure.
 - `timeline` uses rail/dot layout instead of grid columns.
 - `myth-fact` uses paired columns.
@@ -109,7 +111,7 @@ npm run build
 The work is complete only when:
 
 - Every public advanced module either structurally matches the competitor baseline or is documented as an optimized exception.
-- `gallery` and `longimage` still render real image modules.
+- `gallery` and `longimage` match the follow-up competitor baseline structure while still rendering real image modules.
 - The full showcase conversion emits no raw advanced directive fences.
 - The generated HTML includes the competitor child ids for `question`, `resource-list`, and `stat-row`.
 - The targeted and full verification commands pass.
