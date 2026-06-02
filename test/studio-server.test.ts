@@ -69,7 +69,7 @@ describe("Studio server", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         markdown: "![remote](https://example.com/a.png)\n\n![local](./local.png)",
-        theme: "tech",
+        theme: "github-readme",
       }),
     })
     const payload = await response.json() as {
@@ -82,6 +82,24 @@ describe("Studio server", () => {
     expect(payload.data.html).toContain("<img")
     expect(payload.data.externalImages).toEqual(["https://example.com/a.png"])
     expect(payload.data.localImages).toEqual(["./local.png"])
+  })
+
+  it("rejects unknown runtime theme ids through the local convert API", async () => {
+    const server = await start("# Hello")
+
+    const response = await fetch(`${server.url}/api/convert`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        markdown: "# Hello",
+        theme: "legacy-theme",
+      }),
+    })
+    const payload = await response.json() as { success: boolean; error: string }
+
+    expect(response.status).toBe(400)
+    expect(payload.success).toBe(false)
+    expect(payload.error).toContain("未知主题: legacy-theme")
   })
 
   it("returns a normalized JSON error when publishing without WeChat credentials", async () => {

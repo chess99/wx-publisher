@@ -39,10 +39,10 @@ wxp studio --file article.md
 wxp preview --file article.md
 
 # 仅转换，输出到文件（脚本/自动化用）
-wxp convert --file article.md --theme tech --output preview.html
+wxp convert --file article.md --theme github-readme --output preview.html
 
-# 使用高级模块主题
-wxp convert --file article.md --theme studio --output preview.html
+# 使用高视觉强调主题
+wxp convert --file article.md --theme bold-red --output preview.html
 
 # 启动本地 REST API
 wxp serve --port 8080
@@ -93,11 +93,16 @@ wxp studio --file article.md --port 8787 --no-open
 
 ## 主题
 
-内置主题分为兼容主题和专业主题矩阵：
+内置主题严格对齐 48 个公开主题 ID。`wxp themes` 会返回主题名、系列、适用场景、密度、对比度和强调色，方便脚本或 AI 调用方自动选型。
 
-- 兼容主题：`default`, `tech`, `elegant`, `minimal`, `warm-tech`, `studio`
-- 专业主题：40 个主题 ID，覆盖 `basic`, `minimal`, `focus`, `elegant`, `bold`, `featured` 系列
-- 系列主题示例：`minimal-blue`, `focus-green`, `elegant-gold`, `bold-red`, `sspai-red`, `wechat-native`
+- Built-in：`default`, `bytedance`, `apple`, `sports`, `chinese`, `cyber`
+- Classic：`wechat-native`, `nyt-classic`
+- Modern：`github-readme`, `sspai-red`, `mint-fresh`, `sunset-amber`
+- Extra：`ink-minimal`, `lavender-dream`, `coffee-house`, `bauhaus-primary`
+- Minimal：`minimal-gold`, `minimal-green`, `minimal-blue`, `minimal-orange`, `minimal-red`, `minimal-navy`, `minimal-gray`, `minimal-sky`
+- Focus：`focus-gold`, `focus-green`, `focus-blue`, `focus-orange`, `focus-red`, `focus-navy`, `focus-gray`, `focus-sky`
+- Elegant：`elegant-gold`, `elegant-green`, `elegant-blue`, `elegant-orange`, `elegant-red`, `elegant-navy`, `elegant-gray`, `elegant-sky`
+- Bold：`bold-gold`, `bold-green`, `bold-blue`, `bold-orange`, `bold-red`, `bold-navy`, `bold-gray`, `bold-sky`
 
 ## 高级排版模块
 
@@ -208,7 +213,7 @@ wxp serve --port 8080
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
   -H "Content-Type: application/json" \
-  -d '{"markdown":"# Hello\n\nBody","theme":"studio","fontSize":"medium","convertVersion":"v1"}'
+  -d '{"markdown":"# Hello\n\nBody","theme":"default","fontSize":"medium","convertVersion":"v1"}'
 ```
 
 可用端点：

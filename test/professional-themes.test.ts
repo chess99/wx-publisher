@@ -9,6 +9,16 @@ const PROFESSIONAL_THEMES = [
   "sports",
   "chinese",
   "cyber",
+  "wechat-native",
+  "nyt-classic",
+  "github-readme",
+  "sspai-red",
+  "mint-fresh",
+  "sunset-amber",
+  "ink-minimal",
+  "lavender-dream",
+  "coffee-house",
+  "bauhaus-primary",
   "minimal-gold",
   "minimal-green",
   "minimal-blue",
@@ -41,19 +51,17 @@ const PROFESSIONAL_THEMES = [
   "bold-navy",
   "bold-gray",
   "bold-sky",
-  "sspai-red",
-  "wechat-native",
 ]
 
 describe("professional theme matrix", () => {
-  it("exposes the full professional theme set plus compatibility themes", () => {
+  it("exposes exactly the aligned 48-theme set", () => {
     const themes = listThemes()
 
+    expect(themes).toEqual(PROFESSIONAL_THEMES)
     for (const theme of PROFESSIONAL_THEMES) {
       expect(themes).toContain(theme)
     }
-    expect(themes).toContain("studio")
-    expect(themes.length).toBeGreaterThanOrEqual(40)
+    expect(themes).toHaveLength(48)
   })
 
   it("converts plain markdown and advanced modules with every professional theme", async () => {
@@ -71,6 +79,15 @@ describe("professional theme matrix", () => {
     expect(getTheme("focus-blue").styles.h1).toContain("text-align:center")
     expect(getTheme("elegant-green").styles.h2).toContain("border-left:5px")
     expect(getTheme("bold-red").styles.h1).toContain("color:#ffffff")
+    expect(getTheme("github-readme").styles.pre).toContain("#0969da")
+    expect(getTheme("nyt-classic").styles.wrapper).toContain("#fbf6e8")
     expect(getTheme("wechat-native").styles.a).toContain("#07c160")
+  })
+
+  it("keeps theme selection metadata available for AI callers", () => {
+    expect(getTheme("github-readme").bestFor).toContain("technical")
+    expect(getTheme("github-readme").collection).toBe("modern")
+    expect(getTheme("bold-red").density).toBe("medium")
+    expect(getTheme("nyt-classic").contrast).toBe("medium")
   })
 })

@@ -23,7 +23,7 @@ These stages must be implemented as separate commits.
 - Draft creation through the WeChat API.
 - JSON output for automation.
 
-The blog workflow in `/Users/zcs/code2/blog` already owns editorial decisions, cover generation, channel adaptation, and publishing orchestration. A caller AI has already proven it can understand the current `Theme.styles` structure by adding the `warm-tech` theme for a specific article. That proves external AI-generated themes are viable.
+The blog workflow in `/Users/zcs/code2/blog` already owns editorial decisions, cover generation, channel adaptation, and publishing orchestration. A caller AI has already proven it can understand the current `Theme.styles` structure by adding the `custom article theme` theme for a specific article. That proves external AI-generated themes are viable.
 
 The current friction is that article-specific design requires either choosing one of a few built-in themes or changing `src/converter/themes.ts`. Changing source is sometimes fine, but installed/open-source users may not have or want a source checkout. `wxp` should expose a theme-file interface for that case.
 

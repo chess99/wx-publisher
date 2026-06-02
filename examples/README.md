@@ -9,9 +9,9 @@
 常用命令：
 
 ```bash
-wxp convert --file examples/advanced-layout-showcase.md --theme studio --output /tmp/wxp-showcase.html
+wxp convert --file examples/advanced-layout-showcase.md --theme default --output /tmp/wxp-showcase.html
 wxp preview --file examples/advanced-layout-showcase.md
-wxp publish --file examples/advanced-layout-showcase.md --theme studio --title "wx-publisher 高级模块效果预览"
+wxp publish --file examples/advanced-layout-showcase.md --theme default --title "wx-publisher 高级模块效果预览"
 ```
 
 发布命令不传封面图时会使用内置占位封面，草稿 JSON 中会返回 `used_placeholder_cover: true`。

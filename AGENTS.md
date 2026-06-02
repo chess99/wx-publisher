@@ -51,7 +51,7 @@ wxp serve --port 8080
 
 curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
   -H "Content-Type: application/json" \
-  -d '{"markdown":"# 标题\n\n正文","theme":"studio","fontSize":"medium","convertVersion":"v1"}'
+  -d '{"markdown":"# 标题\n\n正文","theme":"default","fontSize":"medium","convertVersion":"v1"}'
 ```
 
 本地 API 端点：
@@ -67,7 +67,7 @@ curl -X POST "http://127.0.0.1:8080/api/v1/convert" \
 wxp publish \
   --file /path/to/article.md \
   --cover /path/to/cover.jpg \
-  --theme tech \
+  --theme github-readme \
   --title "文章标题"
 ```
 
@@ -115,8 +115,8 @@ wxp publish \
 ### 仅转换不发布
 
 ```bash
-wxp convert --file article.md --theme tech --output /tmp/preview.html
-wxp convert --file article.md --theme tech > /tmp/preview.html
+wxp convert --file article.md --theme github-readme --output /tmp/preview.html
+wxp convert --file article.md --theme github-readme > /tmp/preview.html
 ```
 
 ### 预览主题
@@ -137,7 +137,7 @@ wxp preview --file article.md
   "data": {
     "media_id": "xxxxx",
     "title": "文章标题",
-    "theme": "tech",
+    "theme": "github-readme",
     "images_uploaded": 3,
     "message": "草稿已创建，请在微信公众号后台发布",
     "used_placeholder_cover": false
@@ -184,19 +184,20 @@ API IP 白名单路径：微信开发者平台 → 我的业务与服务 → 公
 
 ## 主题
 
-| 主题 | 适合场景 |
-|------|---------|
-| `default` | 通用，绿色强调，微信经典风 |
-| `tech` | 技术文章，蓝色强调，代码高亮深色背景 |
-| `elegant` | 深度内容，金色强调，衬线字体 |
-| `minimal` | 内容优先，无装饰，简洁 |
-| `studio` | 暖橙作品风，高级模块和品牌化长文 |
-| `minimal-*` | 专业极简系列，如 `minimal-blue` |
-| `focus-*` | 专业居中强调系列，如 `focus-green` |
-| `elegant-*` | 专业层次系列，如 `elegant-gold` |
-| `bold-*` | 专业强视觉系列，如 `bold-red` |
-| `sspai-red` / `wechat-native` | 精选主题 |
-| `studio` | 暖橙作品风，高级模块和品牌化长文 |
+运行时主题严格对齐 48 个公开主题 ID，不保留旧兼容主题名。
+
+| 系列 | 主题 |
+|------|------|
+| Built-in | `default`, `bytedance`, `apple`, `sports`, `chinese`, `cyber` |
+| Classic | `wechat-native`, `nyt-classic` |
+| Modern | `github-readme`, `sspai-red`, `mint-fresh`, `sunset-amber` |
+| Extra | `ink-minimal`, `lavender-dream`, `coffee-house`, `bauhaus-primary` |
+| Minimal | `minimal-gold`, `minimal-green`, `minimal-blue`, `minimal-orange`, `minimal-red`, `minimal-navy`, `minimal-gray`, `minimal-sky` |
+| Focus | `focus-gold`, `focus-green`, `focus-blue`, `focus-orange`, `focus-red`, `focus-navy`, `focus-gray`, `focus-sky` |
+| Elegant | `elegant-gold`, `elegant-green`, `elegant-blue`, `elegant-orange`, `elegant-red`, `elegant-navy`, `elegant-gray`, `elegant-sky` |
+| Bold | `bold-gold`, `bold-green`, `bold-blue`, `bold-orange`, `bold-red`, `bold-navy`, `bold-gray`, `bold-sky` |
+
+`wxp themes` 会返回每个主题的系列、适用场景、密度、对比度和强调色，AI 调用方应优先使用这些字段选型。
 
 查看主题：
 

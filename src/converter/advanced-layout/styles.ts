@@ -18,26 +18,7 @@ export interface AdvancedPalette {
 }
 
 export function getAdvancedPalette(theme: Theme): AdvancedPalette {
-  if (theme.name === "studio" || theme.name === "studio-studio") {
-    return {
-      background: "#faf9f5",
-      surface: "#faf9f5",
-      surfaceAlt: "#f7f7f7",
-      accentSoft: "#f1e6df",
-      accentSofter: "#ecd9d0",
-      accent: "#c86442",
-      accentDark: "#b3593b",
-      border: "#e3c6b9",
-      mutedBorder: "rgba(202, 202, 199, 0.18)",
-      text: "#555555",
-      textStrong: "#222222",
-      muted: "#737373",
-      shadow: "0 2px 6px rgba(85, 85, 85, 0.06)",
-      accentShadow: "0 4px 16px rgba(179, 89, 59, 0.12)",
-    }
-  }
-
-  const accent = extractAccentColor(theme.styles.h2) ?? extractAccentColor(theme.styles.a) ?? "#07c160"
+  const accent = theme.accent ?? extractAccentColor(theme.styles.h2) ?? extractAccentColor(theme.styles.a) ?? "#07c160"
   return {
     background: "#ffffff",
     surface: "#ffffff",

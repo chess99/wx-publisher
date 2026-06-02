@@ -4,7 +4,7 @@ import type { ThemePreviewResult } from "../src/converter/preview-html.js"
 
 const MOCK_RESULTS: ThemePreviewResult[] = [
   { theme: "default", html: "<section>default content</section>" },
-  { theme: "tech",    html: "<section>tech content</section>" },
+  { theme: "github-readme", html: "<section>github-readme content</section>" },
   { theme: "elegant", html: "<section>elegant content</section>" },
   { theme: "minimal", html: "<section>minimal content</section>" },
 ]
@@ -31,7 +31,7 @@ describe("generatePreviewHtml", () => {
     // 第一个 panel 不含 display:none
     expect(html).toContain('<div class="panel" data-theme="default">')
     // 其余含 display:none
-    expect(html).toContain('data-theme="tech" style="display:none"')
+    expect(html).toContain('data-theme="github-readme" style="display:none"')
     expect(html).toContain('data-theme="elegant" style="display:none"')
     expect(html).toContain('data-theme="minimal" style="display:none"')
   })
@@ -76,7 +76,7 @@ describe("generatePreviewHtml", () => {
   it("渲染失败的主题显示错误信息而非崩溃", () => {
     const resultsWithError: ThemePreviewResult[] = [
       { theme: "default", html: "<section>ok</section>" },
-      { theme: "tech",    html: "", error: "渲染出错了" },
+      { theme: "github-readme", html: "", error: "渲染出错了" },
     ]
     const html = generatePreviewHtml(resultsWithError, FILE_PATH)
     expect(html).toContain("渲染失败")

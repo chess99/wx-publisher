@@ -75,7 +75,7 @@ describe("advanced layout showcase example", () => {
   })
 
   it("converts without leaking directive fences", async () => {
-    const result = await convertMarkdown(readShowcase(), { theme: "studio", stripLinks: false })
+    const result = await convertMarkdown(readShowcase(), { theme: "default", stripLinks: false })
 
     for (const moduleName of [...PUBLIC_ADVANCED_MODULES, ...ENHANCED_ADVANCED_MODULES]) {
       expect(result.html).toContain(`data-mpa-action-id="${moduleName}"`)

@@ -520,8 +520,8 @@ describe("resolveThemeOption", () => {
   })
 
   it("uses explicit built-in theme name", () => {
-    const result = resolveThemeOption({ theme: "tech" }, "default")
-    expect(result).toEqual({ themeName: "tech", themeDefinition: undefined })
+    const result = resolveThemeOption({ theme: "github-readme" }, "default")
+    expect(result).toEqual({ themeName: "github-readme", themeDefinition: undefined })
   })
 
   it("loads an external theme file", () => {
@@ -536,7 +536,7 @@ describe("resolveThemeOption", () => {
 
   it("rejects --theme and --theme-file together", () => {
     expect(() => resolveThemeOption(
-      { theme: "tech", themeFile: "test/fixtures/external-theme-valid.json" },
+      { theme: "github-readme", themeFile: "test/fixtures/external-theme-valid.json" },
       "default"
     )).toThrow("--theme and --theme-file cannot be used together")
   })
@@ -721,7 +721,7 @@ describe("CLI external theme files", () => {
     const { stderr, exitCode } = await runCli([
       "convert",
       "--file", "test/fixtures/benchmark.md",
-      "--theme", "tech",
+      "--theme", "github-readme",
       "--theme-file", "test/fixtures/external-theme-valid.json",
     ])
     const payload = JSON.parse(stderr)

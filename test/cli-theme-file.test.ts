@@ -77,7 +77,7 @@ describe("CLI external theme files", () => {
       "--file",
       articlePath,
       "--theme",
-      "tech",
+      "github-readme",
       "--theme-file",
       validThemePath,
     ])

@@ -1,5 +1,6 @@
 import { resolve } from "path"
 import type { Theme } from "../converter/themes.js"
+import { hasTheme } from "../converter/themes.js"
 import { loadThemeFile } from "../converter/theme-file.js"
 
 export interface ThemeCliOptions {
@@ -22,8 +23,12 @@ export function resolveThemeOption(
   }
 
   if (!opts.themeFile) {
+    const themeName = (opts.theme || defaultTheme || "default").trim() || "default"
+    if (!hasTheme(themeName)) {
+      throw new Error(`未知主题: ${themeName}`)
+    }
     return {
-      themeName: opts.theme ?? defaultTheme,
+      themeName,
       themeDefinition: undefined,
     }
   }

@@ -62,17 +62,17 @@ describe("loadConfig", () => {
   it("全局配置文件生效", async () => {
     writeFileSync(
       join(globalConfigDir, "config.json"),
-      JSON.stringify({ wechat_appid: "wx_global", default_theme: "tech" })
+      JSON.stringify({ wechat_appid: "wx_global", default_theme: "github-readme" })
     )
     const config = await freshLoadConfig()
     expect(config.wechat_appid).toBe("wx_global")
-    expect(config.default_theme).toBe("tech")
+    expect(config.default_theme).toBe("github-readme")
   })
 
   it("本地 .wxp.json 覆盖全局配置", async () => {
     writeFileSync(
       join(globalConfigDir, "config.json"),
-      JSON.stringify({ wechat_appid: "wx_global", default_theme: "tech" })
+      JSON.stringify({ wechat_appid: "wx_global", default_theme: "github-readme" })
     )
     writeFileSync(
       join(testDir, "project", ".wxp.json"),
@@ -82,7 +82,7 @@ describe("loadConfig", () => {
     // 本地覆盖
     expect(config.wechat_appid).toBe("wx_local")
     // 全局提供（本地未覆盖）
-    expect(config.default_theme).toBe("tech")
+    expect(config.default_theme).toBe("github-readme")
   })
 
   it("没有本地配置时全局配置生效", async () => {

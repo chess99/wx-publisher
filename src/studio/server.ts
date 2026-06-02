@@ -6,8 +6,8 @@ import { randomUUID } from "crypto"
 import { spawn } from "child_process"
 import { fileURLToPath } from "url"
 import { convertMarkdown } from "../converter/index.js"
-import { getTheme, listThemes, type Theme } from "../converter/themes.js"
-import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
+import { getTheme, hasTheme, listThemes, type Theme } from "../converter/themes.js"
+import { getPlaceholderCoverBase64 } from "../converter/placeholder-cover.js"
 import { loadConfig, validateConfig } from "../config/index.js"
 import { WechatClient } from "../wechat/client.js"
 import { formatCliError } from "../cli/errors.js"
@@ -98,7 +98,10 @@ async function handleRequest(
     }
     return json(res, 404, { success: false, error: "Not found" })
   } catch (error) {
-    return json(res, 500, formatCliError("Studio request failed", String(error)))
+    const status = error instanceof StudioRequestError ? error.status : 500
+    return json(res, status, error instanceof StudioRequestError
+      ? formatCliError(error.message)
+      : formatCliError("Studio request failed", String(error)))
   }
 }
 
@@ -160,13 +163,12 @@ async function handlePublish(payload: unknown, articleDir: string): Promise<Stud
     return formatCliError("摘要不能超过 120 个字符", { length: Array.from(digest).length, max: 120 }) as unknown as StudioEnvelope
   }
 
+  const theme = resolveStudioTheme(request.theme, request.themeSettings)
   const config = loadConfig()
   const errors = validateConfig(config)
   if (errors.length > 0) {
     return formatCliError("配置不完整", errors) as unknown as StudioEnvelope
   }
-
-  const theme = resolveStudioTheme(request.theme, request.themeSettings)
   const client = new WechatClient({ appid: config.wechat_appid, secret: config.wechat_secret })
   const converted = await convertMarkdown(markdown, {
     theme: theme.name,
@@ -184,7 +186,7 @@ async function handlePublish(payload: unknown, articleDir: string): Promise<Stud
     thumbMediaId = upload.media_id
   } else {
     const tmpPath = resolve(tmpdir(), `wx-publisher-placeholder-${randomUUID()}.png`)
-    writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_COVER_BASE64, "base64"))
+    writeFileSync(tmpPath, Buffer.from(getPlaceholderCoverBase64(), "base64"))
     try {
       const upload = await client.uploadImage(tmpPath)
       thumbMediaId = upload.media_id
@@ -238,8 +240,18 @@ async function handlePublish(payload: unknown, articleDir: string): Promise<Stud
 }
 
 function resolveStudioTheme(themeName: unknown, rawSettings: unknown): Theme {
-  const theme = getTheme(typeof themeName === "string" && themeName.trim() ? themeName : loadConfig().default_theme)
+  const name = (typeof themeName === "string" && themeName.trim() ? themeName : loadConfig().default_theme || "default").trim() || "default"
+  if (!hasTheme(name)) {
+    throw new StudioRequestError(`未知主题: ${name}`, 400)
+  }
+  const theme = getTheme(name)
   return deriveStudioTheme(theme, asThemeSettings(rawSettings))
+}
+
+class StudioRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message)
+  }
 }
 
 function asThemeSettings(value: unknown): StudioThemeSettings {

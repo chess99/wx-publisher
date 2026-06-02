@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "usage": "local-reference-only",
+  "usage": "runtime-theme-catalog",
+  "sourceUpdatedAt": "2026-03-14",
   "palettes": [
     {
       "id": "default",

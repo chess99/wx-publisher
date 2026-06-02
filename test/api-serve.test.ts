@@ -45,7 +45,7 @@ describe("wxp serve API", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           markdown: ":::hero\ntitle: API Title\nsubtitle: API body\n:::",
-          theme: "studio",
+          theme: "default",
           fontSize: "medium",
           convertVersion: "v1",
         }),
@@ -57,7 +57,7 @@ describe("wxp serve API", () => {
 
       expect(res.status).toBe(200)
       expect(payload.success).toBe(true)
-      expect(payload.data.theme).toBe("studio")
+      expect(payload.data.theme).toBe("default")
       expect(payload.data.html).toContain('data-mpa-action-id="hero"')
       expect(payload.data.warnings).toEqual([])
     } finally {
@@ -84,7 +84,7 @@ describe("wxp serve API", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           markdown: "[bad](javascript:alert(1))\n\n![bad](javascript:alert(1))",
-          theme: "studio",
+          theme: "default",
         }),
       })
       const payload = await res.json() as { success: boolean; data: { html: string } }
@@ -93,6 +93,38 @@ describe("wxp serve API", () => {
       expect(payload.success).toBe(true)
       expect(payload.data.html).not.toContain("javascript:")
       expect(payload.data.html).toContain("[图片已移除: bad]")
+    } finally {
+      proc.kill()
+    }
+  })
+
+  it("rejects unknown runtime theme ids through POST /api/v1/convert", async () => {
+    const port = 24000 + Math.floor(Math.random() * 1000)
+    const proc = spawn("node", ["--import", "tsx/esm", "src/cli/index.ts", "serve", "--port", String(port)], {
+      cwd: REPO_ROOT,
+      env: {
+        ...process.env,
+        WXP_APPID: "",
+        WXP_SECRET: "",
+        WXP_THEME: "",
+      },
+    })
+
+    try {
+      await waitForServer(port, proc)
+      const res = await fetch(`http://127.0.0.1:${port}/api/v1/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          markdown: "# Title",
+          theme: "archived-theme",
+        }),
+      })
+      const payload = await res.json() as { success: boolean; error: string }
+
+      expect(res.status).toBe(400)
+      expect(payload.success).toBe(false)
+      expect(payload.error).toContain("未知主题: archived-theme")
     } finally {
       proc.kill()
     }
@@ -173,7 +205,7 @@ describe("wxp serve API", () => {
       const res = await fetch(`http://127.0.0.1:${port}/api/v1/article-draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown: "# Title", theme: "studio" }),
+        body: JSON.stringify({ markdown: "# Title", theme: "default" }),
       })
       const payload = await res.json() as { success: boolean; error: string; details: string[] }
 

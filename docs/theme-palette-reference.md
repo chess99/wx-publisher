@@ -1,15 +1,15 @@
 # Theme Palette Reference
 
-This file is a local reference for future theme work. It is not part of the runtime theme registry and should not be exposed through CLI output, API responses, or Studio controls unless a later implementation explicitly promotes a palette.
+This file documents the 48 runtime themes exposed by `wxp themes`. Runtime support comes from `src/converter/themes.ts`; this document and `docs/theme-palette-reference.json` keep the same theme IDs, palette colors, and selection notes for AI and script callers.
 
 The canonical data file is `docs/theme-palette-reference.json`.
 
 ## Usage
 
-- Use these palettes as local design inputs when exploring new theme directions.
+- Use the theme IDs directly with `--theme`.
+- Use `wxp themes` when an AI caller needs machine-readable selection metadata: collection, best fit, density, contrast, and accent color.
 - Keep palette IDs stable so notes, screenshots, and future experiments can refer to the same design direction.
-- Do not treat these entries as supported themes. Runtime support still comes from `src/converter/themes.ts`.
-- When promoting a palette into runtime code, add normal tests for conversion, CLI listing, API behavior, and Studio preview.
+- When editing the catalog, update `src/converter/themes.ts`, this document, `docs/theme-palette-reference.json`, and the theme tests together.
 
 ## Groups
 
@@ -106,4 +106,4 @@ When editing this reference:
 - Keep `docs/theme-palette-reference.json` at exactly 48 palettes unless the intended source set changes.
 - Keep every palette ID unique.
 - Keep all color values in six-digit hex format.
-- Keep this reference focused on local design directions and future implementation notes.
+- Keep this reference focused on the 48 runtime themes and their selection notes.

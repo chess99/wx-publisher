@@ -5,7 +5,7 @@ import { getAdvancedPalette } from "../src/converter/advanced-layout/styles.js"
 
 describe("deriveStudioTheme", () => {
   it("applies primary color, font size, font family, and code block style without mutating the base theme", () => {
-    const base = getTheme("tech")
+    const base = getTheme("github-readme")
     const derived = deriveStudioTheme(base, {
       primaryColor: "#d66a45",
       fontSize: 17,
@@ -13,7 +13,7 @@ describe("deriveStudioTheme", () => {
       codeBlockStyle: "light",
     })
 
-    expect(derived.name).toBe("tech-studio")
+    expect(derived.name).toBe("github-readme-studio")
     expect(derived.styles.h2).toContain("#d66a45")
     expect(derived.styles.h3).toContain("#d66a45")
     expect(derived.styles.a).toContain("#d66a45")
@@ -28,17 +28,17 @@ describe("deriveStudioTheme", () => {
   })
 
   it("returns the original theme styles when no Studio overrides are provided", () => {
-    const base = getTheme("minimal")
+    const base = getTheme("default")
     const derived = deriveStudioTheme(base, {})
 
-    expect(derived.name).toBe("minimal-studio")
+    expect(derived.name).toBe("default-studio")
     expect(derived.styles).toEqual(base.styles)
     expect(derived.styles).not.toBe(base.styles)
   })
 
-  it("keeps the Studio advanced module palette after deriving settings", () => {
-    const derived = deriveStudioTheme(getTheme("studio"), {})
-    expect(getAdvancedPalette(derived).background).toBe("#faf9f5")
-    expect(getAdvancedPalette(derived).accent).toBe("#c86442")
+  it("keeps advanced module palette tied to the derived theme accent", () => {
+    const derived = deriveStudioTheme(getTheme("github-readme"), {})
+    expect(getAdvancedPalette(derived).accent).toBe("#0969da")
+    expect(getAdvancedPalette(derived).accentSoft).toBe("rgba(9, 105, 218, 0.12)")
   })
 })

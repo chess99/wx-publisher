@@ -58,9 +58,9 @@ async function publishDraft(article: Article): Promise<string> {
 Shell 命令同样需要高亮：
 
 ```bash
-# 发布到草稿箱，使用 tech 主题
+# 发布到草稿箱，使用 github-readme 主题
 wxp publish --file article.md \
-  --theme tech \
+  --theme github-readme \
   --digest "技术文章排版实战指南"
 ```
 
@@ -70,7 +70,7 @@ wxp publish --file article.md \
 {
   "wechat_appid": "wx_your_appid",
   "wechat_secret": "your_secret_here",
-  "default_theme": "tech"
+  "default_theme": "github-readme"
 }
 ```
 

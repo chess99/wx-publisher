@@ -4,15 +4,15 @@
  * 命令行入口，默认输出 JSON，方便脚本解析
  *
  * 用法：
- *   wxp publish --file article.md [--theme tech] [--cover /path/to/cover.jpg]
- *   wxp convert --file article.md [--theme tech]
+ *   wxp publish --file article.md [--theme github-readme] [--cover /path/to/cover.jpg]
+ *   wxp convert --file article.md [--theme github-readme]
  *   wxp config set wechat_appid wx123...
  *   wxp config get
  *   wxp themes
  */
 
 import { program } from "commander"
-import { readFileSync, writeFileSync, unlinkSync } from "fs"
+import { readFileSync, writeFileSync, unlinkSync, writeSync } from "fs"
 import { dirname, isAbsolute, resolve } from "path"
 import { tmpdir } from "os"
 import { randomUUID } from "crypto"
@@ -23,8 +23,8 @@ import { convertMarkdown } from "../converter/index.js"
 import { generatePreviewHtml, shellQuote } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
-import { listThemes, getTheme, type Theme } from "../converter/themes.js"
-import { PLACEHOLDER_COVER_BASE64 } from "../converter/placeholder-cover.js"
+import { listThemes, getTheme, listThemeReferences, hasTheme, type Theme } from "../converter/themes.js"
+import { getPlaceholderCoverBase64 } from "../converter/placeholder-cover.js"
 import { formatCliError } from "./errors.js"
 import { resolveThemeOption } from "./theme-options.js"
 import { getThemeFileSchema, loadThemeFile } from "../converter/theme-file.js"
@@ -34,13 +34,42 @@ import { ENHANCED_ADVANCED_MODULES, PUBLIC_ADVANCED_MODULES } from "../converter
 // ─── 输出格式 ─────────────────────────────────────────────────────────────────
 
 function ok(data: unknown): never {
-  console.log(JSON.stringify({ success: true, data }, null, 2))
+  writeAllSync(1, `${JSON.stringify({ success: true, data }, null, 2)}\n`)
   process.exit(0)
 }
 
 function fail(message: string, details?: unknown): never {
-  console.error(JSON.stringify(formatCliError(message, details), null, 2))
+  writeAllSync(2, `${JSON.stringify(formatCliError(message, details), null, 2)}\n`)
   process.exit(1)
+}
+
+function writeAllSync(fd: number, text: string): void {
+  const buffer = Buffer.from(text)
+  let offset = 0
+  while (offset < buffer.length) {
+    try {
+      const written = writeSync(fd, buffer, offset, buffer.length - offset)
+      if (written === 0) {
+        sleepSync(5)
+      } else {
+        offset += written
+      }
+    } catch (error) {
+      if (isWriteAgain(error)) {
+        sleepSync(5)
+        continue
+      }
+      throw error
+    }
+  }
+}
+
+function isWriteAgain(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "EAGAIN"
+}
+
+function sleepSync(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 }
 
 // ─── CLI 定义 ─────────────────────────────────────────────────────────────────
@@ -116,7 +145,7 @@ program
     } else {
       // 未提供封面图，使用内置占位图
       const tmpPath = resolve(tmpdir(), `wx-publisher-placeholder-${randomUUID()}.png`)
-      writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_COVER_BASE64, "base64"))
+      writeFileSync(tmpPath, Buffer.from(getPlaceholderCoverBase64(), "base64"))
       try {
         const result = await client.uploadImage(tmpPath).catch(e => fail(`上传占位封面图失败`, String(e)))
         thumbMediaId = result.media_id
@@ -275,9 +304,17 @@ program
     const names = listThemes()
     const themes = names.map(name => {
       const t = getTheme(name)
-      return opts.verbose
-        ? { name: t.name, description: t.description, styles: t.styles }
-        : { name: t.name, description: t.description }
+      const summary = {
+        name: t.name,
+        description: t.description,
+        collection: t.collection,
+        displayName: t.displayName,
+        bestFor: t.bestFor,
+        density: t.density,
+        contrast: t.contrast,
+        accent: t.accent,
+      }
+      return opts.verbose ? { ...summary, styles: t.styles } : summary
     })
     ok({ themes, count: themes.length })
   })
@@ -410,7 +447,7 @@ program
       coverage: {
         themes: {
           total: listThemes().length,
-          professional: 40,
+          professional: listThemes().length,
         },
         advanced_modules: {
           public: PUBLIC_ADVANCED_MODULES.length,
@@ -480,6 +517,7 @@ program
         WXP_THEME: "默认主题",
       },
       themes: listThemes(),
+      theme_reference: listThemeReferences(),
       notes: [
         "封面图可选：--cover 本地路径 或 --cover-url 公网 URL；不提供则自动使用内置占位图，JSON 输出含 warning 字段",
         "文章中的外链图片和本地图片会自动上传到微信素材库",
@@ -753,7 +791,7 @@ async function handleConvertApi(body: ConvertApiBody, res: ServerResponse): Prom
 
   const warnings = apiWarnings(body)
   const config = loadConfig()
-  const theme = body.theme || config.default_theme || "default"
+  const theme = resolveApiTheme(body.theme, config.default_theme)
   const result = await convertMarkdown(body.markdown, { theme, stripLinks: false })
 
   sendJson(res, 200, {
@@ -780,7 +818,7 @@ async function handleDraftApi(body: ConvertApiBody, res: ServerResponse): Promis
     return
   }
 
-  const theme = body.theme || config.default_theme || "default"
+  const theme = resolveApiTheme(body.theme, config.default_theme)
   const title = body.title || extractTitle(body.markdown) || "Untitled"
   const digest = typeof body.digest === "string" && body.digest.trim() ? body.digest.trim() : undefined
   if (digest && Array.from(digest).length > 120) {
@@ -901,7 +939,7 @@ async function resolveApiCover(
   }
 
   const tmpPath = resolve(tmpdir(), `wx-publisher-placeholder-${randomUUID()}.png`)
-  writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_COVER_BASE64, "base64"))
+  writeFileSync(tmpPath, Buffer.from(getPlaceholderCoverBase64(), "base64"))
   try {
     const result = await client.uploadImage(tmpPath)
     return { mediaId: result.media_id, usedPlaceholder: true }
@@ -919,6 +957,14 @@ function apiWarnings(body: ConvertApiBody): string[] {
     warnings.push(`unsupported convertVersion ignored: ${body.convertVersion}`)
   }
   return warnings
+}
+
+function resolveApiTheme(rawTheme: unknown, defaultTheme: string): string {
+  const theme = (typeof rawTheme === "string" && rawTheme.trim() ? rawTheme : defaultTheme || "default").trim() || "default"
+  if (!hasTheme(theme)) {
+    throw new ApiRequestError(`未知主题: ${theme}`, 400)
+  }
+  return theme
 }
 
 class ApiRequestError extends Error {

@@ -179,7 +179,7 @@ body: Theme can then carry atmosphere.
 :::
 
 :::author-card
-name: Geek Journey
+name: Product Notes
 role: Builder
 bio: Builds content tools.
 tags: AI | Content
@@ -287,7 +287,7 @@ describe("advanced layout parser", () => {
 
 describe("advanced layout conversion", () => {
   it("renders every documented sample module without leaking directive fences", async () => {
-    const result = await convertMarkdown(SAMPLE_MODULES, { theme: "studio", stripLinks: false })
+    const result = await convertMarkdown(SAMPLE_MODULES, { theme: "default", stripLinks: false })
 
     const modules = [
       "hero", "cards", "metrics", "steps", "compare", "timeline",
@@ -316,7 +316,7 @@ describe("advanced layout conversion", () => {
   })
 
   it("renders formerly aliased modules as first-class modules", async () => {
-    const result = await convertMarkdown(`:::steps[Steps]\n01 | Do it | Follow the path | ${IMAGE_URL} | Note\n:::\n\n:::compare\nleft_title: Old\nleft_image: ${IMAGE_URL}\nright_title: New\nright_image: ${IMAGE_URL}\n:::\n\n:::bridge\ntitle: Bridge title\nbody: Connect sections.\n:::\n\n:::manifesto\ntitle: Believe this\nbody: A memorable position.\n:::`, { theme: "studio" })
+    const result = await convertMarkdown(`:::steps[Steps]\n01 | Do it | Follow the path | ${IMAGE_URL} | Note\n:::\n\n:::compare\nleft_title: Old\nleft_image: ${IMAGE_URL}\nright_title: New\nright_image: ${IMAGE_URL}\n:::\n\n:::bridge\ntitle: Bridge title\nbody: Connect sections.\n:::\n\n:::manifesto\ntitle: Believe this\nbody: A memorable position.\n:::`, { theme: "default" })
 
     expect(result.html).toContain('data-mpa-action-id="steps"')
     expect(result.html).toContain('data-mpa-action-id="compare"')
@@ -324,10 +324,10 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain('data-mpa-action-id="manifesto"')
   })
 
-  it("matches competitor structure for gallery and long image modules", async () => {
+  it("matches reference structure for gallery and long image modules", async () => {
     const result = await convertMarkdown(
       `:::gallery[Gallery]\n![A](${IMAGE_URL})\n![B](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
-      { theme: "studio" },
+      { theme: "default" },
     )
 
     expect(result.html).toContain('data-mpa-action-id="gallery"')
@@ -346,10 +346,10 @@ describe("advanced layout conversion", () => {
     expect(result.html).not.toContain("[IMAGE:")
   })
 
-  it("matches competitor structure for process and comparison modules", async () => {
+  it("matches reference structure for process and comparison modules", async () => {
     const result = await convertMarkdown(
       `:::steps[Steps]\n01 | Start | Body | Note\n02 | Continue | More body | More note\n:::\n\n:::timeline[Timeline]\nStage 1 | Build | First pass\nStage 2 | Verify | Second pass\n:::\n\n:::bridge\nlabel: Next\ntitle: Evidence follows judgment\nbody: The next section carries proof.\nnext: Continue\n:::\n\n:::myth-fact[Myth Fact]\nMore modules means better | Useful modules should remain\n:::`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).toContain('data-mpa-action-id="steps"')
@@ -363,10 +363,10 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain("grid-template-columns:minmax(0,1fr) minmax(0,1fr)")
   })
 
-  it("matches competitor details for statement and manifesto modules", async () => {
+  it("matches reference details for statement and manifesto modules", async () => {
     const result = await convertMarkdown(
       `:::infographic\ntype: statement\neyebrow: Graphic\ntitle: Make|one point|visible\nsubtitle: Short explanation\nquote: One screen, one judgment.\nnote: Good for transitions\n:::\n\n:::manifesto\nlabel: Belief\ntitle: Structure before decoration\nbody: Good layout clarifies meaning.\nbelieve: Structure first | Text is the lead\nagainst: Random templates | Visual noise\nnote: Keep it useful\n:::\n\n:::myth-fact[Myth Fact]\nMore modules means better | Useful modules should remain\n:::`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).toContain('data-infographic-type="statement"')
@@ -374,13 +374,13 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain("justify-content:space-between")
     expect(result.html).toContain("我相信")
     expect(result.html).toContain("我拒绝")
-    expect(result.html).toContain("background:linear-gradient(135deg, #f1e6df 0%, #faf9f5 70%, #f7f7f7 100%)")
+    expect(result.html).toContain("background:linear-gradient(135deg, rgba(7, 193, 96, 0.12) 0%, #ffffff 70%, #f7f7f7 100%)")
   })
 
-  it("matches competitor structure for JSON-backed modules", async () => {
+  it("matches reference structure for JSON-backed modules", async () => {
     const result = await convertMarkdown(
       `:::changelog\n{"version":"v2","date":"2026.05","added":["More modules"],"fixed":["Stable rendering"]}\n:::\n\n:::comparison-table\n{"left":{"title":"Before","items":["Slow"]},"right":{"title":"After","items":["Fast"]}}\n:::\n\n:::definition\n{"term":"Advanced layout","def":"A structured expression layer.","termLabel":"Definition"}\n:::\n\n:::question\n[{"q":"Why use modules?","a":"To make judgment easier to scan."}]\n:::\n\n:::quote-card\n{"text":"Structure is a reading promise.","source":"Guide"}\n:::\n\n:::resource-list\n[{"name":"Docs","url":"https://example.com","desc":"Syntax and examples","icon":"Guide"}]\n:::\n\n:::stat-row\n[{"value":"43","label":"Modules","note":"Public set"}]\n:::\n\n:::tweet\n{"name":"Product Notes","handle":"@local","text":"Readable before decorative.","timestamp":"2026-05"}\n:::`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).toContain('data-mpa-action-id="changelog"')
@@ -397,7 +397,7 @@ describe("advanced layout conversion", () => {
 
   it("renders GFM alerts and styled footnotes", async () => {
     const markdown = `> [!NOTE]\n> **提示**: remember this\n>\n> Second paragraph\n\nFootnote here[^1].\n\n[^1]: Footnote body`
-    const result = await convertMarkdown(markdown, { theme: "studio", stripLinks: false })
+    const result = await convertMarkdown(markdown, { theme: "default", stripLinks: false })
 
     expect(result.html).toContain("markdown-alert-note")
     expect(result.html).toContain("<strong")
@@ -410,7 +410,7 @@ describe("advanced layout conversion", () => {
   it("removes unsafe Markdown links and images when links are preserved", async () => {
     const result = await convertMarkdown(
       `[bad](javascript:alert(1))\n\n[data](data:text/html,<svg>)\n\n![x](javascript:alert(1))\n\n[ok](https://example.com/path)\n\n![ok](./local.png)`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).not.toContain("javascript:")
@@ -423,7 +423,7 @@ describe("advanced layout conversion", () => {
   it("sanitizes and collects Markdown links and images inside GFM alerts", async () => {
     const result = await convertMarkdown(
       `> [!NOTE]\n> [bad](javascript:alert(1))\n> ![bad](javascript:alert(1))\n> [ok](https://example.com/path)\n> ![ok](./alert-local.png)`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).not.toContain("javascript:")
@@ -435,7 +435,7 @@ describe("advanced layout conversion", () => {
   it("strips Markdown links inside GFM alerts by default", async () => {
     const result = await convertMarkdown(
       `> [!NOTE]\n> [ok](https://example.com/path)`,
-      { theme: "studio" },
+      { theme: "default" },
     )
 
     expect(result.html).not.toContain('href="https://example.com/path"')
@@ -445,7 +445,7 @@ describe("advanced layout conversion", () => {
   it("does not render protocol-relative advanced module image URLs", async () => {
     const result = await convertMarkdown(
       `:::hero\ntitle: Unsafe image\nimage: //cdn.example.com/unsafe.png\n:::`,
-      { theme: "studio" },
+      { theme: "default" },
     )
 
     expect(result.html).not.toContain("//cdn.example.com/unsafe.png")
@@ -455,7 +455,7 @@ describe("advanced layout conversion", () => {
   it("does not let user text collide with advanced block markers", async () => {
     const result = await convertMarkdown(
       `WXP_ADVANCED_LAYOUT_BLOCK_0\n\n:::summary\neyebrow: Summary\nhighlight: Safe marker\nbody: Only one rendered block.\n:::\n\nWXP_ADVANCED_LAYOUT_BLOCK_0`,
-      { theme: "studio" },
+      { theme: "default" },
     )
 
     expect(result.html.match(/data-mpa-action-id="summary"/g)).toHaveLength(1)
@@ -464,7 +464,7 @@ describe("advanced layout conversion", () => {
 
   it("collects raw image URLs from image-steps rows", async () => {
     const rowImage = "https://example.com/image-steps-only.png"
-    const result = await convertMarkdown(`:::image-steps[Steps]\n01 | Open | Body | ${rowImage} | Note\n:::`, { theme: "studio" })
+    const result = await convertMarkdown(`:::image-steps[Steps]\n01 | Open | Body | ${rowImage} | Note\n:::`, { theme: "default" })
 
     expect(result.externalImages).toContain(rowImage)
   })

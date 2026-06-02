@@ -46,8 +46,10 @@ export function deriveStudioTheme(baseTheme: Theme, settings: StudioThemeSetting
   }
 
   return {
+    ...baseTheme,
     name: `${baseTheme.name}-studio`,
     description: `${baseTheme.description}（Studio 调整）`,
+    accent: settings.primaryColor ?? baseTheme.accent,
     styles,
   }
 }

@@ -1,8 +1,8 @@
-# Competitor Advanced Renderer Alignment Implementation Plan
+# Reference Advanced Renderer Alignment Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Align `wxp` advanced block rendering with the competitor baseline while preserving optimized behavior for competitor gaps.
+**Goal:** Align `wxp` advanced block rendering with the reference baseline while preserving optimized behavior for reference gaps.
 
 **Architecture:** Keep the existing parser and palette intact. Update focused renderer functions in `src/converter/advanced-layout/renderers.ts`, and prove alignment through structural Vitest assertions in `test/advanced-layout.test.ts` plus showcase conversion.
 
@@ -13,11 +13,11 @@
 ## File Map
 
 - Modify: `test/advanced-layout.test.ts`
-  - Adds structural tests for competitor-aligned modules and optimized exceptions.
+  - Adds structural tests for reference-aligned modules and optimized exceptions.
 - Modify: `src/converter/advanced-layout/renderers.ts`
-  - Updates the renderer templates for public advanced modules whose structure differs from the competitor baseline.
+  - Updates the renderer templates for public advanced modules whose structure differs from the reference baseline.
 - Read-only reference: `/Users/zcs/.codex/attachments/71c0aaa6-befa-4ac5-af00-6ac3685a42d0/pasted-text.txt`
-  - Competitor baseline output.
+  - Reference baseline output.
 - Read-only reference: `examples/advanced-layout-showcase.md`
   - Canonical full-feature article.
 
@@ -31,10 +31,10 @@
 Add this test inside `describe("advanced layout conversion", () => { ... })`:
 
 ```ts
-  it("matches competitor structure for gallery and long image modules", async () => {
+  it("matches reference structure for gallery and long image modules", async () => {
     const result = await convertMarkdown(
       `:::gallery[Gallery]\n![A](${IMAGE_URL})\n![B](${IMAGE_URL})\n:::\n\n:::longimage[Long]\n![Long](${IMAGE_URL})\n:::`,
-      { theme: "studio" },
+      { theme: "default" },
     )
 
     expect(result.html).toContain('data-mpa-action-id="gallery"')
@@ -59,10 +59,10 @@ Add this test inside `describe("advanced layout conversion", () => { ... })`:
 Add this test in the same describe block:
 
 ```ts
-  it("matches competitor structure for process and comparison modules", async () => {
+  it("matches reference structure for process and comparison modules", async () => {
     const result = await convertMarkdown(
       `:::steps[Steps]\n01 | Start | Body | Note\n02 | Continue | More body | More note\n:::\n\n:::timeline[Timeline]\nStage 1 | Build | First pass\nStage 2 | Verify | Second pass\n:::\n\n:::bridge\nlabel: Next\n title: Evidence follows judgment\nbody: The next section carries proof.\nnext: Continue\n:::\n\n:::myth-fact[Myth Fact]\nMore modules means better | Useful modules should remain\n:::`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).toContain('data-mpa-action-id="steps"')
@@ -82,10 +82,10 @@ Add this test in the same describe block:
 Add this test in the same describe block:
 
 ```ts
-  it("matches competitor structure for JSON-backed modules", async () => {
+  it("matches reference structure for JSON-backed modules", async () => {
     const result = await convertMarkdown(
       `:::changelog\n{"version":"v2","date":"2026.05","added":["More modules"],"fixed":["Stable rendering"]}\n:::\n\n:::comparison-table\n{"left":{"title":"Before","items":["Slow"]},"right":{"title":"After","items":["Fast"]}}\n:::\n\n:::definition\n{"term":"Advanced layout","def":"A structured expression layer.","termLabel":"Definition"}\n:::\n\n:::question\n[{"q":"Why use modules?","a":"To make judgment easier to scan."}]\n:::\n\n:::quote-card\n{"text":"Structure is a reading promise.","source":"Guide"}\n:::\n\n:::resource-list\n[{"name":"Docs","url":"https://example.com","desc":"Syntax and examples","icon":"Guide"}]\n:::\n\n:::stat-row\n[{"value":"43","label":"Modules","note":"Public set"}]\n:::\n\n:::tweet\n{"name":"Product Notes","handle":"@local","text":"Readable before decorative.","timestamp":"2026-05"}\n:::`,
-      { theme: "studio", stripLinks: false },
+      { theme: "default", stripLinks: false },
     )
 
     expect(result.html).toContain('data-mpa-action-id="changelog"')
@@ -121,7 +121,7 @@ Default for this repository is to commit working iterations, so do not commit th
 - Modify: `src/converter/advanced-layout/renderers.ts`
 - Test: `test/advanced-layout.test.ts`
 
-- [ ] **Step 1: Replace `renderSteps` with competitor-style step cards**
+- [ ] **Step 1: Replace `renderSteps` with reference-style step cards**
 
 Use a structure with:
 
@@ -140,7 +140,7 @@ Each row must include:
 
 Omit the connector on the last row.
 
-- [ ] **Step 2: Replace `renderTimeline` with competitor-style dot rail rows**
+- [ ] **Step 2: Replace `renderTimeline` with reference-style dot rail rows**
 
 Each row must include:
 
@@ -152,7 +152,7 @@ Each row must include:
 
 Omit the vertical continuation line on the last row.
 
-- [ ] **Step 3: Replace `renderBridge` with competitor-style side rail card**
+- [ ] **Step 3: Replace `renderBridge` with reference-style side rail card**
 
 The outer bridge must include:
 
@@ -163,7 +163,7 @@ The outer bridge must include:
 
 The content card must use `padding:14px 15px`, `border-radius:12px`, and keep `label`, `title`, `body`, and `next`.
 
-- [ ] **Step 4: Replace `renderMythFact` with competitor-style paired cards**
+- [ ] **Step 4: Replace `renderMythFact` with reference-style paired cards**
 
 Each row must use:
 
@@ -173,7 +173,7 @@ Each row must use:
 
 The left card renders `误区`; the right card renders `事实`.
 
-- [ ] **Step 5: Adjust `renderManifesto` toward competitor card rhythm**
+- [ ] **Step 5: Adjust `renderManifesto` toward reference card rhythm**
 
 Keep field support intact. Use a compact statement section and a `display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;` belief/against area. Preserve `believe`, `against`, and `note`.
 
@@ -195,7 +195,7 @@ Expected: process/comparison test passes; JSON structure test still fails until 
 
 - [ ] **Step 1: Replace `renderChangelog` with compact header and entry rows**
 
-Use `div` elements in this module to match the competitor structure. The header must include:
+Use `div` elements in this module to match the reference structure. The header must include:
 
 ```ts
 `font-variant-numeric:tabular-nums;`
@@ -241,7 +241,7 @@ Render one Q row and one A row with circular badges.
 
 Use a centered layout, large quote mark, main quote text, and source badge. Preserve `author` and `source` by joining them when both exist.
 
-- [ ] **Step 6: Replace `renderResourceList` with competitor row structure**
+- [ ] **Step 6: Replace `renderResourceList` with reference row structure**
 
 Each item must include:
 
@@ -286,10 +286,10 @@ Expected: all new structural tests pass.
 Run:
 
 ```bash
-npm run dev -- convert --file examples/advanced-layout-showcase.md --theme studio --output /tmp/wxp-current-showcase.html
+npm run dev -- convert --file examples/advanced-layout-showcase.md --theme default --output /tmp/wxp-current-showcase.html
 ```
 
-Expected: JSON success output with `"theme": "studio"`.
+Expected: JSON success output with `"theme": "default"`.
 
 - [ ] **Step 2: Confirm required ids in generated HTML**
 
@@ -328,7 +328,7 @@ Run:
 
 ```bash
 git add test/advanced-layout.test.ts src/converter/advanced-layout/renderers.ts
-git commit -m "fix: align advanced renderer with competitor baseline"
+git commit -m "fix: align advanced renderer with reference baseline"
 ```
 
 Expected: commit succeeds with only the test and renderer files staged.
@@ -336,6 +336,6 @@ Expected: commit succeeds with only the test and renderer files staged.
 ## Self-Review Notes
 
 - The plan covers all modules identified in the design as materially different.
-- `gallery` and `longimage` are aligned to the follow-up competitor baseline while preserving `imageTag` for WeChat compatibility.
+- `gallery` and `longimage` are aligned to the follow-up reference baseline while preserving `imageTag` for WeChat compatibility.
 - No raw full-output snapshot is required; structural assertions are less brittle and still prove the important alignment points.
 - The plan keeps parser, themes, and example article unchanged unless verification reveals a direct need.
