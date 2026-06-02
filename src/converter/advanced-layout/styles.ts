@@ -19,7 +19,7 @@ export interface AdvancedPalette {
 
 export function getAdvancedPalette(theme: Theme): AdvancedPalette {
   const accent = theme.accent ?? extractAccentColor(theme.styles.h2) ?? extractAccentColor(theme.styles.a) ?? "#07c160"
-  if (theme.name === "default") {
+  if (theme.name === "default" && theme.collection === "built-in") {
     return {
       background: "#faf9f5",
       surface: "#faf9f5",

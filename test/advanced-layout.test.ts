@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { convertMarkdown } from "../src/converter/index.js"
 import { parseAdvancedLayoutBlocks } from "../src/converter/advanced-layout/parser.js"
+import { getTheme } from "../src/converter/themes.js"
 
 const IMAGE_URL = "https://example.com/image.png"
 
@@ -322,6 +323,32 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain('data-mpa-action-id="compare"')
     expect(result.html).toContain('data-mpa-action-id="bridge"')
     expect(result.html).toContain('data-mpa-action-id="manifesto"')
+  })
+
+  it("uses active external theme styles for advanced modules even when named default", async () => {
+    const externalDefaultTheme = {
+      name: "default",
+      description: "External default fixture",
+      styles: {
+        ...getTheme("github-readme").styles,
+        wrapper: "background:#fefefe;color:#123456;",
+        h2: "font-size:20px;color:#334455;background:#ddeeff;border-left:4px solid #334455;",
+        p: "font-size:16px;color:#123456;",
+        em: "font-style:italic;color:#556677;",
+        a: "color:#334455;border-bottom:1px solid #778899;",
+        table: "background:#ffeecc;",
+      },
+    }
+
+    const result = await convertMarkdown(
+      `:::verdict\neyebrow: Check\ntitle: External palette\nbody: Advanced modules follow active theme.\n:::`,
+      { themeDefinition: externalDefaultTheme, stripLinks: false },
+    )
+
+    expect(result.html).toContain('data-mpa-action-id="verdict"')
+    expect(result.html).toContain("background:linear-gradient(135deg, rgba(51, 68, 85, 0.12) 0%, #ffeecc 48%, #ddeeff 100%)")
+    expect(result.html).toContain("color:#123456")
+    expect(result.html).not.toContain("#ead6cc")
   })
 
   it("matches reference structure for gallery and long image modules", async () => {

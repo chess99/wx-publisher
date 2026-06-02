@@ -82,6 +82,7 @@ describe("professional theme matrix", () => {
     expect(defaultStyles.h2).toContain("border-bottom:1px dashed")
     expect(defaultStyles.code).toContain("border-radius:999px")
     expect(defaultStyles.pre).toContain("rgba(200, 100, 66, 0.14) 12px")
+    expect(defaultStyles.preCode).toContain("overflow-wrap:anywhere")
 
     expect(getTheme("minimal-gold").styles.h1).toContain("#b8872f")
     expect(getTheme("focus-blue").styles.h1).toContain("text-align:center")
@@ -129,6 +130,7 @@ describe("professional theme matrix", () => {
     expect(result.html).toContain("border-radius:999px")
     expect(result.html).toContain("<br>/goal")
     expect(result.html).not.toContain("white-space:nowrap;overflow-x:auto;;white-space:nowrap")
+    expect(result.html).toContain("overflow-wrap:anywhere")
     expect(result.html).toContain('data-mpa-action-id="verdict"')
     expect(result.html).toContain("background:linear-gradient(135deg, #ead6cc 0%, #faf9f5 48%, #f7f7f7 100%)")
     expect(result.html).toContain("word-break:break-all")

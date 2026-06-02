@@ -6,7 +6,7 @@
  * - 不支持外链，链接转为带下划线文字
  * - 图片必须是微信素材库 URL，外链图片会被屏蔽
  * - ul/ol/li 标签会被微信二次处理导致空行，改用 <p> + 前缀符号模拟
- * - pre/code 不能依赖 white-space:pre，换行→<br>，空格→&nbsp;（doocs/md 方案）
+ * - pre/code 不能依赖 white-space:pre，换行→<br>，空格→&nbsp;
  */
 
 import { unified } from "unified"
@@ -312,8 +312,8 @@ function inlineStyles(
           const lang = classNames.find(c => c.startsWith("language-"))?.replace("language-", "")
           const formattedHtml = formatCodeForWechat(rawText, lang)
 
-          // doocs/md 结构：pre 加 hljs class，code 加 language-xxx class
-          // ProseMirror 识别 hljs class 从而保留内容；style 双写保证样式
+          // 编辑器兼容结构：pre 加 hljs class，code 加 language-xxx class
+          // 部分富文本编辑器识别 hljs class 从而保留内容；style 双写保证样式
           const preStyle = styles.pre
           const codeStyle = hasCssDeclaration(styles.preCode, "white-space")
             ? styles.preCode
