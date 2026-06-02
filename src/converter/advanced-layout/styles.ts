@@ -19,19 +19,45 @@ export interface AdvancedPalette {
 
 export function getAdvancedPalette(theme: Theme): AdvancedPalette {
   const accent = theme.accent ?? extractAccentColor(theme.styles.h2) ?? extractAccentColor(theme.styles.a) ?? "#07c160"
+  if (theme.name === "default") {
+    return {
+      background: "#faf9f5",
+      surface: "#faf9f5",
+      surfaceAlt: "#f7f7f7",
+      accentSoft: "#ead6cc",
+      accentSofter: "#e3c6b9",
+      accent,
+      accentDark: "#b3593b",
+      border: "#dab1a1",
+      mutedBorder: "rgba(202, 202, 199, 0.18)",
+      text: "#555555",
+      textStrong: "#222222",
+      muted: "#737373",
+      shadow: "0 1px 2px rgba(0, 0, 0, 0.6)",
+      accentShadow: "0 8px 20px rgba(200, 100, 66, 0.1)",
+    }
+  }
+
+  const wrapperBackground = extractCssColor(theme.styles.wrapper, "background") ?? "#ffffff"
+  const surface = extractCssColor(theme.styles.table, "background") ?? wrapperBackground
+  const surfaceAlt = extractCssColor(theme.styles.h2, "background") ?? surface
+  const text = extractCssColor(theme.styles.p, "color") ?? "#333333"
+  const muted = extractCssColor(theme.styles.em, "color") ?? "#666666"
+  const border = extractCssColor(theme.styles.a, "border-bottom") ?? colorMix(accent, 0.28)
+
   return {
-    background: "#ffffff",
-    surface: "#ffffff",
-    surfaceAlt: "#f7f7f7",
+    background: wrapperBackground,
+    surface,
+    surfaceAlt,
     accentSoft: colorMix(accent, 0.12),
     accentSofter: colorMix(accent, 0.18),
     accent,
     accentDark: accent,
-    border: colorMix(accent, 0.28),
+    border,
     mutedBorder: "rgba(0, 0, 0, 0.08)",
-    text: "#333333",
-    textStrong: "#1a1a1a",
-    muted: "#666666",
+    text,
+    textStrong: text,
+    muted,
     shadow: "0 2px 6px rgba(0, 0, 0, 0.06)",
     accentShadow: "0 4px 14px rgba(0, 0, 0, 0.10)",
   }
@@ -96,6 +122,12 @@ function extractAccentColor(style: string): string | null {
   if (rgb) return rgb[0]
   const hex = style.match(/#[0-9a-fA-F]{3,8}/)
   return hex?.[0] ?? null
+}
+
+function extractCssColor(style: string, property: string): string | null {
+  const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const match = style.match(new RegExp(`${escaped}\\s*:[^;]*(#[0-9a-fA-F]{3,8}|rgba?\\([^)]+\\))`, "i"))
+  return match?.[1] ?? null
 }
 
 function colorMix(color: string, alpha: number): string {

@@ -75,6 +75,14 @@ describe("professional theme matrix", () => {
   })
 
   it("applies distinct family visual rules", () => {
+    const defaultStyles = getTheme("default").styles
+    expect(getTheme("default").accent).toBe("#c86442")
+    expect(defaultStyles.wrapper).toContain("background:#1a1a1a")
+    expect(defaultStyles.p).toContain("letter-spacing:0.1em")
+    expect(defaultStyles.h2).toContain("border-bottom:1px dashed")
+    expect(defaultStyles.code).toContain("border-radius:999px")
+    expect(defaultStyles.pre).toContain("rgba(200, 100, 66, 0.14) 12px")
+
     expect(getTheme("minimal-gold").styles.h1).toContain("#b8872f")
     expect(getTheme("focus-blue").styles.h1).toContain("text-align:center")
     expect(getTheme("elegant-green").styles.h2).toContain("border-left:5px")
@@ -89,5 +97,41 @@ describe("professional theme matrix", () => {
     expect(getTheme("github-readme").collection).toBe("modern")
     expect(getTheme("bold-red").density).toBe("medium")
     expect(getTheme("nyt-classic").contrast).toBe("medium")
+  })
+
+  it("converts default theme content against the local reference baseline", async () => {
+    const markdown = [
+      "## 我会怎么写 `/goal`",
+      "",
+      "正文包含 `AGENTS.md` 和 `docs/plan.md`。",
+      "",
+      "```text",
+      "/goal line one",
+      "/goal line two",
+      "```",
+      "",
+      ":::verdict",
+      "eyebrow: 判断",
+      "title: 默认主题基线",
+      "body: 高级模块应跟随默认主题。",
+      ":::",
+      "",
+      "## 参考资料",
+      "",
+      "1. Example：https://example.com/a/very/long/path",
+    ].join("\n")
+
+    const result = await convertMarkdown(markdown, { theme: "default", stripLinks: false })
+
+    expect(result.html).toContain("border-left:4px solid rgb(230, 130, 96)")
+    expect(result.html).toContain("border-bottom:1px dashed rgb(230, 130, 96)")
+    expect(result.html).toContain('class="inline-code"')
+    expect(result.html).toContain("border-radius:999px")
+    expect(result.html).toContain("<br>/goal")
+    expect(result.html).not.toContain("white-space:nowrap;overflow-x:auto;;white-space:nowrap")
+    expect(result.html).toContain('data-mpa-action-id="verdict"')
+    expect(result.html).toContain("background:linear-gradient(135deg, #ead6cc 0%, #faf9f5 48%, #f7f7f7 100%)")
+    expect(result.html).toContain("word-break:break-all")
+    expect(result.html).toContain("overflow-wrap:anywhere")
   })
 })

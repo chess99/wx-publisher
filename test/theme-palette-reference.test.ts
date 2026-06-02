@@ -59,7 +59,7 @@ describe("theme palette reference", () => {
 
     expect(reference.version).toBe(1)
     expect(reference.usage).toBe("runtime-theme-catalog")
-    expect(reference.sourceUpdatedAt).toBe("2026-03-14")
+    expect(reference.sourceUpdatedAt).toBe("2026-06-02")
     expect(reference.palettes).toHaveLength(48)
 
     const actualIds = reference.palettes.map(palette => palette.id)

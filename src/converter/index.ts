@@ -314,9 +314,10 @@ function inlineStyles(
 
           // doocs/md 结构：pre 加 hljs class，code 加 language-xxx class
           // ProseMirror 识别 hljs class 从而保留内容；style 双写保证样式
-          // white-space:nowrap 防折行，color 保证文字可见
           const preStyle = styles.pre
-          const codeStyle = `${styles.preCode};white-space:nowrap;`
+          const codeStyle = hasCssDeclaration(styles.preCode, "white-space")
+            ? styles.preCode
+            : `${styles.preCode};white-space:nowrap;`
 
           node.properties = { class: "hljs code__pre", style: preStyle }
           node.children = [
@@ -504,6 +505,11 @@ function applyStyle(node: Element, style: string): void {
   const existing = (node.properties?.style as string) ?? ""
   node.properties = node.properties ?? {}
   node.properties.style = existing ? `${existing};${style}` : style
+}
+
+function hasCssDeclaration(style: string, property: string): boolean {
+  const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`(?:^|;)\\s*${escaped}\\s*:`, "i").test(style)
 }
 
 function styleLinkNode(node: Element, styles: NodeStyles, stripLinks: boolean): void {

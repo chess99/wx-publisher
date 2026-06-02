@@ -374,7 +374,7 @@ describe("advanced layout conversion", () => {
     expect(result.html).toContain("justify-content:space-between")
     expect(result.html).toContain("我相信")
     expect(result.html).toContain("我拒绝")
-    expect(result.html).toContain("background:linear-gradient(135deg, rgba(7, 193, 96, 0.12) 0%, #ffffff 70%, #f7f7f7 100%)")
+    expect(result.html).toContain("background:linear-gradient(135deg, #ead6cc 0%, #faf9f5 70%, #f7f7f7 100%)")
   })
 
   it("matches reference structure for JSON-backed modules", async () => {

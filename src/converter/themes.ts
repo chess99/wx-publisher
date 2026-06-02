@@ -72,13 +72,13 @@ interface ThemeSpec {
   contrast: "low" | "medium" | "high"
 }
 
-const SOURCE_UPDATED_AT = "2026-03-14"
+const SOURCE_UPDATED_AT = "2026-06-02"
 
 const BASE_UL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
 const BASE_OL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
 
 const NAMED_THEME_SPECS: ThemeSpec[] = [
-  named("default", "built-in", "Default Green", "#07c160", "#ffffff", "#f7fbf8", "#1f2933", "#64748b", "#d9eadf", "#f0f7f2", "微信绿色基线，稳妥耐读", "general writing, operations, knowledge articles", "medium", "medium"),
+  named("default", "built-in", "Reference Warm", "#c86442", "#1a1a1a", "#faf9f5", "#f0f0f0", "#c8c8c8", "#dab1a1", "#f6e7df", "暖色技术长文基线，适合代码和判断密集的文章", "technical essays, code-heavy notes, structured long-form writing", "medium", "high"),
   named("bytedance", "built-in", "Product Blue", "#1d4ed8", "#ffffff", "#f4f7ff", "#111827", "#64748b", "#c9d7ff", "#eef4ff", "产品蓝，现代清晰", "product updates, efficient business writing, modern operations", "medium", "medium"),
   named("apple", "built-in", "Polished Indigo", "#5b6ee1", "#fbfcff", "#f3f5ff", "#111827", "#667085", "#d7dcff", "#eef1ff", "精致靛蓝，留白充足", "brand stories, product writing, polished launches", "low", "medium"),
   named("sports", "built-in", "Energy Orange", "#f97316", "#fffaf5", "#fff3e8", "#24180f", "#7c6a57", "#fed7aa", "#fff0df", "活力橙，节奏强", "events, campaigns, launches, time-sensitive updates", "medium", "high"),
@@ -185,6 +185,8 @@ function createTheme(spec: ThemeSpec): Theme {
 }
 
 function createStyles(spec: ThemeSpec): NodeStyles {
+  if (spec.name === "default") return createDefaultReferenceStyles(spec)
+
   const accent = spec.accent
   const soft = colorMix(accent, 0.10)
   const softer = colorMix(accent, 0.16)
@@ -217,6 +219,38 @@ function createStyles(spec: ThemeSpec): NodeStyles {
     table: `width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;background:${spec.surface};`,
     th: `background:${softer};font-weight:800;padding:9px 12px;border:1px solid ${border};text-align:left;color:${accent};`,
     td: `padding:9px 12px;border:1px solid ${border};color:${spec.text};`,
+  }
+}
+
+function createDefaultReferenceStyles(spec: ThemeSpec): NodeStyles {
+  const headingAccent = "rgb(230, 130, 96)"
+  const linkAccent = "rgb(200, 100, 66)"
+  const inlineCodeBg = "linear-gradient(180deg, rgba(200, 100, 66, 0.14), rgba(200, 100, 66, 0.08))"
+  const preBg = "linear-gradient(180deg, rgba(200, 100, 66, 0.14) 0px, rgba(200, 100, 66, 0.14) 12px, rgba(250, 250, 249, 0.98) 12px, rgba(250, 250, 249, 0.98) 100%)"
+  const fontFamily = "'PingFang SC',-apple-system-font,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans GB','Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif"
+
+  return {
+    wrapper: `font-family:${fontFamily};max-width:677px;margin:0 auto;padding:12px;background:#1a1a1a;color:${spec.text};`,
+    h1: `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:22px;font-weight:bold;line-height:1.2;color:rgb(220, 220, 220);`,
+    h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(200, 200, 200);`,
+    h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(210, 210, 210);`,
+    h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(210, 210, 210);`,
+    p: `margin:1.2em 8px;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(240, 240, 240);overflow-wrap:break-word;`,
+    strong: `font-weight:800;color:rgb(245, 245, 245);`,
+    em: `font-style:italic;color:${spec.muted};`,
+    code: `display:inline-block;background:${inlineCodeBg};color:#9f452c;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;padding:2px 7px;border-radius:999px;border:1px solid rgba(200, 100, 66, 0.18);font-size:90%;line-height:1.4;`,
+    pre: `display:block;box-sizing:border-box;margin:1.5em 8px;padding:1.15em 1.2em 1.2em;background:${preBg};border:1px solid rgba(200, 100, 66, 0.18);border-radius:14px;overflow-x:auto;font-size:14px;line-height:1.6;box-shadow:0 8px 20px rgba(200, 100, 66, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.85);white-space:pre;word-break:normal;overflow-wrap:normal;-webkit-overflow-scrolling:touch;tab-size:2;`,
+    preCode: `background:none;padding:0;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:14px;color:#3b342f;line-height:1.6;white-space:pre-wrap;`,
+    blockquote: `margin:1.5em 8px 2em;padding:1em 1.2em;border-left:4px solid ${headingAccent};background:rgba(200, 100, 66, 0.1);color:rgb(220, 220, 220);font-size:15px;line-height:1.75;border-radius:0 8px 8px 0;`,
+    ul: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(200, 200, 200);`,
+    ol: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(200, 200, 200);`,
+    li: `display:block;margin:0.5em 0;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(200, 200, 200);`,
+    hr: `border:none;border-top:1px dashed rgba(230, 130, 96, 0.4);margin:2em 8px;`,
+    img: `max-width:100%;border-radius:8px;display:block;margin:18px auto;`,
+    a: `color:${linkAccent};text-decoration:none;border-bottom:1px solid rgba(200, 100, 66, 0.3);word-break:break-all;overflow-wrap:anywhere;white-space:normal;`,
+    table: `width:100%;border-collapse:collapse;margin:1.5em 8px;font-size:14px;background:#faf9f5;`,
+    th: `background:#ead6cc;font-weight:800;padding:9px 12px;border:1px solid #dab1a1;text-align:left;color:#9f452c;`,
+    td: `padding:9px 12px;border:1px solid #dab1a1;color:#3b342f;`,
   }
 }
 
