@@ -276,55 +276,35 @@ warn | 图片上传需关注 | 外链图片可能受网络或微信限制影响
 :::
 
 :::changelog
-title: 本次能力变化
-version: v2
-date: 2026.05
-新增 | 补齐公开高级模块的本地渲染能力
-调整 | 示例文件覆盖所有模块和基础 Markdown
-验证 | 转换、测试、构建、草稿预览一起执行
+{"version":"v2","date":"2026.05","added":["补齐公开高级模块的本地渲染能力"],"changed":["示例文件覆盖所有模块和基础 Markdown"],"fixed":["转换、测试、构建、草稿预览一起执行"]}
 :::
 
 :::comparison-table
-columns: 能力 | 原状态 | 目标状态
-高级模块 | 部分覆盖 | 43 个公开模块全部可渲染
-主题 | 少量内置主题 | 系列化主题矩阵
-验收 | 零散样例 | 单一 canonical 示例
+{"left":{"title":"原状态","items":["高级模块部分覆盖","主题数量较少","验收样例零散"]},"right":{"title":"目标状态","items":["43 个公开模块全部可渲染","系列化主题矩阵","单一 canonical 示例"]}}
 :::
 
 :::definition
-label: 定义
-term: 全特性示例
-body: 一篇长期维护的 Markdown 文章，用来同时覆盖普通语法、高级模块、主题和发布链路。
-note: 它不是业务文案，而是验收资产。
+{"term":"全特性示例","def":"一篇长期维护的 Markdown 文章，用来同时覆盖普通语法、高级模块、主题和发布链路。","termLabel":"定义"}
 :::
 
 :::question
-title: 为什么要维护这么长的示例？
-body: 因为公众号后台的真实渲染和浏览器预览可能存在差异，完整样例能减少重大变更后的遗漏。
+[{"q":"为什么要维护这么长的示例？","a":"因为公众号后台的真实渲染和浏览器预览可能存在差异，完整样例能减少重大变更后的遗漏。"}]
 :::
 
 :::quote-card
-quote: 示例文件是渲染能力的快照。
-source: wx-publisher 维护规范
+{"text":"示例文件是渲染能力的快照。","source":"本地维护规范"}
 :::
 
-:::resource-list[资源清单]
-文档 | 高级模块使用指南 | 查看完整字段和 API 说明 | docs/advanced-layout.md
-命令 | 转换预览命令 | 生成 HTML 后人工检查 | npm run dev -- convert
-草稿 | 发布草稿命令 | 创建公众号后台可见草稿 | npm run dev -- publish
+:::resource-list
+[{"name":"高级模块使用指南","url":"https://example.com/docs","desc":"查看完整字段和 API 说明","icon":"文档"},{"name":"转换预览命令","url":"https://example.com/convert","desc":"生成 HTML 后人工检查","icon":"命令"},{"name":"发布草稿命令","url":"https://example.com/publish","desc":"创建公众号后台可见草稿","icon":"草稿"}]
 :::
 
 :::stat-row
-公开模块 | 43 | 作为模块覆盖率基准
-增强模块 | 3 | 对话、画廊和长图
-配色备用 | 48 | 用本地参考资料维护
+[{"value":"43","label":"公开模块","note":"作为模块覆盖率基准"},{"value":"3","label":"增强模块","note":"对话、画廊和长图"},{"value":"48","label":"配色备用","note":"用本地参考资料维护"}]
 :::
 
 :::tweet
-author: wx-publisher 维护笔记
-handle: @local
-body: 一个本地排版工具，真正重要的是可重复、可验证、可发布到草稿箱。
-note: 适合放短观点、社媒摘录或用户反馈
+{"name":"本地维护笔记","handle":"@local","text":"一个本地排版工具，真正重要的是可重复、可验证、可发布到草稿箱。","timestamp":"2026.05"}
 :::
 
 :::dialogue[维护者与审核者]

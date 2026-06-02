@@ -81,14 +81,14 @@ The runtime source of truth for supported names is `src/converter/advanced-layou
 | Block | Type | Field order | Minimum | Recommended use | Common failure |
 | --- | --- | --- | --- | --- | --- |
 | `callout` | rows | type, title, body | one 3-column row | Highlight a tip, warning, or important note. | Replacing all normal paragraphs with callouts. |
-| `changelog` | fields or rows | `title`, `version`, `date`, or change type and body rows | one change | Show release changes or iteration notes. | Mixing product changes with unrelated commentary. |
-| `comparison-table` | fields and rows | `columns`, then table rows | `columns`, one row | Compare multiple attributes compactly. | Creating a table too wide for phone reading. |
-| `definition` | fields | `label`, `term`, `body`, `note` | `term`, `body` | Define a key term or concept. | Defining terms that are already obvious. |
-| `question` | fields | `title`, `body` | `title` | Raise a strategic or reflective question. | Using it as a generic heading. |
-| `quote-card` | fields | `quote`, `source` | `quote` | Show a compact quote with stronger framing. | Repeating the same point as a nearby `quote`. |
-| `resource-list` | rows | type, title, body, link | one 3-column row | Curate documents, tools, or next reads. | Listing unvetted links. |
-| `stat-row` | rows | label, value, body | one 3-column row | Show several compact stats in one row group. | Using it for verbose explanations. |
-| `tweet` | fields | `author`, `handle`, `body`, `note` | `body` | Present a short social-style observation or testimonial. | Using real social attribution without permission. |
+| `changelog` | JSON object | `version`, `date`, `added`, `changed`, `fixed`, `removed` | `version`, one change array | Show release changes or iteration notes. | Mixing product changes with unrelated commentary. |
+| `comparison-table` | JSON object | `left.title`, `left.items`, `right.title`, `right.items` | left and right item arrays | Compare two groups compactly. | Creating a table too wide for phone reading. |
+| `definition` | JSON object | `term`, `def`, `termLabel` | `term`, `def` | Define a key term or concept. | Using `definition` or `body` instead of `def`. |
+| `question` | JSON array | each item: `q`, `a` | one Q/A item | Raise strategic or reflective questions. | Using `question`/`answer` instead of `q`/`a`. |
+| `quote-card` | JSON object | `text`, `source`, `author` | `text` | Show a compact quote with stronger framing. | Using `quote` instead of `text`. |
+| `resource-list` | JSON array | each item: `name`, `url`, `desc`, `icon` | one resource with `name`, `url` | Curate documents, tools, or next reads. | Using `description` instead of `desc`. |
+| `stat-row` | JSON array | each item: `value`, `label`, `unit`, `note` | one stat with `value`, `label` | Show several compact stats in one row group. | Using verbose explanations as stats. |
+| `tweet` | JSON object | `name`, `handle`, `text`, `timestamp`, `likes`, `avatar` | `text` | Present a short social-style observation or testimonial. | Using `author`, `body`, or `date` keys. |
 
 ## Enhanced Blocks
 

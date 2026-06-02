@@ -139,8 +139,6 @@ title: 让|一句判断|先被读者看到
 | `specs` | 标签, 值, 说明 |
 | `notice` | 标签, 值, 说明 |
 | `callout` | 类型, 标题, 说明 |
-| `resource-list` | 类型, 标题, 说明, 链接 |
-| `stat-row` | 标签, 数值, 说明 |
 
 样式列支持 `accent` 和 `default`。`checklist` 的状态支持 `done`、`pending`、`warn`。
 
@@ -151,6 +149,33 @@ title: 让|一句判断|先被读者看到
 done | 结构先搭好 | 先把目录、重点和结论摆出来
 pending | 数据再补齐 | 关键数字和案例放进对应模块
 warn | 链接和说明单独检查 | 避免手机里出现跳读和看不清
+:::
+```
+
+### JSON Body 模块
+
+以下模块直接在块内容中写 JSON，字段名必须按表格填写。
+
+| 模块 | JSON 类型 | 字段 |
+| --- | --- | --- |
+| `changelog` | object | `version`, `date`, `added`, `changed`, `fixed`, `removed` |
+| `comparison-table` | object | `left.title`, `left.items`, `right.title`, `right.items` |
+| `definition` | object | `term`, `def`, `termLabel` |
+| `question` | array | 每项 `q`, `a` |
+| `quote-card` | object | `text`, `source`, `author` |
+| `resource-list` | array | 每项 `name`, `url`, `desc`, `icon` |
+| `stat-row` | array | 每项 `value`, `label`, `unit`, `note` |
+| `tweet` | object | `name`, `handle`, `text`, `timestamp`, `likes`, `avatar` |
+
+示例：
+
+```md
+:::definition
+{"term":"全特性示例","def":"一篇长期维护的 Markdown 文章，用来覆盖普通语法、高级模块、主题和发布链路。","termLabel":"定义"}
+:::
+
+:::question
+[{"q":"为什么要维护完整示例？","a":"因为完整样例能减少重大变更后的遗漏。"}]
 :::
 ```
 
@@ -185,12 +210,14 @@ point: 02 | 74 | 36 | 指标区 | 适合讲关键数字、结果和变化
 | 模块 | 类型 | 字段 |
 | --- | --- | --- |
 | `summary` | 字段型 | `eyebrow`, `highlight`, `body` |
-| `changelog` | 字段型/行型 | `title`, `version`, `date`；或每行 变更类型, 说明 |
-| `comparison-table` | 字段型/行型 | `columns`；每行对应表格单元格 |
-| `definition` | 字段型 | `label`, `term`, `body`, `note` |
-| `question` | 字段型 | `title`, `body` |
-| `quote-card` | 字段型 | `quote`, `source` |
-| `tweet` | 字段型 | `author`, `handle`, `body`, `note` |
+| `changelog` | JSON object | `version`, `date`, `added`, `changed`, `fixed`, `removed` |
+| `comparison-table` | JSON object | `left.title`, `left.items`, `right.title`, `right.items` |
+| `definition` | JSON object | `term`, `def`, `termLabel` |
+| `question` | JSON array | 每项 `q`, `a` |
+| `quote-card` | JSON object | `text`, `source`, `author` |
+| `resource-list` | JSON array | 每项 `name`, `url`, `desc`, `icon` |
+| `stat-row` | JSON array | 每项 `value`, `label`, `unit`, `note` |
+| `tweet` | JSON object | `name`, `handle`, `text`, `timestamp`, `likes`, `avatar` |
 | `author-card` | 字段型 | `name`, `role`, `bio`, `tags`, `note`, `link` |
 | `series` | 字段型 | `name`, `issue`, `title`, `desc`, `tags`, `next` |
 | `subscribe` | 字段型 | `label`, `title`, `subtitle`, `primary`, `secondary`, `note` |

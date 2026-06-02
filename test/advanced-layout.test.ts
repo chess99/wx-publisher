@@ -215,49 +215,35 @@ Tip | Keep it focused | One module should solve one reading task
 :::
 
 :::changelog
-title: Update log
-version: v2
-date: 2026.05
-Added: More modules
-Fixed: Stable rendering
+{"version":"v2","date":"2026.05","added":["More modules"],"fixed":["Stable rendering"]}
 :::
 
 :::comparison-table
-columns: Item | Before | After
-Speed | Slow | Fast
-Clarity | Low | High
+{"left":{"title":"Before","items":["Slow","Low clarity"]},"right":{"title":"After","items":["Fast","High clarity"]}}
 :::
 
 :::definition
-label: Definition
-term: Advanced layout
-body: A structured expression layer.
-note: Used for narrow-screen reading.
+{"term":"Advanced layout","def":"A structured expression layer.","termLabel":"Definition"}
 :::
 
 :::question
-title: Why use modules?
-body: To make judgment and evidence easier to scan.
+[{"q":"Why use modules?","a":"To make judgment and evidence easier to scan."}]
 :::
 
 :::quote-card
-quote: Structure is a reading promise.
-source: wx-publisher
+{"text":"Structure is a reading promise.","source":"Local publishing guide"}
 :::
 
-:::resource-list[Resources]
-Docs | Advanced layout guide | Syntax and examples | https://example.com
+:::resource-list
+[{"name":"Docs","url":"https://example.com","desc":"Syntax and examples","icon":"Guide"}]
 :::
 
 :::stat-row
-Modules | 43 | Public set
-Themes | 40 | Professional set
+[{"value":"43","label":"Modules","note":"Public set"},{"value":"40","label":"Themes","note":"Professional set"}]
 :::
 
 :::tweet
-author: Product Notes
-handle: @wxp
-body: A good article should be readable before it is decorative.
+{"name":"Product Notes","handle":"@local","text":"A good article should be readable before it is decorative.","timestamp":"2026-05"}
 :::
 
 :::gallery[Gallery]
@@ -320,6 +306,13 @@ describe("advanced layout conversion", () => {
     expect(result.html).not.toContain(":::hero")
     expect(result.html).not.toContain("<script")
     expect(result.externalImages).toContain(IMAGE_URL)
+    expect(result.html).toContain("More modules")
+    expect(result.html).toContain("Advanced layout")
+    expect(result.html).toContain("Why use modules?")
+    expect(result.html).toContain("Structure is a reading promise.")
+    expect(result.html).toContain("Syntax and examples")
+    expect(result.html).toContain("Public set")
+    expect(result.html).toContain("A good article should be readable before it is decorative.")
   })
 
   it("renders formerly aliased modules as first-class modules", async () => {

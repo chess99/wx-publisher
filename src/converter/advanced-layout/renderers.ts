@@ -317,43 +317,67 @@ function renderCallout(module: AdvancedModule, p: AdvancedPalette): string {
 }
 
 function renderChangelog(module: AdvancedModule, p: AdvancedPalette): string {
-  const f = module.fields
-  const rows = module.rows.length ? module.rows : Object.entries(f).filter(([key]) => !["title", "version", "date"].includes(key)).map(([key, value]) => [key, value])
-  return `<section data-mpa-action-id="changelog" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;flex-wrap:wrap;"><p style="margin:0;font-size:18px;font-weight:900;color:${p.text};line-height:1.35;">${esc(f.title ?? module.title)}</p><span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};color:${p.accentDark};font-size:13px;font-weight:850;">${esc([f.version, f.date].filter(Boolean).join(" · "))}</span></section><section style="display:flex;flex-direction:column;gap:10px;">${rows.map(row => `<section style="display:flex;align-items:flex-start;gap:10px;padding-bottom:10px;border-bottom:1px solid ${p.mutedBorder};"><span style="margin-top:0.58em;width:7px;height:7px;border-radius:999px;background:${p.accentDark};flex-shrink:0;"></span><section><p style="margin:0 0 2px;font-size:15px;font-weight:850;color:${p.text};line-height:1.55;">${esc(row[0])}</p><p style="margin:0;font-size:15px;color:${p.muted};line-height:1.6;">${esc(row[1])}</p></section></section>`).join("")}</section></section>`
+  const data = parseJsonObject(module.body)
+  const groups = [
+    ["新增", stringArray(data.added)],
+    ["调整", stringArray(data.changed)],
+    ["修复", stringArray(data.fixed)],
+    ["移除", stringArray(data.removed)],
+  ].flatMap(([kind, items]) => (items as string[]).map(item => [kind as string, item]))
+  const meta = [stringValue(data.version), stringValue(data.date)].filter(Boolean).join(" · ")
+  return `<section data-mpa-action-id="changelog" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;flex-wrap:wrap;"><p style="margin:0;font-size:18px;font-weight:900;color:${p.text};line-height:1.35;">${esc(stringValue(data.title) || "更新日志")}</p><span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};color:${p.accentDark};font-size:13px;font-weight:850;">${esc(meta)}</span></section><section style="display:flex;flex-direction:column;gap:10px;">${groups.map(row => `<section style="display:flex;align-items:flex-start;gap:10px;padding-bottom:10px;border-bottom:1px solid ${p.mutedBorder};"><span style="margin-top:0.58em;width:7px;height:7px;border-radius:999px;background:${p.accentDark};flex-shrink:0;"></span><section><p style="margin:0 0 2px;font-size:15px;font-weight:850;color:${p.text};line-height:1.55;">${esc(row[0])}</p><p style="margin:0;font-size:15px;color:${p.muted};line-height:1.6;">${esc(row[1])}</p></section></section>`).join("")}</section></section>`
 }
 
 function renderComparisonTable(module: AdvancedModule, p: AdvancedPalette): string {
-  const headers = splitList(module.fields.columns || module.fields.headers || "项目 | 方案 A | 方案 B")
-  return `<section data-mpa-action-id="comparison-table" style="margin:0 0 30px;">${sectionTitle(module.fields.title ?? module.title, p)}<section style="overflow-x:auto;border:1px solid ${p.mutedBorder};border-radius:12px;background:${p.surface};box-shadow:${p.shadow};"><table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr>${headers.map(head => `<th style="padding:10px 12px;background:${p.accentSoft};border-bottom:1px solid ${p.border};color:${p.accentDark};font-weight:900;text-align:left;">${esc(head)}</th>`).join("")}</tr></thead><tbody>${module.rows.map(row => `<tr>${headers.map((_, i) => `<td style="padding:10px 12px;border-bottom:1px solid ${p.mutedBorder};color:${i === 0 ? p.text : p.muted};font-weight:${i === 0 ? "800" : "500"};line-height:1.55;">${esc(row[i])}</td>`).join("")}</tr>`).join("")}</tbody></table></section></section>`
+  const data = parseJsonObject(module.body)
+  const left = objectValue(data.left)
+  const right = objectValue(data.right)
+  const leftItems = stringArray(left.items)
+  const rightItems = stringArray(right.items)
+  const rowCount = Math.max(leftItems.length, rightItems.length)
+  const rows = Array.from({ length: rowCount }, (_, i) => [leftItems[i] ?? "", rightItems[i] ?? ""])
+  const headers = [stringValue(left.title) || "方案 A", stringValue(right.title) || "方案 B"]
+  return `<section data-mpa-action-id="comparison-table" style="margin:0 0 30px;">${sectionTitle(stringValue(data.title), p)}<section style="overflow-x:auto;border:1px solid ${p.mutedBorder};border-radius:12px;background:${p.surface};box-shadow:${p.shadow};"><table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr>${headers.map(head => `<th style="padding:10px 12px;background:${p.accentSoft};border-bottom:1px solid ${p.border};color:${p.accentDark};font-weight:900;text-align:left;">${esc(head)}</th>`).join("")}</tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell, i) => `<td style="padding:10px 12px;border-bottom:1px solid ${p.mutedBorder};color:${i === 0 ? p.text : p.muted};font-weight:${i === 0 ? "800" : "500"};line-height:1.55;">${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></section></section>`
 }
 
 function renderDefinition(module: AdvancedModule, p: AdvancedPalette): string {
-  const f = module.fields
-  return `<section data-mpa-action-id="definition" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};">${label(f.label ?? "定义", p, `margin:0 0 10px;`)}<p style="margin:0;font-size:22px;font-weight:950;color:${p.text};line-height:1.25;">${esc(f.term ?? f.title ?? module.title)}</p>${paragraph(f.body ?? f.definition ?? module.body, p, "margin:10px 0 0;")} ${f.note ? `<p style="margin:12px 0 0;padding:10px 12px;border-radius:10px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};font-size:13px;color:${p.muted};line-height:1.55;">${esc(f.note)}</p>` : ""}</section>`
+  const data = parseJsonObject(module.body)
+  return `<section data-mpa-action-id="definition" style="margin:0 0 30px;padding:18px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};">${label(stringValue(data.termLabel) || "定义", p, `margin:0 0 10px;`)}<p style="margin:0;font-size:22px;font-weight:950;color:${p.text};line-height:1.25;">${esc(stringValue(data.term))}</p>${paragraph(stringValue(data.def), p, "margin:10px 0 0;")}</section>`
 }
 
 function renderQuestion(module: AdvancedModule, p: AdvancedPalette): string {
-  const f = module.fields
-  return `<section data-mpa-action-id="question" style="margin:0 0 30px;padding:18px;background:linear-gradient(180deg, ${p.surface} 0%, ${p.surfaceAlt} 100%);border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><p style="margin:0 0 8px;font-size:13px;font-weight:900;color:${p.accentDark};letter-spacing:1px;">QUESTION</p><p style="margin:0;font-size:20px;font-weight:950;color:${p.text};line-height:1.42;">${esc(f.title ?? f.question ?? module.title)}</p>${paragraph(f.body ?? f.answer ?? module.body, p, "margin:10px 0 0;")}</section>`
+  const items = parseJsonArray(module.body).map(item => ({
+    q: stringValue(item.q),
+    a: stringValue(item.a),
+  }))
+  return `<section data-mpa-action-id="question" style="margin:0 0 30px;display:flex;flex-direction:column;gap:12px;">${items.map(item => `<section style="padding:18px;background:linear-gradient(180deg, ${p.surface} 0%, ${p.surfaceAlt} 100%);border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><p style="margin:0 0 8px;font-size:13px;font-weight:900;color:${p.accentDark};letter-spacing:1px;">QUESTION</p><p style="margin:0;font-size:20px;font-weight:950;color:${p.text};line-height:1.42;">${esc(item.q)}</p>${paragraph(item.a, p, "margin:10px 0 0;")}</section>`).join("")}</section>`
 }
 
 function renderQuoteCard(module: AdvancedModule, p: AdvancedPalette): string {
-  const f = module.fields
-  return `<section data-mpa-action-id="quote-card" style="margin:0 0 30px;padding:20px;background:linear-gradient(135deg, ${p.accentSoft} 0%, ${p.surface} 62%, ${p.surfaceAlt} 100%);border:1px solid ${p.border};border-radius:16px;box-shadow:${p.shadow};"><p style="margin:0 0 12px;font-size:36px;line-height:0.8;color:${p.accentDark};font-weight:900;">“</p><p style="margin:0;font-size:20px;font-weight:900;color:${p.text};line-height:1.65;">${esc(f.quote ?? f.title ?? module.body)}</p>${f.source ? `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${p.mutedBorder};font-size:13px;font-weight:850;color:${p.muted};">-- ${esc(f.source)}</p>` : ""}</section>`
+  const data = parseJsonObject(module.body)
+  const attribution = [stringValue(data.author), stringValue(data.source)].filter(Boolean).join(" · ")
+  return `<section data-mpa-action-id="quote-card" style="margin:0 0 30px;padding:20px;background:linear-gradient(135deg, ${p.accentSoft} 0%, ${p.surface} 62%, ${p.surfaceAlt} 100%);border:1px solid ${p.border};border-radius:16px;box-shadow:${p.shadow};"><p style="margin:0 0 12px;font-size:36px;line-height:0.8;color:${p.accentDark};font-weight:900;">“</p><p style="margin:0;font-size:20px;font-weight:900;color:${p.text};line-height:1.65;">${esc(stringValue(data.text))}</p>${attribution ? `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${p.mutedBorder};font-size:13px;font-weight:850;color:${p.muted};">-- ${esc(attribution)}</p>` : ""}</section>`
 }
 
 function renderResourceList(module: AdvancedModule, p: AdvancedPalette): string {
-  const rows = module.rows.length ? module.rows : splitList(module.fields.items).map(item => item.split(",").map(part => part.trim()))
-  return stackedRows("resource-list", module.fields.title ?? module.title, p, rows.map(row => `<section style="padding:14px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:12px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 5px;"><p style="margin:0;font-size:13px;font-weight:850;color:${p.accentDark};background:${p.accentSoft};padding:2px 8px;border-radius:999px;">${esc(row[0])}</p>${row[3] ? `<a href="${attr(safeUrl(row[3]))}" style="font-size:13px;color:${p.muted};text-decoration:none;">↗</a>` : ""}</section><p style="margin:0 0 3px;font-size:17px;font-weight:850;color:${p.text};line-height:1.45;">${esc(row[1])}</p><p style="margin:0;font-size:15px;color:${p.muted};line-height:1.6;">${esc(row[2])}</p></section>`).join(""))
+  const items = parseJsonArray(module.body)
+  return stackedRows("resource-list", module.title, p, items.map(item => {
+    const url = stringValue(item.url)
+    return `<section style="padding:14px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:12px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 5px;"><p style="margin:0;font-size:13px;font-weight:850;color:${p.accentDark};background:${p.accentSoft};padding:2px 8px;border-radius:999px;">${esc(stringValue(item.icon) || "资源")}</p>${url ? `<a href="${attr(safeUrl(url))}" style="font-size:13px;color:${p.muted};text-decoration:none;">↗</a>` : ""}</section><p style="margin:0 0 3px;font-size:17px;font-weight:850;color:${p.text};line-height:1.45;">${esc(stringValue(item.name))}</p><p style="margin:0;font-size:15px;color:${p.muted};line-height:1.6;">${esc(stringValue(item.desc))}</p></section>`
+  }).join(""))
 }
 
 function renderStatRow(module: AdvancedModule, p: AdvancedPalette): string {
-  return `<section data-mpa-action-id="stat-row" style="margin:0 0 30px;padding:14px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;">${module.rows.map(row => `<section style="text-align:center;padding:12px 8px;border-radius:12px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};"><p style="margin:0 0 5px;font-size:22px;font-weight:950;color:${p.accentDark};line-height:1;">${esc(row[1] ?? row[0])}</p><p style="margin:0;font-size:13px;font-weight:800;color:${p.muted};line-height:1.35;">${esc(row[0])}</p>${row[2] ? `<p style="margin:5px 0 0;font-size:12px;color:${p.muted};line-height:1.45;">${esc(row[2])}</p>` : ""}</section>`).join("")}</section></section>`
+  const items = parseJsonArray(module.body)
+  return `<section data-mpa-action-id="stat-row" style="margin:0 0 30px;padding:14px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;">${items.map(item => `<section style="text-align:center;padding:12px 8px;border-radius:12px;background:${p.surfaceAlt};border:1px solid ${p.mutedBorder};"><p style="margin:0 0 5px;font-size:22px;font-weight:950;color:${p.accentDark};line-height:1;">${esc(`${stringValue(item.value)}${stringValue(item.unit)}`)}</p><p style="margin:0;font-size:13px;font-weight:800;color:${p.muted};line-height:1.35;">${esc(stringValue(item.label))}</p>${stringValue(item.note) ? `<p style="margin:5px 0 0;font-size:12px;color:${p.muted};line-height:1.45;">${esc(stringValue(item.note))}</p>` : ""}</section>`).join("")}</section></section>`
 }
 
 function renderTweet(module: AdvancedModule, p: AdvancedPalette): string {
-  const f = module.fields
-  return `<section data-mpa-action-id="tweet" style="margin:0 0 30px;padding:16px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;gap:10px;margin:0 0 12px;"><span style="width:36px;height:36px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};display:flex;align-items:center;justify-content:center;color:${p.accentDark};font-weight:900;">${esc((f.author ?? f.name ?? "T").slice(0, 1))}</span><section><p style="margin:0;font-size:15px;font-weight:900;color:${p.text};">${esc(f.author ?? f.name ?? "观点摘录")}</p><p style="margin:0;font-size:12px;color:${p.muted};">${esc(f.handle ?? f.meta ?? "")}</p></section></section><p style="margin:0;font-size:16px;color:${p.text};line-height:1.75;">${esc(f.body ?? f.text ?? module.body)}</p>${f.note ? `<p style="margin:12px 0 0;padding-top:10px;border-top:1px solid ${p.mutedBorder};font-size:13px;color:${p.muted};">${esc(f.note)}</p>` : ""}</section>`
+  const data = parseJsonObject(module.body)
+  const name = stringValue(data.name) || "观点摘录"
+  const meta = [stringValue(data.handle), stringValue(data.timestamp), stringValue(data.likes)].filter(Boolean).join(" · ")
+  const avatar = stringValue(data.avatar)
+  return `<section data-mpa-action-id="tweet" style="margin:0 0 30px;padding:16px;background:${p.surface};border:1px solid ${p.mutedBorder};border-radius:16px;box-shadow:${p.shadow};"><section style="display:flex;align-items:center;gap:10px;margin:0 0 12px;">${avatar ? `<span style="width:36px;height:36px;border-radius:999px;overflow:hidden;background:${p.accentSoft};border:1px solid ${p.border};display:inline-block;">${imageTag(avatar, name, "width:100% !important;height:100% !important;object-fit:cover;display:block;")}</span>` : `<span style="width:36px;height:36px;border-radius:999px;background:${p.accentSoft};border:1px solid ${p.border};display:flex;align-items:center;justify-content:center;color:${p.accentDark};font-weight:900;">${esc(name.slice(0, 1))}</span>`}<section><p style="margin:0;font-size:15px;font-weight:900;color:${p.text};">${esc(name)}</p><p style="margin:0;font-size:12px;color:${p.muted};">${esc(meta)}</p></section></section><p style="margin:0;font-size:16px;color:${p.text};line-height:1.75;">${esc(stringValue(data.text))}</p></section>`
 }
 
 function renderGallery(module: AdvancedModule, p: AdvancedPalette): string {
@@ -364,6 +388,40 @@ function renderGallery(module: AdvancedModule, p: AdvancedPalette): string {
 function renderLongImage(module: AdvancedModule, p: AdvancedPalette): string {
   const image = parseMarkdownImages(module.body)[0]
   return `<section data-mpa-action-id="longimage" style="margin:0 0 30px;">${label(module.title, p, "margin:0 0 12px;")}<section style="max-height:520px;overflow-y:auto;border:1px solid ${p.mutedBorder};border-radius:12px;background:${p.surfaceAlt};box-shadow:${p.shadow};-webkit-overflow-scrolling:touch;">${image ? imageTag(image.src, image.alt, "width:100% !important;height:auto !important;display:block;") : ""}</section></section>`
+}
+
+type JsonRecord = Record<string, unknown>
+
+function parseJsonObject(body: string): JsonRecord {
+  try {
+    const parsed: unknown = JSON.parse(body)
+    return objectValue(parsed)
+  } catch {
+    return {}
+  }
+}
+
+function parseJsonArray(body: string): JsonRecord[] {
+  try {
+    const parsed: unknown = JSON.parse(body)
+    return Array.isArray(parsed) ? parsed.map(objectValue) : []
+  } catch {
+    return []
+  }
+}
+
+function objectValue(value: unknown): JsonRecord {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {}
+}
+
+function stringValue(value: unknown): string {
+  if (typeof value === "string") return value
+  if (typeof value === "number" || typeof value === "boolean") return String(value)
+  return ""
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(stringValue).filter(Boolean) : []
 }
 
 function titledGrid(id: string, title: string, p: AdvancedPalette, body: string, columns = "repeat(auto-fit,minmax(160px,1fr))"): string {
