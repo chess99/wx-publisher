@@ -300,7 +300,7 @@ function h1Style(spec: ThemeSpec, soft: string, shadow: string): string {
     case "bold":
       return `font-size:24px;font-weight:900;color:#ffffff;margin:28px 0 15px;line-height:1.3;text-align:center;padding:14px 18px;background:${spec.accent};border-radius:12px;box-shadow:${shadow};`
     default:
-      return `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${spec.accent};border-bottom:1px dashed ${spec.accent};font-size:22px;font-weight:800;line-height:1.25;color:${spec.text};`
+      return `margin:28px 8px 22px;padding:16px 18px;background:${spec.accent};color:#ffffff;font-size:24px;font-weight:900;line-height:1.28;text-align:center;border-radius:12px;box-shadow:${shadow};`
   }
 }
 
