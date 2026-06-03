@@ -89,8 +89,10 @@ interface ThemeSpec {
 
 const SOURCE_UPDATED_AT = "2026-06-03"
 
-const BASE_UL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
-const BASE_OL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
+const READING_FONT_FAMILY = "-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Arial,sans-serif"
+const READING_PARAGRAPH = "font-size:16px;line-height:1.82;margin:0 0 16px 0;"
+const READING_LIST = "list-style:none;padding-left:0;margin:0 0 16px 0;"
+const READING_LIST_ITEM = "display:block;margin:0.22em 8px;font-size:16px;line-height:1.82;"
 
 const NAMED_THEME_SPECS: ThemeSpec[] = [
   named("default", "built-in", "Reference Warm", "#a34e2e", "#faf9f5", "#f7f7f7", "#222222", "#737373", "#e3c6b9", "#f1e6df", "暖色技术长文基线，适合代码和判断密集的文章", "technical essays, code-heavy notes, structured long-form writing", "medium", "medium"),
@@ -259,13 +261,13 @@ function createStyles(spec: ThemeSpec): NodeStyles {
   const softer = colorMix(accent, 0.16)
   const border = spec.border
   const shadow = `0 6px 18px ${colorMix(accent, 0.10)}`
-  const paragraph = `font-size:16px;line-height:${spec.density === "low" ? "1.9" : spec.density === "high" ? "1.72" : "1.82"};color:${spec.text};margin:0 0 16px 0;`
+  const paragraph = `${READING_PARAGRAPH}color:${spec.text};`
 
   const h1 = h1Style(spec, soft, shadow)
   const h2 = h2Style(spec, soft, shadow)
 
   return {
-    wrapper: `font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Arial,sans-serif;max-width:677px;margin:0 auto;padding:0 16px;background:${spec.background};color:${spec.text};`,
+    wrapper: `font-family:${READING_FONT_FAMILY};max-width:677px;margin:0 auto;padding:0 16px;background:${spec.background};color:${spec.text};`,
     h1,
     h2,
     h3: `font-size:18px;font-weight:750;color:${accent};margin:22px 0 9px;line-height:1.42;`,
@@ -277,9 +279,9 @@ function createStyles(spec: ThemeSpec): NodeStyles {
     pre: `background:${spec.name === "github-readme" ? spec.surface : "#111827"};border-radius:10px;padding:16px 18px;margin:18px 0;overflow-x:auto;display:block;border:1px solid ${accent};`,
     preCode: `font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:${spec.name === "github-readme" ? spec.text : "#e5e7eb"};background:none;padding:0;border-radius:0;display:block;white-space:nowrap;overflow-x:auto;`,
     blockquote: `border-left:4px solid ${accent};margin:18px 0;padding:12px 16px;background:${soft};color:${spec.muted};font-size:15px;line-height:1.82;border-radius:0 8px 8px 0;`,
-    ul: BASE_UL,
-    ol: BASE_OL,
-    li: `display:block;margin:0.22em 8px;font-size:16px;line-height:1.82;color:${spec.text};`,
+    ul: READING_LIST,
+    ol: READING_LIST,
+    li: `${READING_LIST_ITEM}color:${spec.text};`,
     hr: `border:none;border-top:1px solid ${border};margin:26px 0;`,
     img: `max-width:100%;border-radius:${spec.collection === "minimal" || spec.name === "ink-minimal" ? "2px" : "8px"};display:block;margin:18px auto;${spec.collection === "bold" || spec.collection === "elegant" ? `box-shadow:${shadow};` : ""}`,
     a: `color:${accent};text-decoration:none;font-weight:700;border-bottom:1px solid ${border};`,
@@ -294,24 +296,23 @@ function createDefaultReferenceStyles(spec: ThemeSpec): NodeStyles {
   const linkAccent = "rgb(200, 100, 66)"
   const inlineCodeBg = "linear-gradient(180deg, rgba(200, 100, 66, 0.14), rgba(200, 100, 66, 0.08))"
   const preBg = "linear-gradient(180deg, rgba(200, 100, 66, 0.14) 0px, rgba(200, 100, 66, 0.14) 12px, rgba(250, 250, 249, 0.98) 12px, rgba(250, 250, 249, 0.98) 100%)"
-  const fontFamily = "'PingFang SC',-apple-system-font,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans GB','Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif"
 
   return {
-    wrapper: `font-family:${fontFamily};max-width:677px;margin:0 auto;padding:12px;background:#faf9f5;color:${spec.text};`,
+    wrapper: `font-family:${READING_FONT_FAMILY};max-width:677px;margin:0 auto;padding:0 16px;background:#faf9f5;color:${spec.text};`,
     h1: `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:22px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
     h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
     h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
     h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
-    p: `margin:0 8px 1.15em;padding:0.2em 0;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(34, 34, 34);font-weight:400;overflow-wrap:break-word;`,
+    p: `${READING_PARAGRAPH}color:rgb(34, 34, 34);overflow-wrap:break-word;`,
     strong: `font-weight:700;color:rgb(63, 63, 63);`,
     em: `font-style:italic;color:${spec.muted};`,
     code: `display:inline-block;background:${inlineCodeBg};color:#9f452c;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;padding:2px 7px;border-radius:999px;border:1px solid rgba(200, 100, 66, 0.18);font-size:90%;line-height:1.4;`,
     pre: `display:block;box-sizing:border-box;margin:1.5em 8px;padding:1.15em 1.2em 1.2em;background:${preBg};border:1px solid rgba(200, 100, 66, 0.18);border-radius:14px;overflow-x:auto;font-size:14px;line-height:1.6;box-shadow:0 8px 20px rgba(200, 100, 66, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.85);white-space:pre;-webkit-overflow-scrolling:touch;tab-size:2;`,
     preCode: `background:none;padding:0;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:14px;color:#3b342f;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;`,
     blockquote: `margin:1.5em 8px 2em;padding:1em 1.2em;border-left:4px solid ${headingAccent};background:rgba(200, 100, 66, 0.1);color:rgb(63, 63, 63);font-size:15px;line-height:1.75;border-radius:0 8px 8px 0;`,
-    ul: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(63, 63, 63);`,
-    ol: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(63, 63, 63);`,
-    li: `display:block;margin:0.5em 0;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;font-weight:400;color:rgb(63, 63, 63);`,
+    ul: READING_LIST,
+    ol: READING_LIST,
+    li: `${READING_LIST_ITEM}color:rgb(63, 63, 63);`,
     hr: `border:none;border-top:1px dashed rgba(230, 130, 96, 0.4);margin:2em 8px;`,
     img: `max-width:100%;border-radius:8px;display:block;margin:18px auto;`,
     a: `color:${linkAccent};text-decoration:none;border-bottom:1px solid rgba(200, 100, 66, 0.3);word-break:break-all;overflow-wrap:anywhere;white-space:normal;`,
