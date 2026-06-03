@@ -34,9 +34,14 @@ const expectedPaletteIds = [
 
 const colorFields = [
   "accent",
+  "renderAccent",
   "background",
   "surface",
+  "surfaceAlt",
+  "accentSoft",
+  "accentSofter",
   "text",
+  "headingText",
   "muted",
   "border",
   "codeBackground",
@@ -46,6 +51,7 @@ interface PaletteReference {
   version: number
   usage: string
   sourceUpdatedAt: string
+  sources: string[]
   palettes: Array<Record<string, string>>
 }
 
@@ -57,9 +63,13 @@ describe("theme palette reference", () => {
   it("keeps a local-only catalog of exactly 48 palettes", () => {
     const reference = readPaletteReference()
 
-    expect(reference.version).toBe(1)
+    expect(reference.version).toBe(2)
     expect(reference.usage).toBe("runtime-theme-catalog")
-    expect(reference.sourceUpdatedAt).toBe("2026-06-02")
+    expect(reference.sourceUpdatedAt).toBe("2026-06-03")
+    expect(reference.sources).toEqual([
+      "https://www.md2wechat.com/themes",
+      "https://www.md2wechat.cn/theme-gallery",
+    ])
     expect(reference.palettes).toHaveLength(48)
 
     const actualIds = reference.palettes.map(palette => palette.id)
@@ -86,5 +96,17 @@ describe("theme palette reference", () => {
         expect(ids.has(`${family}-${color}`)).toBe(true)
       }
     }
+  })
+
+  it("keeps known gallery corrections for previously misaligned themes", () => {
+    const reference = readPaletteReference()
+    const palettes = new Map(reference.palettes.map(palette => [palette.id, palette]))
+
+    expect(palettes.get("default")?.accent).toBe("#a34e2e")
+    expect(palettes.get("default")?.renderAccent).toBe("#b3593b")
+    expect(palettes.get("bytedance")?.accent).toBe("#1677ff")
+    expect(palettes.get("apple")?.accent).toBe("#007aff")
+    expect(palettes.get("sports")?.accent).toBe("#00a968")
+    expect(palettes.get("minimal-orange")?.accent).toBe("#f89a3a")
   })
 })

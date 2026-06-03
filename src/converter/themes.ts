@@ -15,7 +15,22 @@ export interface Theme {
   density?: "low" | "medium" | "high"
   contrast?: "low" | "medium" | "high"
   accent?: string
+  advancedPalette?: ThemeAdvancedPalette
   sourceUpdatedAt?: string
+}
+
+export interface ThemeAdvancedPalette {
+  background: string
+  surface: string
+  surfaceAlt: string
+  accentSoft: string
+  accentSofter: string
+  accentDark: string
+  border: string
+  muted: string
+  text: string
+  textStrong: string
+  mutedBorder?: string
 }
 
 export interface ThemeReference {
@@ -72,39 +87,39 @@ interface ThemeSpec {
   contrast: "low" | "medium" | "high"
 }
 
-const SOURCE_UPDATED_AT = "2026-06-02"
+const SOURCE_UPDATED_AT = "2026-06-03"
 
 const BASE_UL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
 const BASE_OL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
 
 const NAMED_THEME_SPECS: ThemeSpec[] = [
-  named("default", "built-in", "Reference Warm", "#c86442", "#faf9f5", "#f7f7f7", "#222222", "#3f3f3f", "#dab1a1", "#f6e7df", "暖色技术长文基线，适合代码和判断密集的文章", "technical essays, code-heavy notes, structured long-form writing", "medium", "medium"),
-  named("bytedance", "built-in", "Product Blue", "#1d4ed8", "#ffffff", "#f4f7ff", "#111827", "#64748b", "#c9d7ff", "#eef4ff", "产品蓝，现代清晰", "product updates, efficient business writing, modern operations", "medium", "medium"),
-  named("apple", "built-in", "Polished Indigo", "#5b6ee1", "#fbfcff", "#f3f5ff", "#111827", "#667085", "#d7dcff", "#eef1ff", "精致靛蓝，留白充足", "brand stories, product writing, polished launches", "low", "medium"),
-  named("sports", "built-in", "Energy Orange", "#f97316", "#fffaf5", "#fff3e8", "#24180f", "#7c6a57", "#fed7aa", "#fff0df", "活力橙，节奏强", "events, campaigns, launches, time-sensitive updates", "medium", "high"),
-  named("chinese", "built-in", "Classic Umber", "#9a3412", "#fffaf3", "#f8efe2", "#2f2318", "#7a6656", "#e9d0b8", "#f7eadc", "暖棕古典，书卷气", "culture, seasonal writing, traditional editorial pieces", "medium", "medium"),
-  named("cyber", "built-in", "Neon Violet", "#8b5cf6", "#111827", "#1f1438", "#f8fafc", "#c4b5fd", "#6d4bd8", "#18122c", "霓虹紫，高对比", "visual technology, experiments, campaigns", "high", "high"),
-  named("wechat-native", "classic", "Classic Green", "#07c160", "#ffffff", "#f5fbf7", "#1f2933", "#5f6f67", "#d6eadf", "#eef8f1", "公众号原生绿，熟悉保守", "public-account style posts, conservative knowledge writing", "medium", "medium"),
-  named("nyt-classic", "classic", "Newsprint Black", "#111827", "#fbf6e8", "#f3ecd8", "#111111", "#6b6254", "#d8cdb5", "#eee4cf", "新闻纸黑，严肃长文", "long-form reports, essays, opinion columns", "high", "medium"),
-  named("github-readme", "modern", "Developer Blue", "#0969da", "#ffffff", "#f6f8fa", "#24292f", "#57606a", "#d0d7de", "#f6f8fa", "开发者蓝，README 气质", "technical guides, API notes, developer documentation", "medium", "medium"),
-  named("sspai-red", "modern", "Media Red", "#d71920", "#ffffff", "#fff5f5", "#1f2933", "#6b7280", "#f3c3c5", "#fff0f1", "媒体红，利落醒目", "productivity posts, media-style reviews, creator content", "medium", "high"),
-  named("mint-fresh", "modern", "Fresh Mint", "#10b981", "#f7fffb", "#ecfdf5", "#12372a", "#55766a", "#bbf7d0", "#e9fbf2", "清新薄荷，轻运营", "lifestyle, health, light operations content", "low", "medium"),
-  named("sunset-amber", "modern", "Sunset Amber", "#d97706", "#fff8ed", "#ffedd5", "#33210d", "#7c5d36", "#fed7aa", "#fff1dc", "落日琥珀，叙事温暖", "travel, narrative essays, story-driven columns", "medium", "medium"),
-  named("ink-minimal", "extra", "Ink Minimal", "#111827", "#ffffff", "#f3f4f6", "#111827", "#6b7280", "#d1d5db", "#f3f4f6", "黑白墨色，低干扰", "text-heavy essays, notes, minimal editorial writing", "low", "medium"),
-  named("lavender-dream", "extra", "Lavender Dream", "#8b5cf6", "#fbf7ff", "#f3e8ff", "#2e2444", "#75658f", "#ddd6fe", "#f5edff", "柔紫梦境，品牌情绪", "brand mood, inspiration writing, soft visual stories", "low", "medium"),
-  named("coffee-house", "extra", "Coffee House", "#7c4a2d", "#fff8ef", "#f3e6d8", "#2f2118", "#7a6658", "#d9bea6", "#f5eadf", "咖啡暖棕，人物访谈", "interviews, human-centered columns, essays", "medium", "medium"),
-  named("bauhaus-primary", "extra", "Primary Bauhaus", "#e63946", "#fffdf7", "#f8f0d9", "#111827", "#5f6268", "#f3c14b", "#f4f0e5", "包豪斯主色，图形感强", "campaigns, launches, visual columns", "high", "high"),
+  named("default", "built-in", "Reference Warm", "#a34e2e", "#faf9f5", "#f7f7f7", "#222222", "#737373", "#e3c6b9", "#f1e6df", "暖色技术长文基线，适合代码和判断密集的文章", "technical essays, code-heavy notes, structured long-form writing", "medium", "medium"),
+  named("bytedance", "built-in", "Product Blue", "#1677ff", "#ffffff", "#f2f3f5", "#4e5969", "#717782", "#b4d2fb", "#e3eefd", "产品蓝，现代清晰", "product updates, efficient business writing, modern operations", "medium", "medium"),
+  named("apple", "built-in", "Polished Blue", "#007aff", "#ffffff", "#fafafa", "#333333", "#767676", "#add2fa", "#e0eefd", "精致系统蓝，留白充足", "brand stories, product writing, polished launches", "low", "medium"),
+  named("sports", "built-in", "Energy Green", "#00a968", "#ffffff", "#f8f8f8", "#2c2c2c", "#767676", "#afd9cc", "#e1f1ec", "活力绿，节奏强", "events, campaigns, launches, time-sensitive updates", "medium", "high"),
+  named("chinese", "built-in", "Classic Red", "#8b1e22", "#f8f4e9", "#f5eee3", "#333333", "#70706f", "#d5b0a9", "#ebdad1", "中式红，书卷气", "culture, seasonal writing, traditional editorial pieces", "medium", "medium"),
+  named("cyber", "built-in", "Cyber Pink", "#f472b6", "#ffffff", "#fef8fb", "#333333", "#767676", "#d8caf9", "#f0ebfd", "赛博粉紫，高对比", "visual technology, experiments, campaigns", "high", "high"),
+  named("wechat-native", "classic", "Classic Green", "#07c160", "#ffffff", "#f6fbfa", "#333333", "#767676", "#afd9c3", "#e1f1e9", "公众号原生绿，熟悉保守", "public-account style posts, conservative knowledge writing", "medium", "medium"),
+  named("nyt-classic", "classic", "Newsprint Blue", "#326891", "#fdfaf6", "#f7f3ee", "#000000", "#757372", "#bccbd6", "#e5e8ea", "新闻纸蓝，严肃长文", "long-form reports, essays, opinion columns", "high", "medium"),
+  named("github-readme", "modern", "Developer Blue", "#0969da", "#ffffff", "#f6f8fa", "#1f2328", "#75767a", "#b0cff3", "#e1edfb", "开发者蓝，README 气质", "technical guides, API notes, developer documentation", "medium", "medium"),
+  named("sspai-red", "modern", "Media Red", "#d71a1b", "#ffffff", "#f6fbfa", "#333333", "#767676", "#f2b6b6", "#fae4e4", "媒体红，利落醒目", "productivity posts, media-style reviews, creator content", "medium", "high"),
+  named("mint-fresh", "modern", "Fresh Mint", "#1a7a5a", "#f0faf5", "#e1f5ec", "#2d4a3e", "#63766f", "#acd1c3", "#d6ebe2", "清新薄荷，轻运营", "lifestyle, health, light operations content", "low", "medium"),
+  named("sunset-amber", "modern", "Sunset Amber", "#c0582a", "#fdf6ee", "#f9ecda", "#3d2c1e", "#7c6f64", "#e7c2af", "#f5e3d6", "落日琥珀，叙事温暖", "travel, narrative essays, story-driven columns", "medium", "medium"),
+  named("ink-minimal", "extra", "Ink Minimal", "#111111", "#ffffff", "#fafafa", "#111111", "#767676", "#b3b3b3", "#e2e2e2", "黑白墨色，低干扰", "text-heavy essays, notes, minimal editorial writing", "low", "medium"),
+  named("lavender-dream", "extra", "Lavender Dream", "#6b4c9a", "#f5f0ff", "#ece4ff", "#3d3155", "#746a87", "#c9bcdf", "#e4dcf3", "柔紫梦境，品牌情绪", "brand mood, inspiration writing, soft visual stories", "low", "medium"),
+  named("coffee-house", "extra", "Coffee House", "#6d4c41", "#f5efe6", "#ece3d5", "#3e2723", "#7b6963", "#c9bbb1", "#e5dbd2", "咖啡暖棕，人物访谈", "interviews, human-centered columns, essays", "medium", "medium"),
+  named("bauhaus-primary", "extra", "Primary Bauhaus", "#004d9f", "#ffffff", "#f6fbfa", "#1a1a1a", "#767676", "#adc6e0", "#e0eaf3", "包豪斯主色，图形感强", "campaigns, launches, visual columns", "high", "high"),
 ]
 
 const COLOR_VARIANTS = [
-  { key: "gold", accent: "#b8872f", label: "Gold" },
-  { key: "green", accent: "#188a5b", label: "Green" },
-  { key: "blue", accent: "#2563eb", label: "Blue" },
-  { key: "orange", accent: "#c86442", label: "Orange" },
-  { key: "red", accent: "#d33f49", label: "Red" },
-  { key: "navy", accent: "#243b63", label: "Navy" },
-  { key: "gray", accent: "#64748b", label: "Gray" },
-  { key: "sky", accent: "#0ea5e9", label: "Sky" },
+  { key: "gold", accent: "#c8a062", label: "Gold" },
+  { key: "green", accent: "#2bae85", label: "Green" },
+  { key: "blue", accent: "#4b6ef5", label: "Blue" },
+  { key: "orange", accent: "#f89a3a", label: "Orange" },
+  { key: "red", accent: "#f25c54", label: "Red" },
+  { key: "navy", accent: "#1f4f8a", label: "Navy" },
+  { key: "gray", accent: "#4e5969", label: "Gray" },
+  { key: "sky", accent: "#3a7fd5", label: "Sky" },
 ] as const
 
 const MATRIX_THEME_SPECS: ThemeSpec[] = [
@@ -113,6 +128,57 @@ const MATRIX_THEME_SPECS: ThemeSpec[] = [
   ...themeSeries("elegant", "Elegant", "elegant", "层次丰富，编辑感强", "brand-led articles, editorial writing, aesthetic long-form", "medium", "medium"),
   ...themeSeries("bold", "Bold", "bold", "强视觉标题，强调转化", "launches, campaigns, high-impact announcements", "medium", "high"),
 ]
+
+const GALLERY_ADVANCED_PALETTES: Record<string, ThemeAdvancedPalette> = {
+  "default": { background: "#faf9f5", surface: "#faf9f5", surfaceAlt: "#f7f7f7", accentSoft: "#f1e6df", accentSofter: "#ecd9d0", accentDark: "#b3593b", border: "#e3c6b9", muted: "#737373", text: "#555555", textStrong: "#222222", mutedBorder: "rgba(202, 202, 199, 0.18)" },
+  "bytedance": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f2f3f5", accentSoft: "#e3eefd", accentSofter: "#d0e3fc", accentDark: "#1571f1", border: "#b4d2fb", muted: "#717782", text: "#1d2129", textStrong: "#4e5969" },
+  "apple": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fafafa", accentSoft: "#e0eefd", accentSofter: "#cce3fc", accentDark: "#0072ef", border: "#add2fa", muted: "#767676", text: "#595959", textStrong: "#333333" },
+  "sports": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f8f8f8", accentSoft: "#e1f1ec", accentSofter: "#cde7df", accentDark: "#05875f", border: "#afd9cc", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "chinese": { background: "#f8f4e9", surface: "#f8f4e9", surfaceAlt: "#f5eee3", accentSoft: "#ebdad1", accentSofter: "#e2c9c1", accentDark: "#8b1e22", border: "#d5b0a9", muted: "#70706f", text: "#8b1e22", textStrong: "#333333" },
+  "cyber": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fef8fb", accentSoft: "#f0ebfd", accentSofter: "#e7defb", accentDark: "#8659ed", border: "#d8caf9", muted: "#767676", text: "#595959", textStrong: "#333333" },
+  "wechat-native": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6fbfa", accentSoft: "#e1f1e9", accentSofter: "#cde7da", accentDark: "#058844", border: "#afd9c3", muted: "#767676", text: "#163325", textStrong: "#333333" },
+  "nyt-classic": { background: "#fdfaf6", surface: "#fdfaf6", surfaceAlt: "#f7f3ee", accentSoft: "#e5e8ea", accentSofter: "#d4dde2", accentDark: "#326891", border: "#bccbd6", muted: "#757372", text: "#111111", textStrong: "#000000" },
+  "github-readme": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f8fa", accentSoft: "#e1edfb", accentSofter: "#cee1f8", accentDark: "#0969da", border: "#b0cff3", muted: "#75767a", text: "#1f2328", textStrong: "#1f2328" },
+  "sspai-red": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6fbfa", accentSoft: "#fae4e4", accentSofter: "#f7d1d1", accentDark: "#d71a1b", border: "#f2b6b6", muted: "#767676", text: "#2d2d2d", textStrong: "#333333" },
+  "mint-fresh": { background: "#f0faf5", surface: "#f0faf5", surfaceAlt: "#e1f5ec", accentSoft: "#d6ebe2", accentSofter: "#c5e0d6", accentDark: "#1a7a5a", border: "#acd1c3", muted: "#63766f", text: "#1d5e49", textStrong: "#2d4a3e" },
+  "sunset-amber": { background: "#fdf6ee", surface: "#fdf6ee", surfaceAlt: "#f9ecda", accentSoft: "#f5e3d6", accentSofter: "#efd6c6", accentDark: "#b85428", border: "#e7c2af", muted: "#7c6f64", text: "#7f452a", textStrong: "#3d2c1e" },
+  "ink-minimal": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fafafa", accentSoft: "#e2e2e2", accentSofter: "#cfcfcf", accentDark: "#111111", border: "#b3b3b3", muted: "#767676", text: "#000000", textStrong: "#111111" },
+  "lavender-dream": { background: "#f5f0ff", surface: "#f5f0ff", surfaceAlt: "#ece4ff", accentSoft: "#e4dcf3", accentSofter: "#d9cfeb", accentDark: "#6b4c9a", border: "#c9bcdf", muted: "#746a87", text: "#5e4587", textStrong: "#3d3155" },
+  "coffee-house": { background: "#f5efe6", surface: "#f5efe6", surfaceAlt: "#ece3d5", accentSoft: "#e5dbd2", accentSofter: "#dacec5", accentDark: "#6d4c41", border: "#c9bbb1", muted: "#7b6963", text: "#4a302a", textStrong: "#3e2723" },
+  "bauhaus-primary": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6fbfa", accentSoft: "#e0eaf3", accentSofter: "#ccdbec", accentDark: "#004d9f", border: "#adc6e0", muted: "#767676", text: "#595959", textStrong: "#1a1a1a" },
+  "minimal-gold": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#f2eee9", accentSofter: "#e9e3da", accentDark: "#8f7246", border: "#dbd2c4", muted: "#767676", text: "#6b5534", textStrong: "#2c2c2c" },
+  "minimal-green": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#e4f0ed", accentSofter: "#d3e7e0", accentDark: "#218666", border: "#b8d8ce", muted: "#767676", text: "#19644d", textStrong: "#2c2c2c" },
+  "minimal-blue": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#e9edfd", accentSofter: "#dbe1fc", accentDark: "#496bef", border: "#c5d0fa", muted: "#767676", text: "#3751b4", textStrong: "#2c2c2c" },
+  "minimal-orange": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#f4ede5", accentSofter: "#ede1d4", accentDark: "#a76827", border: "#e3cfba", muted: "#767676", text: "#7e4e1e", textStrong: "#2c2c2c" },
+  "minimal-red": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#f9eae9", accentSofter: "#f4dbda", accentDark: "#ca4d46", border: "#eec6c4", muted: "#767676", text: "#983a35", textStrong: "#2c2c2c" },
+  "minimal-navy": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#e4eaf1", accentSofter: "#d2dce8", accentDark: "#1f4f8a", border: "#b7c7da", muted: "#767676", text: "#1f4f8a", textStrong: "#2c2c2c" },
+  "minimal-gray": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#eaebed", accentSofter: "#dcdee1", accentDark: "#4e5969", border: "#c6cacf", muted: "#767676", text: "#4e5969", textStrong: "#2c2c2c" },
+  "minimal-sky": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f9fafb", accentSoft: "#e7eff8", accentSofter: "#d7e4f4", accentDark: "#3777c8", border: "#bfd3ed", muted: "#767676", text: "#295a96", textStrong: "#2c2c2c" },
+  "focus-gold": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fcfaf7", accentSoft: "#f2eee9", accentSofter: "#e9e3da", accentDark: "#8f7246", border: "#dbd2c4", muted: "#767676", text: "#6b5534", textStrong: "#2c2c2c" },
+  "focus-green": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f4fbf9", accentSoft: "#e4f0ed", accentSofter: "#d3e7e0", accentDark: "#218666", border: "#b8d8ce", muted: "#767676", text: "#19644d", textStrong: "#2c2c2c" },
+  "focus-blue": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f8ff", accentSoft: "#e9edfd", accentSofter: "#dbe1fc", accentDark: "#496bef", border: "#c5d0fa", muted: "#767676", text: "#3751b4", textStrong: "#2c2c2c" },
+  "focus-orange": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fffaf5", accentSoft: "#f4ede5", accentSofter: "#ede1d4", accentDark: "#a76827", border: "#e3cfba", muted: "#767676", text: "#7e4e1e", textStrong: "#2c2c2c" },
+  "focus-red": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fef7f6", accentSoft: "#f9eae9", accentSofter: "#f4dbda", accentDark: "#ca4d46", border: "#eec6c4", muted: "#767676", text: "#983a35", textStrong: "#2c2c2c" },
+  "focus-navy": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f4f6f9", accentSoft: "#e4eaf1", accentSofter: "#d2dce8", accentDark: "#1f4f8a", border: "#b7c7da", muted: "#767676", text: "#1f4f8a", textStrong: "#2c2c2c" },
+  "focus-gray": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f7f8", accentSoft: "#eaebed", accentSofter: "#dcdee1", accentDark: "#4e5969", border: "#c6cacf", muted: "#767676", text: "#4e5969", textStrong: "#2c2c2c" },
+  "focus-sky": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f5f9fd", accentSoft: "#e7eff8", accentSofter: "#d7e4f4", accentDark: "#3777c8", border: "#bfd3ed", muted: "#767676", text: "#295a96", textStrong: "#2c2c2c" },
+  "elegant-gold": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fcfaf7", accentSoft: "#f2eee9", accentSofter: "#e9e3da", accentDark: "#8f7246", border: "#dbd2c4", muted: "#767676", text: "#6b5534", textStrong: "#2c2c2c" },
+  "elegant-green": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f4fbf9", accentSoft: "#e4f0ed", accentSofter: "#d3e7e0", accentDark: "#218666", border: "#b8d8ce", muted: "#767676", text: "#19644d", textStrong: "#2c2c2c" },
+  "elegant-blue": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f8ff", accentSoft: "#e9edfd", accentSofter: "#dbe1fc", accentDark: "#496bef", border: "#c5d0fa", muted: "#767676", text: "#3751b4", textStrong: "#2c2c2c" },
+  "elegant-orange": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fffaf5", accentSoft: "#f4ede5", accentSofter: "#ede1d4", accentDark: "#a76827", border: "#e3cfba", muted: "#767676", text: "#7e4e1e", textStrong: "#2c2c2c" },
+  "elegant-red": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fef7f6", accentSoft: "#f9eae9", accentSofter: "#f4dbda", accentDark: "#ca4d46", border: "#eec6c4", muted: "#767676", text: "#983a35", textStrong: "#2c2c2c" },
+  "elegant-navy": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f4f6f9", accentSoft: "#e4eaf1", accentSofter: "#d2dce8", accentDark: "#1f4f8a", border: "#b7c7da", muted: "#767676", text: "#1f4f8a", textStrong: "#2c2c2c" },
+  "elegant-gray": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f7f8", accentSoft: "#eaebed", accentSofter: "#dcdee1", accentDark: "#4e5969", border: "#c6cacf", muted: "#767676", text: "#4e5969", textStrong: "#2c2c2c" },
+  "elegant-sky": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f5f9fd", accentSoft: "#e7eff8", accentSofter: "#d7e4f4", accentDark: "#3777c8", border: "#bfd3ed", muted: "#767676", text: "#295a96", textStrong: "#2c2c2c" },
+  "bold-gold": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fcfaf7", accentSoft: "#f2eee9", accentSofter: "#e9e3da", accentDark: "#8f7246", border: "#dbd2c4", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-green": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f4fbf9", accentSoft: "#e4f0ed", accentSofter: "#d3e7e0", accentDark: "#218666", border: "#b8d8ce", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-blue": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f8ff", accentSoft: "#e9edfd", accentSofter: "#dbe1fc", accentDark: "#496bef", border: "#c5d0fa", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-orange": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fffaf5", accentSoft: "#f4ede5", accentSofter: "#ede1d4", accentDark: "#a76827", border: "#e3cfba", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-red": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#fef7f6", accentSoft: "#f9eae9", accentSofter: "#f4dbda", accentDark: "#ca4d46", border: "#eec6c4", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-navy": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f4f6f9", accentSoft: "#e4eaf1", accentSofter: "#d2dce8", accentDark: "#1f4f8a", border: "#b7c7da", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-gray": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f6f7f8", accentSoft: "#eaebed", accentSofter: "#dcdee1", accentDark: "#4e5969", border: "#c6cacf", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+  "bold-sky": { background: "#ffffff", surface: "#ffffff", surfaceAlt: "#f5f9fd", accentSoft: "#e7eff8", accentSofter: "#d7e4f4", accentDark: "#3777c8", border: "#bfd3ed", muted: "#767676", text: "#595959", textStrong: "#2c2c2c" },
+}
 
 const THEME_SPECS: ThemeSpec[] = [
   ...NAMED_THEME_SPECS,
@@ -156,10 +222,10 @@ function themeSeries(
     collection,
     `${label} ${color.label}`,
     color.accent,
-    collection === "elegant" ? "#fffaf3" : "#ffffff",
+    "#ffffff",
     colorMix(color.accent, 0.08),
-    "#2f3437",
-    "#64748b",
+    "#2c2c2c",
+    "#767676",
     colorMix(color.accent, 0.28),
     colorMix(color.accent, 0.10),
     `${color.label} ${description}`,
@@ -180,6 +246,7 @@ function createTheme(spec: ThemeSpec): Theme {
     density: spec.density,
     contrast: spec.contrast,
     accent: spec.accent,
+    advancedPalette: GALLERY_ADVANCED_PALETTES[spec.name],
     sourceUpdatedAt: SOURCE_UPDATED_AT,
   }
 }
@@ -235,7 +302,7 @@ function createDefaultReferenceStyles(spec: ThemeSpec): NodeStyles {
     h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
     h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
     h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
-    p: `margin:1.2em 8px;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(34, 34, 34);font-weight:400;overflow-wrap:break-word;`,
+    p: `margin:0 8px 1.15em;padding:0.2em 0;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(34, 34, 34);font-weight:400;overflow-wrap:break-word;`,
     strong: `font-weight:700;color:rgb(63, 63, 63);`,
     em: `font-style:italic;color:${spec.muted};`,
     code: `display:inline-block;background:${inlineCodeBg};color:#9f452c;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;padding:2px 7px;border-radius:999px;border:1px solid rgba(200, 100, 66, 0.18);font-size:90%;line-height:1.4;`,

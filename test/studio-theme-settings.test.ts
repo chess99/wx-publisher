@@ -22,6 +22,8 @@ describe("deriveStudioTheme", () => {
     expect(derived.styles.wrapper).toContain("Georgia")
     expect(derived.styles.pre).toContain("background:#f6f8fa")
     expect(derived.styles.preCode).toContain("color:#24292f")
+    expect(getAdvancedPalette(derived).accent).toBe("#d66a45")
+    expect(getAdvancedPalette(derived).accentSoft).toBe("rgba(214, 106, 69, 0.12)")
 
     expect(base.styles.h2).not.toContain("#d66a45")
     expect(base.styles.p).not.toContain("font-size:17px")
@@ -36,9 +38,9 @@ describe("deriveStudioTheme", () => {
     expect(derived.styles).not.toBe(base.styles)
   })
 
-  it("keeps advanced module palette tied to the derived theme accent", () => {
+  it("uses the gallery advanced palette when Studio keeps the base accent", () => {
     const derived = deriveStudioTheme(getTheme("github-readme"), {})
     expect(getAdvancedPalette(derived).accent).toBe("#0969da")
-    expect(getAdvancedPalette(derived).accentSoft).toBe("rgba(9, 105, 218, 0.12)")
+    expect(getAdvancedPalette(derived).accentSoft).toBe("#e1edfb")
   })
 })

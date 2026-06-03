@@ -19,6 +19,25 @@ export interface AdvancedPalette {
 
 export function getAdvancedPalette(theme: Theme): AdvancedPalette {
   const accent = theme.accent ?? extractAccentColor(theme.styles.h2) ?? extractAccentColor(theme.styles.a) ?? "#07c160"
+  if (theme.advancedPalette) {
+    const p = theme.advancedPalette
+    return {
+      background: p.background,
+      surface: p.surface,
+      surfaceAlt: p.surfaceAlt,
+      accentSoft: p.accentSoft,
+      accentSofter: p.accentSofter,
+      accent,
+      accentDark: p.accentDark,
+      border: p.border,
+      mutedBorder: p.mutedBorder ?? colorMix(accent, 0.18),
+      text: p.text,
+      textStrong: p.textStrong,
+      muted: p.muted,
+      shadow: `0 2px 6px ${colorMix(p.text, 0.06)}`,
+      accentShadow: `0 8px 20px ${colorMix(accent, 0.1)}`,
+    }
+  }
   if (theme.name === "default" && theme.collection === "built-in") {
     return {
       background: "#faf9f5",
