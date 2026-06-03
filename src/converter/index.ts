@@ -271,15 +271,7 @@ function inlineStyles(
       case "h4":
       case "h5":
       case "h6": applyStyle(node, styles.h4); break
-      case "p": {
-        node.tagName = "section"
-        node.properties = {
-          ...(node.properties ?? {}),
-          "data-wxp-paragraph": "true",
-        }
-        applyStyle(node, styles.p)
-        break
-      }
+      case "p":  applyStyle(node, styles.p);  break
 
       case "strong": applyStyle(node, styles.strong); break
       case "em":     applyStyle(node, styles.em);     break
