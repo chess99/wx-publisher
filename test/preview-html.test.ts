@@ -5,22 +5,22 @@ import type { ThemePreviewResult } from "../src/converter/preview-html.js"
 const MOCK_RESULTS: ThemePreviewResult[] = [
   {
     theme: "default",
-    displayName: "Reference Warm",
+    displayName: "默认主题",
     collection: "built-in",
     density: "medium",
     contrast: "medium",
     accent: "#a34e2e",
-    bestFor: "technical essays",
+    bestFor: "适合运营、知识内容，气质偏熟悉、微信原生。",
     html: "<section>default content</section>",
   },
   {
     theme: "github-readme",
-    displayName: "Developer Blue",
+    displayName: "GitHub",
     collection: "modern",
     density: "medium",
     contrast: "medium",
     accent: "#0969da",
-    bestFor: "developer documentation",
+    bestFor: "适合产品、知识内容，气质偏技术、结构化。",
     html: "<section>github-readme content</section>",
   },
   {
@@ -54,22 +54,38 @@ describe("generatePreviewHtml", () => {
 
     expect(html).toContain('id="themeSearch"')
     expect(html).toContain('data-filter-group="collection"')
+    expect(html).toContain('data-filter-group="scenario"')
     expect(html).toContain('data-filter-group="density"')
     expect(html).toContain('data-filter-group="contrast"')
     expect(html).toContain('data-filter-value="modern"')
     expect(html).toContain('data-filter-value="custom"')
+    expect(html).toContain('data-filter-value="知识"')
   })
 
-  it("shows theme metadata badges and accent swatches", () => {
+  it("shows Chinese theme metadata badges and accent swatches", () => {
     const html = generatePreviewHtml(MOCK_RESULTS, FILE_PATH)
 
-    expect(html).toContain("Reference Warm")
-    expect(html).toContain("Developer Blue")
-    expect(html).toContain("technical essays")
+    expect(html).toContain("默认主题")
+    expect(html).toContain("GitHub")
+    expect(html).toContain("适合运营、知识内容")
+    expect(html).toContain("原生")
+    expect(html).toContain("精选")
+    expect(html).toContain("中密度")
+    expect(html).toContain("高对比")
     expect(html).toContain('class="accent-swatch" style="background:#a34e2e"')
-    expect(html).toContain("built-in")
-    expect(html).toContain("medium density")
-    expect(html).toContain("high contrast")
+    expect(html).not.toContain("medium density")
+    expect(html).not.toContain("high contrast")
+  })
+
+  it("renders a Chinese editorial hero for content-oriented theme selection", () => {
+    const html = generatePreviewHtml(MOCK_RESULTS, FILE_PATH)
+
+    expect(html).toContain("主题不是换配色，")
+    expect(html).toContain("是切换内容气质")
+    expect(html).toContain("主题负责气质")
+    expect(html).toContain("表达密度")
+    expect(html).toContain("搜索主题、场景或气质")
+    expect(html).toContain("全部系列")
   })
 
   it("contains a full preview drawer and copy command controls", () => {

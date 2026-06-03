@@ -75,6 +75,8 @@ describe("CLI surface", () => {
     expect(payload.data.themes).not.toContain("studio")
     expect(payload.data.theme_reference).toContainEqual(expect.objectContaining({
       name: "github-readme",
+      displayName: "GitHub",
+      bestFor: expect.stringContaining("适合产品、知识内容"),
       collection: "modern",
       density: "medium",
       contrast: "medium",
@@ -89,6 +91,8 @@ describe("CLI surface", () => {
     expect(payload.data.count).toBe(48)
     expect(payload.data.themes).toContainEqual(expect.objectContaining({
       name: "github-readme",
+      displayName: "GitHub",
+      bestFor: expect.stringContaining("适合产品、知识内容"),
       collection: "modern",
       density: "medium",
       contrast: "medium",

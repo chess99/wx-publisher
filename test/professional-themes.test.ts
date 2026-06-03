@@ -145,8 +145,12 @@ describe("professional theme matrix", () => {
   })
 
   it("keeps theme selection metadata available for AI callers", () => {
-    expect(getTheme("github-readme").bestFor).toContain("technical")
+    expect(getTheme("default").displayName).toBe("默认主题")
+    expect(getTheme("github-readme").displayName).toBe("GitHub")
+    expect(getTheme("bold-red").displayName).toBe("醒目 · 中国红")
+    expect(getTheme("github-readme").bestFor).toContain("适合产品、知识内容")
     expect(getTheme("github-readme").collection).toBe("modern")
+    expect(getTheme("bold-red").bestFor).toContain("适合专题、品牌、运营内容")
     expect(getTheme("bold-red").density).toBe("medium")
     expect(getTheme("nyt-classic").contrast).toBe("medium")
   })
