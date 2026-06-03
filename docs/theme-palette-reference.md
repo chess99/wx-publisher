@@ -28,7 +28,7 @@ The canonical data file is `docs/theme-palette-reference.json`.
 
 | ID | Accent | Notes |
 | --- | --- | --- |
-| `default` | `#c86442` | Warm technical baseline for structured long-form articles with code and dense references. |
+| `default` | `#c86442` | Light warm technical baseline for structured long-form articles with code and dense references. |
 | `bytedance` | `#1d4ed8` | Product-blue direction with efficient contrast. |
 | `apple` | `#5b6ee1` | Polished indigo direction for brand and product writing. |
 | `sports` | `#f97316` | Energetic orange direction for activity, event, and release content. |

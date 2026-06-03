@@ -77,9 +77,12 @@ describe("professional theme matrix", () => {
   it("applies distinct family visual rules", () => {
     const defaultStyles = getTheme("default").styles
     expect(getTheme("default").accent).toBe("#c86442")
-    expect(defaultStyles.wrapper).toContain("background:#1a1a1a")
+    expect(defaultStyles.wrapper).toContain("background:#faf9f5")
+    expect(defaultStyles.wrapper).toContain("color:#222222")
     expect(defaultStyles.p).toContain("letter-spacing:0.1em")
+    expect(defaultStyles.p).toContain("font-weight:400")
     expect(defaultStyles.h2).toContain("border-bottom:1px dashed")
+    expect(defaultStyles.h2).toContain("rgb(63, 63, 63)")
     expect(defaultStyles.code).toContain("border-radius:999px")
     expect(defaultStyles.pre).toContain("rgba(200, 100, 66, 0.14) 12px")
     expect(defaultStyles.preCode).toContain("overflow-wrap:anywhere")
@@ -111,6 +114,9 @@ describe("professional theme matrix", () => {
       "/goal line two",
       "```",
       "",
+      "- 列表一",
+      "- 列表二",
+      "",
       ":::verdict",
       "eyebrow: 判断",
       "title: 默认主题基线",
@@ -124,6 +130,8 @@ describe("professional theme matrix", () => {
 
     const result = await convertMarkdown(markdown, { theme: "default", stripLinks: false })
 
+    expect(result.html).toContain("background:#faf9f5")
+    expect(result.html).toContain("color:rgb(34, 34, 34);font-weight:400")
     expect(result.html).toContain("border-left:4px solid rgb(230, 130, 96)")
     expect(result.html).toContain("border-bottom:1px dashed rgb(230, 130, 96)")
     expect(result.html).toContain('class="inline-code"')
@@ -131,6 +139,9 @@ describe("professional theme matrix", () => {
     expect(result.html).toContain("<br>/goal")
     expect(result.html).not.toContain("white-space:nowrap;overflow-x:auto;;white-space:nowrap")
     expect(result.html).toContain("overflow-wrap:anywhere")
+    expect(result.html).toContain('data-wxp-list="unordered"')
+    expect(result.html).toContain('data-wxp-list="ordered"')
+    expect(result.html).not.toMatch(/<(ul|ol|li)\b/)
     expect(result.html).toContain('data-mpa-action-id="verdict"')
     expect(result.html).toContain("background:linear-gradient(135deg, #ead6cc 0%, #faf9f5 48%, #f7f7f7 100%)")
     expect(result.html).toContain("word-break:break-all")

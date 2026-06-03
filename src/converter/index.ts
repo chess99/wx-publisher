@@ -5,7 +5,7 @@
  * - 不支持外部 CSS（class 无效），所有样式必须内联到 style 属性
  * - 不支持外链，链接转为带下划线文字
  * - 图片必须是微信素材库 URL，外链图片会被屏蔽
- * - ul/ol/li 标签会被微信二次处理导致空行，改用 <p> + 前缀符号模拟
+ * - ul/ol/li 标签会被微信二次处理导致空行或重复标记，改用非列表标签 + 前缀符号模拟
  * - pre/code 不能依赖 white-space:pre，换行→<br>，空格→&nbsp;
  */
 
@@ -135,7 +135,7 @@ function injectAdvancedBlocks(tree: Root, blocks: RenderedAdvancedBlock[]): void
 /**
  * 剥掉 li 直接子级的 <p> 包裹（松散列表产生），避免 p 的 margin 撑开空行
  * 同时过滤掉纯空白文本节点（\n），防止微信编辑器将其渲染为额外空行
- * <li>\n<p>text</p>\n</li> → <li>text</li>
+ * <li>\n<p>text</p>\n</li> → text
  */
 function unwrapLiParagraphs(children: ElementContent[]): ElementContent[] {
   const result: ElementContent[] = []
@@ -149,6 +149,32 @@ function unwrapLiParagraphs(children: ElementContent[]): ElementContent[] {
     }
   }
   return result
+}
+
+function renderListAsWechatSafeSections(node: Element, styles: NodeStyles, ordered: boolean): void {
+  const listStyle = ordered ? styles.ol : styles.ul
+  const listItems = node.children.filter(
+    (child): child is Element => child.type === "element" && child.tagName === "li"
+  )
+
+  node.tagName = "section"
+  node.properties = {
+    ...(node.properties ?? {}),
+    "data-wxp-list": ordered ? "ordered" : "unordered",
+    style: listStyle,
+  }
+  node.children = listItems.map((li, index): Element => ({
+    type: "element",
+    tagName: "section",
+    properties: {
+      "data-wxp-list-item": ordered ? String(index + 1) : "bullet",
+      style: styles.li,
+    },
+    children: [
+      { type: "text", value: ordered ? `${index + 1}. ` : "• " },
+      ...unwrapLiParagraphs(li.children),
+    ],
+  }))
 }
 
 /**
@@ -252,29 +278,14 @@ function inlineStyles(
 
       case "hr": applyStyle(node, styles.hr); break
 
-      // 列表：display:block 消除 list-item 默认行为，li 前加 bullet 前缀
-      // 关键：过滤掉 ul/ol 里的文本节点（\n），防止 ProseMirror 把它们渲染成空 li
+      // 列表：避免真实 ul/ol/li 被公众号编辑器重新补 marker。
+      // 关键：过滤掉 ul/ol 里的文本节点（\n），防止 ProseMirror 把它们渲染成空项。
       case "ul": {
-        applyStyle(node, styles.ul)
-        const ulLis = node.children.filter(
-          (c): c is Element => c.type === "element" && c.tagName === "li"
-        )
-        for (const li of ulLis) {
-          li.children = [{ type: "text", value: "• " } as Text, ...unwrapLiParagraphs(li.children)]
-        }
-        node.children = ulLis
+        renderListAsWechatSafeSections(node, styles, false)
         break
       }
       case "ol": {
-        applyStyle(node, styles.ol)
-        let counter = 1
-        const olLis = node.children.filter(
-          (c): c is Element => c.type === "element" && c.tagName === "li"
-        )
-        for (const li of olLis) {
-          li.children = [{ type: "text", value: `${counter++}. ` } as Text, ...unwrapLiParagraphs(li.children)]
-        }
-        node.children = olLis
+        renderListAsWechatSafeSections(node, styles, true)
         break
       }
       case "li": {

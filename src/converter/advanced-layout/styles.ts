@@ -33,7 +33,7 @@ export function getAdvancedPalette(theme: Theme): AdvancedPalette {
       text: "#555555",
       textStrong: "#222222",
       muted: "#737373",
-      shadow: "0 1px 2px rgba(0, 0, 0, 0.6)",
+      shadow: "0 2px 6px rgba(85, 85, 85, 0.06)",
       accentShadow: "0 8px 20px rgba(200, 100, 66, 0.1)",
     }
   }

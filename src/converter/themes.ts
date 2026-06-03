@@ -78,7 +78,7 @@ const BASE_UL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
 const BASE_OL = "list-style:none;padding-left:0;margin:0 0 16px 0;"
 
 const NAMED_THEME_SPECS: ThemeSpec[] = [
-  named("default", "built-in", "Reference Warm", "#c86442", "#1a1a1a", "#faf9f5", "#f0f0f0", "#c8c8c8", "#dab1a1", "#f6e7df", "暖色技术长文基线，适合代码和判断密集的文章", "technical essays, code-heavy notes, structured long-form writing", "medium", "high"),
+  named("default", "built-in", "Reference Warm", "#c86442", "#faf9f5", "#f7f7f7", "#222222", "#3f3f3f", "#dab1a1", "#f6e7df", "暖色技术长文基线，适合代码和判断密集的文章", "technical essays, code-heavy notes, structured long-form writing", "medium", "medium"),
   named("bytedance", "built-in", "Product Blue", "#1d4ed8", "#ffffff", "#f4f7ff", "#111827", "#64748b", "#c9d7ff", "#eef4ff", "产品蓝，现代清晰", "product updates, efficient business writing, modern operations", "medium", "medium"),
   named("apple", "built-in", "Polished Indigo", "#5b6ee1", "#fbfcff", "#f3f5ff", "#111827", "#667085", "#d7dcff", "#eef1ff", "精致靛蓝，留白充足", "brand stories, product writing, polished launches", "low", "medium"),
   named("sports", "built-in", "Energy Orange", "#f97316", "#fffaf5", "#fff3e8", "#24180f", "#7c6a57", "#fed7aa", "#fff0df", "活力橙，节奏强", "events, campaigns, launches, time-sensitive updates", "medium", "high"),
@@ -230,21 +230,21 @@ function createDefaultReferenceStyles(spec: ThemeSpec): NodeStyles {
   const fontFamily = "'PingFang SC',-apple-system-font,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans GB','Microsoft YaHei UI','Microsoft YaHei',Arial,sans-serif"
 
   return {
-    wrapper: `font-family:${fontFamily};max-width:677px;margin:0 auto;padding:12px;background:#1a1a1a;color:${spec.text};`,
-    h1: `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:22px;font-weight:bold;line-height:1.2;color:rgb(220, 220, 220);`,
-    h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(200, 200, 200);`,
-    h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(210, 210, 210);`,
-    h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(210, 210, 210);`,
-    p: `margin:1.2em 8px;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(240, 240, 240);overflow-wrap:break-word;`,
-    strong: `font-weight:800;color:rgb(245, 245, 245);`,
+    wrapper: `font-family:${fontFamily};max-width:677px;margin:0 auto;padding:12px;background:#faf9f5;color:${spec.text};`,
+    h1: `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:22px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
+    h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
+    h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
+    h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
+    p: `margin:1.2em 8px;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(34, 34, 34);font-weight:400;overflow-wrap:break-word;`,
+    strong: `font-weight:700;color:rgb(63, 63, 63);`,
     em: `font-style:italic;color:${spec.muted};`,
     code: `display:inline-block;background:${inlineCodeBg};color:#9f452c;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;padding:2px 7px;border-radius:999px;border:1px solid rgba(200, 100, 66, 0.18);font-size:90%;line-height:1.4;`,
     pre: `display:block;box-sizing:border-box;margin:1.5em 8px;padding:1.15em 1.2em 1.2em;background:${preBg};border:1px solid rgba(200, 100, 66, 0.18);border-radius:14px;overflow-x:auto;font-size:14px;line-height:1.6;box-shadow:0 8px 20px rgba(200, 100, 66, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.85);white-space:pre;-webkit-overflow-scrolling:touch;tab-size:2;`,
     preCode: `background:none;padding:0;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:14px;color:#3b342f;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;`,
-    blockquote: `margin:1.5em 8px 2em;padding:1em 1.2em;border-left:4px solid ${headingAccent};background:rgba(200, 100, 66, 0.1);color:rgb(220, 220, 220);font-size:15px;line-height:1.75;border-radius:0 8px 8px 0;`,
-    ul: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(200, 200, 200);`,
-    ol: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(200, 200, 200);`,
-    li: `display:block;margin:0.5em 0;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(200, 200, 200);`,
+    blockquote: `margin:1.5em 8px 2em;padding:1em 1.2em;border-left:4px solid ${headingAccent};background:rgba(200, 100, 66, 0.1);color:rgb(63, 63, 63);font-size:15px;line-height:1.75;border-radius:0 8px 8px 0;`,
+    ul: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(63, 63, 63);`,
+    ol: `list-style:none;margin:0em 8px 1.5em;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;color:rgb(63, 63, 63);`,
+    li: `display:block;margin:0.5em 0;padding:0;text-align:left;line-height:1.75;font-family:${fontFamily};font-size:15px;font-weight:400;color:rgb(63, 63, 63);`,
     hr: `border:none;border-top:1px dashed rgba(230, 130, 96, 0.4);margin:2em 8px;`,
     img: `max-width:100%;border-radius:8px;display:block;margin:18px auto;`,
     a: `color:${linkAccent};text-decoration:none;border-bottom:1px solid rgba(200, 100, 66, 0.3);word-break:break-all;overflow-wrap:anywhere;white-space:normal;`,

@@ -561,44 +561,44 @@ program
 
     const checks: Record<string, { status: string; detail: string }> = {}
 
-    // CHECK: li 有 display:block
-    const liMatches = [...html.matchAll(/<li\s[^>]*style="([^"]*)"/g)]
-    if (liMatches.length === 0) {
-      checks["LIST_DISPLAY_BLOCK"] = { status: "SKIP", detail: "无 li 元素" }
+    // CHECK: 普通 Markdown 列表应使用非原生列表结构，避免编辑器重复补 marker
+    const safeListMatches = [...html.matchAll(/data-wxp-list="(ordered|unordered)"/g)]
+    if (safeListMatches.length === 0) {
+      checks["LIST_WECHAT_SAFE_STRUCTURE"] = { status: "SKIP", detail: "无普通 Markdown 列表" }
     } else {
-      const bad = liMatches.filter(m => !m[1].includes("display:block"))
-      checks["LIST_DISPLAY_BLOCK"] = {
-        status: bad.length === 0 ? "PASS" : "FAIL",
-        detail: `${liMatches.length} 个 li，${bad.length} 个缺少 display:block`,
+      const nativeListMatches = [...html.matchAll(/<(ul|ol|li)\b/g)]
+      checks["LIST_WECHAT_SAFE_STRUCTURE"] = {
+        status: nativeListMatches.length === 0 ? "PASS" : "FAIL",
+        detail: `${safeListMatches.length} 个安全列表，${nativeListMatches.length} 个原生列表标签`,
       }
     }
 
-    // CHECK: ul li 有 • 前缀文本
+    // CHECK: 无序列表有 • 前缀文本
     const bulletCount = (html.match(/• /g) || []).length
     checks["LIST_HAS_BULLET"] = {
       status: bulletCount > 0 ? "PASS" : "SKIP",
       detail: `发现 ${bulletCount} 个 • 前缀`,
     }
 
-    // CHECK: pre 有深色背景
+    // CHECK: pre 有背景样式
     const preMatches = [...html.matchAll(/<pre[^>]*style="([^"]*)"/g)]
     if (preMatches.length === 0) {
-      checks["CODE_BLOCK_DARK_BG"] = { status: "SKIP", detail: "无代码块" }
+      checks["CODE_BLOCK_BACKGROUND"] = { status: "SKIP", detail: "无代码块" }
     } else {
-      const bad = preMatches.filter(m => !m[1].includes("background:#") && !m[1].includes("background: #"))
-      checks["CODE_BLOCK_DARK_BG"] = {
+      const bad = preMatches.filter(m => !m[1].includes("background:"))
+      checks["CODE_BLOCK_BACKGROUND"] = {
         status: bad.length === 0 ? "PASS" : "FAIL",
         detail: `${preMatches.length} 个 pre，${bad.length} 个缺少 background 样式`,
       }
     }
 
-    // CHECK: pre code 有浅色 color
+    // CHECK: pre code 有 color
     const preCodeMatches = [...html.matchAll(/class="language-[^"]*"\s+style="([^"]*)"/g)]
     if (preCodeMatches.length === 0) {
-      checks["CODE_BLOCK_LIGHT_TEXT"] = { status: "SKIP", detail: "无代码块" }
+      checks["CODE_BLOCK_TEXT_COLOR"] = { status: "SKIP", detail: "无代码块" }
     } else {
       const bad = preCodeMatches.filter(m => !m[1].includes("color:"))
-      checks["CODE_BLOCK_LIGHT_TEXT"] = {
+      checks["CODE_BLOCK_TEXT_COLOR"] = {
         status: bad.length === 0 ? "PASS" : "FAIL",
         detail: `${preCodeMatches.length} 个 pre code，${bad.length} 个缺少 color 样式`,
       }
