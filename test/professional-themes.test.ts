@@ -126,17 +126,16 @@ describe("professional theme matrix", () => {
     expect(getTheme("nyt-classic").contrast).toBe("medium")
   })
 
-  it("renders default paragraphs with the reference reading rhythm", async () => {
+  it("renders default paragraphs with WeChat-safe block spacing", async () => {
     const result = await convertMarkdown("第一段连续正文。\n\n第二段应该保留段距。", { theme: "default" })
 
-    expect(result.html).toContain("<p")
-    expect(result.html).toContain("margin:1.2em 8px")
+    expect(result.html).toContain('data-wxp-paragraph="true"')
+    expect(result.html).toContain("margin:0 8px 1.15em")
+    expect(result.html).toContain("padding:0.2em 0")
     expect(result.html).toContain("line-height:1.75")
     expect(result.html).toContain("font-size:15px")
     expect(result.html).toContain("font-weight:400")
-    expect(result.html).not.toContain("data-wxp-paragraph")
-    expect(result.html).not.toContain("margin:0 8px 1.15em")
-    expect(result.html).not.toContain("padding:0.2em 0")
+    expect(result.html).not.toContain("<p")
   })
 
   it("converts default theme content against the local reference baseline", async () => {
@@ -167,7 +166,7 @@ describe("professional theme matrix", () => {
     const result = await convertMarkdown(markdown, { theme: "default", stripLinks: false })
 
     expect(result.html).toContain("background:#faf9f5")
-    expect(result.html).toContain("margin:1.2em 8px")
+    expect(result.html).toContain("margin:0 8px 1.15em")
     expect(result.html).toContain("color:rgb(34, 34, 34);font-weight:400")
     expect(result.html).toContain("border-left:4px solid rgb(230, 130, 96)")
     expect(result.html).toContain("border-bottom:1px dashed rgb(230, 130, 96)")

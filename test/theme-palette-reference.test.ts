@@ -51,7 +51,6 @@ interface PaletteReference {
   version: number
   usage: string
   sourceUpdatedAt: string
-  sources: string[]
   palettes: Array<Record<string, string>>
 }
 
@@ -66,10 +65,6 @@ describe("theme palette reference", () => {
     expect(reference.version).toBe(2)
     expect(reference.usage).toBe("runtime-theme-catalog")
     expect(reference.sourceUpdatedAt).toBe("2026-06-03")
-    expect(reference.sources).toEqual([
-      "https://www.md2wechat.com/themes",
-      "https://www.md2wechat.cn/theme-gallery",
-    ])
     expect(reference.palettes).toHaveLength(48)
 
     const actualIds = reference.palettes.map(palette => palette.id)

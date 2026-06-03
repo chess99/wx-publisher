@@ -2,11 +2,7 @@
   "version": 2,
   "usage": "runtime-theme-catalog",
   "sourceUpdatedAt": "2026-06-03",
-  "sources": [
-    "https://www.md2wechat.com/themes",
-    "https://www.md2wechat.cn/theme-gallery"
-  ],
-  "extractionNotes": "accent is the theme-card/source color from the gallery detail page; renderAccent/accentSoft/accentSofter/border/text fields are sampled from the rendered article preview on that page.",
+  "extractionNotes": "Palette values are maintained as a local reference baseline; accent is the public theme color, while renderAccent/accentSoft/accentSofter/border/text fields describe rendered output samples.",
   "palettes": [
     {
       "id": "default",
@@ -24,7 +20,6 @@
       "muted": "#737373",
       "border": "#e3c6b9",
       "codeBackground": "#f1e6df",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/default",
       "notes": "默认主题 适合运营、知识内容，气质偏熟悉、微信原生。"
     },
     {
@@ -43,7 +38,6 @@
       "muted": "#717782",
       "border": "#b4d2fb",
       "codeBackground": "#e3eefd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bytedance",
       "notes": "字节范 适合产品、品牌内容，气质偏科技、效率。"
     },
     {
@@ -62,7 +56,6 @@
       "muted": "#767676",
       "border": "#add2fa",
       "codeBackground": "#e0eefd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/apple",
       "notes": "苹果范 适合品牌、产品内容，气质偏精致、未来感。"
     },
     {
@@ -81,7 +74,6 @@
       "muted": "#767676",
       "border": "#afd9cc",
       "codeBackground": "#e1f1ec",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/sports",
       "notes": "运动风 适合运营、专题内容，气质偏动感、活力。"
     },
     {
@@ -100,7 +92,6 @@
       "muted": "#70706f",
       "border": "#d5b0a9",
       "codeBackground": "#ebdad1",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/chinese",
       "notes": "中国风 适合专题、品牌内容，气质偏古典、文化。"
     },
     {
@@ -119,7 +110,6 @@
       "muted": "#767676",
       "border": "#d8caf9",
       "codeBackground": "#f0ebfd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/cyber",
       "notes": "赛博朋克 适合专题、产品内容，气质偏赛博、实验性。"
     },
     {
@@ -138,7 +128,6 @@
       "muted": "#767676",
       "border": "#afd9c3",
       "codeBackground": "#e1f1e9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/wechat-native",
       "notes": "微信公众号原生 适合运营、知识内容，气质偏熟悉、稳妥。"
     },
     {
@@ -157,7 +146,6 @@
       "muted": "#757372",
       "border": "#bccbd6",
       "codeBackground": "#e5e8ea",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/nyt-classic",
       "notes": "NYT 适合知识、专题内容，气质偏报刊、严肃。"
     },
     {
@@ -176,7 +164,6 @@
       "muted": "#75767a",
       "border": "#b0cff3",
       "codeBackground": "#e1edfb",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/github-readme",
       "notes": "GitHub 适合产品、知识内容，气质偏技术、结构化。"
     },
     {
@@ -195,7 +182,6 @@
       "muted": "#767676",
       "border": "#f2b6b6",
       "codeBackground": "#fae4e4",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/sspai-red",
       "notes": "少数派 适合产品、品牌内容，气质偏媒体感、中文科技。"
     },
     {
@@ -214,7 +200,6 @@
       "muted": "#63766f",
       "border": "#acd1c3",
       "codeBackground": "#d6ebe2",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/mint-fresh",
       "notes": "薄荷 适合品牌、运营内容，气质偏清新、生活方式。"
     },
     {
@@ -233,7 +218,6 @@
       "muted": "#7c6f64",
       "border": "#e7c2af",
       "codeBackground": "#f5e3d6",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/sunset-amber",
       "notes": "日落 适合专题、品牌内容，气质偏叙事、温暖。"
     },
     {
@@ -252,7 +236,6 @@
       "muted": "#767676",
       "border": "#b3b3b3",
       "codeBackground": "#e2e2e2",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/ink-minimal",
       "notes": "水墨 适合知识、专题内容，气质偏黑白、克制。"
     },
     {
@@ -271,7 +254,6 @@
       "muted": "#746a87",
       "border": "#c9bcdf",
       "codeBackground": "#e4dcf3",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/lavender-dream",
       "notes": "薰衣草 适合品牌、专题内容，气质偏柔和、浪漫。"
     },
     {
@@ -290,7 +272,6 @@
       "muted": "#7b6963",
       "border": "#c9bbb1",
       "codeBackground": "#e5dbd2",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/coffee-house",
       "notes": "咖啡 适合专题、品牌内容，气质偏温暖、人文。"
     },
     {
@@ -309,7 +290,6 @@
       "muted": "#767676",
       "border": "#adc6e0",
       "codeBackground": "#e0eaf3",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bauhaus-primary",
       "notes": "Bauhaus 适合专题、品牌、产品内容，气质偏现代主义、实验。"
     },
     {
@@ -328,7 +308,6 @@
       "muted": "#767676",
       "border": "#dbd2c4",
       "codeBackground": "#f2eee9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-gold",
       "notes": "简约 · 古铜金 适合知识、运营内容，气质偏克制、整洁、温润、沉稳。"
     },
     {
@@ -347,7 +326,6 @@
       "muted": "#767676",
       "border": "#b8d8ce",
       "codeBackground": "#e4f0ed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-green",
       "notes": "简约 · 翡翠绿 适合知识、运营内容，气质偏克制、整洁、清新、自然。"
     },
     {
@@ -366,7 +344,6 @@
       "muted": "#767676",
       "border": "#c5d0fa",
       "codeBackground": "#e9edfd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-blue",
       "notes": "简约 · 宝石蓝 适合知识、运营内容，气质偏克制、整洁、专业、科技。"
     },
     {
@@ -385,7 +362,6 @@
       "muted": "#767676",
       "border": "#e3cfba",
       "codeBackground": "#f4ede5",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-orange",
       "notes": "简约 · 暖阳橙 适合知识、运营内容，气质偏克制、整洁、明快、亲和。"
     },
     {
@@ -404,7 +380,6 @@
       "muted": "#767676",
       "border": "#eec6c4",
       "codeBackground": "#f9eae9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-red",
       "notes": "简约 · 中国红 适合知识、运营内容，气质偏克制、整洁、强调、传播。"
     },
     {
@@ -423,7 +398,6 @@
       "muted": "#767676",
       "border": "#b7c7da",
       "codeBackground": "#e4eaf1",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-navy",
       "notes": "简约 · 深海蓝 适合知识、运营内容，气质偏克制、整洁、可信、理性。"
     },
     {
@@ -442,7 +416,6 @@
       "muted": "#767676",
       "border": "#c6cacf",
       "codeBackground": "#eaebed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-gray",
       "notes": "简约 · 石墨灰 适合知识、运营内容，气质偏克制、整洁、中性。"
     },
     {
@@ -461,7 +434,6 @@
       "muted": "#767676",
       "border": "#bfd3ed",
       "codeBackground": "#e7eff8",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/minimal-sky",
       "notes": "简约 · 天空蓝 适合知识、运营内容，气质偏克制、整洁、通透、轻盈。"
     },
     {
@@ -480,7 +452,6 @@
       "muted": "#767676",
       "border": "#dbd2c4",
       "codeBackground": "#f2eee9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-gold",
       "notes": "聚焦 · 古铜金 适合知识、品牌内容，气质偏聚焦、秩序、温润、沉稳。"
     },
     {
@@ -499,7 +470,6 @@
       "muted": "#767676",
       "border": "#b8d8ce",
       "codeBackground": "#e4f0ed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-green",
       "notes": "聚焦 · 翡翠绿 适合知识、品牌内容，气质偏聚焦、秩序、清新、自然。"
     },
     {
@@ -518,7 +488,6 @@
       "muted": "#767676",
       "border": "#c5d0fa",
       "codeBackground": "#e9edfd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-blue",
       "notes": "聚焦 · 宝石蓝 适合知识、品牌内容，气质偏聚焦、秩序、专业、科技。"
     },
     {
@@ -537,7 +506,6 @@
       "muted": "#767676",
       "border": "#e3cfba",
       "codeBackground": "#f4ede5",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-orange",
       "notes": "聚焦 · 暖阳橙 适合知识、品牌内容，气质偏聚焦、秩序、明快、亲和。"
     },
     {
@@ -556,7 +524,6 @@
       "muted": "#767676",
       "border": "#eec6c4",
       "codeBackground": "#f9eae9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-red",
       "notes": "聚焦 · 中国红 适合知识、品牌内容，气质偏聚焦、秩序、强调、传播。"
     },
     {
@@ -575,7 +542,6 @@
       "muted": "#767676",
       "border": "#b7c7da",
       "codeBackground": "#e4eaf1",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-navy",
       "notes": "聚焦 · 深海蓝 适合知识、品牌内容，气质偏聚焦、秩序、可信、理性。"
     },
     {
@@ -594,7 +560,6 @@
       "muted": "#767676",
       "border": "#c6cacf",
       "codeBackground": "#eaebed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-gray",
       "notes": "聚焦 · 石墨灰 适合知识、品牌内容，气质偏聚焦、秩序、克制、中性。"
     },
     {
@@ -613,7 +578,6 @@
       "muted": "#767676",
       "border": "#bfd3ed",
       "codeBackground": "#e7eff8",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/focus-sky",
       "notes": "聚焦 · 天空蓝 适合知识、品牌内容，气质偏聚焦、秩序、通透、轻盈。"
     },
     {
@@ -632,7 +596,6 @@
       "muted": "#767676",
       "border": "#dbd2c4",
       "codeBackground": "#f2eee9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-gold",
       "notes": "精致 · 古铜金 适合品牌、运营内容，气质偏精致、雅致、温润、沉稳。"
     },
     {
@@ -651,7 +614,6 @@
       "muted": "#767676",
       "border": "#b8d8ce",
       "codeBackground": "#e4f0ed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-green",
       "notes": "精致 · 翡翠绿 适合品牌、运营内容，气质偏精致、雅致、清新、自然。"
     },
     {
@@ -670,7 +632,6 @@
       "muted": "#767676",
       "border": "#c5d0fa",
       "codeBackground": "#e9edfd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-blue",
       "notes": "精致 · 宝石蓝 适合品牌、运营内容，气质偏精致、雅致、专业、科技。"
     },
     {
@@ -689,7 +650,6 @@
       "muted": "#767676",
       "border": "#e3cfba",
       "codeBackground": "#f4ede5",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-orange",
       "notes": "精致 · 暖阳橙 适合品牌、运营内容，气质偏精致、雅致、明快、亲和。"
     },
     {
@@ -708,7 +668,6 @@
       "muted": "#767676",
       "border": "#eec6c4",
       "codeBackground": "#f9eae9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-red",
       "notes": "精致 · 中国红 适合品牌、运营内容，气质偏精致、雅致、强调、传播。"
     },
     {
@@ -727,7 +686,6 @@
       "muted": "#767676",
       "border": "#b7c7da",
       "codeBackground": "#e4eaf1",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-navy",
       "notes": "精致 · 深海蓝 适合品牌、运营内容，气质偏精致、雅致、可信、理性。"
     },
     {
@@ -746,7 +704,6 @@
       "muted": "#767676",
       "border": "#c6cacf",
       "codeBackground": "#eaebed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-gray",
       "notes": "精致 · 石墨灰 适合品牌、运营内容，气质偏精致、雅致、克制、中性。"
     },
     {
@@ -765,7 +722,6 @@
       "muted": "#767676",
       "border": "#bfd3ed",
       "codeBackground": "#e7eff8",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/elegant-sky",
       "notes": "精致 · 天空蓝 适合品牌、运营内容，气质偏精致、雅致、通透、轻盈。"
     },
     {
@@ -784,7 +740,6 @@
       "muted": "#767676",
       "border": "#dbd2c4",
       "codeBackground": "#f2eee9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-gold",
       "notes": "醒目 · 古铜金 适合专题、品牌、运营内容，气质偏醒目、宣传、温润、沉稳。"
     },
     {
@@ -803,7 +758,6 @@
       "muted": "#767676",
       "border": "#b8d8ce",
       "codeBackground": "#e4f0ed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-green",
       "notes": "醒目 · 翡翠绿 适合专题、品牌、运营内容，气质偏醒目、宣传、清新、自然。"
     },
     {
@@ -822,7 +776,6 @@
       "muted": "#767676",
       "border": "#c5d0fa",
       "codeBackground": "#e9edfd",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-blue",
       "notes": "醒目 · 宝石蓝 适合专题、品牌、运营内容，气质偏醒目、宣传、专业、科技。"
     },
     {
@@ -841,7 +794,6 @@
       "muted": "#767676",
       "border": "#e3cfba",
       "codeBackground": "#f4ede5",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-orange",
       "notes": "醒目 · 暖阳橙 适合专题、品牌、运营内容，气质偏醒目、宣传、明快、亲和。"
     },
     {
@@ -860,7 +812,6 @@
       "muted": "#767676",
       "border": "#eec6c4",
       "codeBackground": "#f9eae9",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-red",
       "notes": "醒目 · 中国红 适合专题、品牌、运营内容，气质偏醒目、宣传、强调、传播。"
     },
     {
@@ -879,7 +830,6 @@
       "muted": "#767676",
       "border": "#b7c7da",
       "codeBackground": "#e4eaf1",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-navy",
       "notes": "醒目 · 深海蓝 适合专题、品牌、运营内容，气质偏醒目、宣传、可信、理性。"
     },
     {
@@ -898,7 +848,6 @@
       "muted": "#767676",
       "border": "#c6cacf",
       "codeBackground": "#eaebed",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-gray",
       "notes": "醒目 · 石墨灰 适合专题、品牌、运营内容，气质偏醒目、宣传、克制、中性。"
     },
     {
@@ -917,7 +866,6 @@
       "muted": "#767676",
       "border": "#bfd3ed",
       "codeBackground": "#e7eff8",
-      "sourceUrl": "https://www.md2wechat.cn/theme-gallery/bold-sky",
       "notes": "醒目 · 天空蓝 适合专题、品牌、运营内容，气质偏醒目、宣传、通透、轻盈。"
     }
   ]

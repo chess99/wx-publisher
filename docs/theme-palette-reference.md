@@ -2,19 +2,19 @@
 
 This file documents the 48 runtime themes exposed by `wxp themes`. Runtime support comes from `src/converter/themes.ts`; `docs/theme-palette-reference.json` is the canonical machine-readable reference for AI and script callers.
 
-## Sources
+## Baseline
 
-- Theme IDs and public selection surface: https://www.md2wechat.com/themes
-- Rendered gallery and detail-page palette samples: https://www.md2wechat.cn/theme-gallery
-- Last local extraction: 2026-06-03
+- Runtime theme IDs remain the public 48-theme catalog.
+- Palette values are maintained as a local reference baseline.
+- Last local update: 2026-06-03
 
-`accent` is the gallery card/source color. `renderAccent`, `accentSoft`, `accentSofter`, `border`, `headingText`, and `text` are sampled from each theme detail page rendered article preview. Keep both layers: the source color is not always the same as the rendered module accent.
+`accent` is the public theme color. `renderAccent`, `accentSoft`, `accentSofter`, `border`, `headingText`, and `text` describe the rendered baseline. Keep both layers: the public color is not always the same as the rendered module accent.
 
 ## Usage
 
 - Use the theme IDs directly with `--theme`.
 - Use `wxp themes` when an AI caller needs machine-readable selection metadata: collection, best fit, density, contrast, and accent color.
-- Use `docs/theme-palette-reference.json` when an AI caller needs source URLs, rendered accents, soft fills, borders, and text colors.
+- Use `docs/theme-palette-reference.json` when an AI caller needs rendered accents, soft fills, borders, and text colors.
 - When editing the catalog, update `src/converter/themes.ts`, this document, `docs/theme-palette-reference.json`, and the theme tests together.
 
 ## Groups

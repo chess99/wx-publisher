@@ -302,7 +302,7 @@ function createDefaultReferenceStyles(spec: ThemeSpec): NodeStyles {
     h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
     h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
     h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
-    p: `margin:1.2em 8px;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(34, 34, 34);font-weight:400;overflow-wrap:break-word;`,
+    p: `margin:0 8px 1.15em;padding:0.2em 0;text-align:justify;line-height:1.75;font-family:${fontFamily};font-size:15px;letter-spacing:0.1em;color:rgb(34, 34, 34);font-weight:400;overflow-wrap:break-word;`,
     strong: `font-weight:700;color:rgb(63, 63, 63);`,
     em: `font-style:italic;color:${spec.muted};`,
     code: `display:inline-block;background:${inlineCodeBg};color:#9f452c;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;padding:2px 7px;border-radius:999px;border:1px solid rgba(200, 100, 66, 0.18);font-size:90%;line-height:1.4;`,
