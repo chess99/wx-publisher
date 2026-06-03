@@ -254,8 +254,6 @@ function createTheme(spec: ThemeSpec): Theme {
 }
 
 function createStyles(spec: ThemeSpec): NodeStyles {
-  if (spec.name === "default") return createDefaultReferenceStyles(spec)
-
   const accent = spec.accent
   const soft = colorMix(accent, 0.10)
   const softer = colorMix(accent, 0.16)
@@ -275,50 +273,19 @@ function createStyles(spec: ThemeSpec): NodeStyles {
     p: paragraph,
     strong: `font-weight:800;color:${accent};`,
     em: `font-style:italic;color:${spec.muted};`,
-    code: `font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;background:${spec.codeBackground};padding:2px 6px;border-radius:5px;color:${accent};border:1px solid ${border};`,
-    pre: `background:${spec.name === "github-readme" ? spec.surface : "#111827"};border-radius:10px;padding:16px 18px;margin:18px 0;overflow-x:auto;display:block;border:1px solid ${accent};`,
-    preCode: `font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;color:${spec.name === "github-readme" ? spec.text : "#e5e7eb"};background:none;padding:0;border-radius:0;display:block;white-space:nowrap;overflow-x:auto;`,
+    code: `display:inline-block;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:90%;line-height:1.4;background:${spec.codeBackground};padding:2px 7px;border-radius:999px;color:${accent};border:1px solid ${border};`,
+    pre: `display:block;box-sizing:border-box;background:${spec.surface};border-radius:12px;padding:16px 18px;margin:18px 0;overflow-x:auto;border:1px solid ${border};border-top:3px solid ${accent};box-shadow:${shadow};-webkit-overflow-scrolling:touch;tab-size:2;`,
+    preCode: `font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:14px;color:${spec.text};background:none;padding:0;border-radius:0;display:block;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;`,
     blockquote: `border-left:4px solid ${accent};margin:18px 0;padding:12px 16px;background:${soft};color:${spec.muted};font-size:15px;line-height:1.82;border-radius:0 8px 8px 0;`,
     ul: READING_LIST,
     ol: READING_LIST,
     li: `${READING_LIST_ITEM}color:${spec.text};`,
-    hr: `border:none;border-top:1px solid ${border};margin:26px 0;`,
+    hr: `border:none;border-top:1px dashed ${border};margin:26px 0;`,
     img: `max-width:100%;border-radius:${spec.collection === "minimal" || spec.name === "ink-minimal" ? "2px" : "8px"};display:block;margin:18px auto;${spec.collection === "bold" || spec.collection === "elegant" ? `box-shadow:${shadow};` : ""}`,
-    a: `color:${accent};text-decoration:none;font-weight:700;border-bottom:1px solid ${border};`,
+    a: `color:${accent};text-decoration:none;font-weight:700;border-bottom:1px solid ${border};word-break:break-all;overflow-wrap:anywhere;white-space:normal;`,
     table: `width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;background:${spec.surface};`,
     th: `background:${softer};font-weight:800;padding:9px 12px;border:1px solid ${border};text-align:left;color:${accent};`,
     td: `padding:9px 12px;border:1px solid ${border};color:${spec.text};`,
-  }
-}
-
-function createDefaultReferenceStyles(spec: ThemeSpec): NodeStyles {
-  const headingAccent = "rgb(230, 130, 96)"
-  const linkAccent = "rgb(200, 100, 66)"
-  const inlineCodeBg = "linear-gradient(180deg, rgba(200, 100, 66, 0.14), rgba(200, 100, 66, 0.08))"
-  const preBg = "linear-gradient(180deg, rgba(200, 100, 66, 0.14) 0px, rgba(200, 100, 66, 0.14) 12px, rgba(250, 250, 249, 0.98) 12px, rgba(250, 250, 249, 0.98) 100%)"
-
-  return {
-    wrapper: `font-family:${READING_FONT_FAMILY};max-width:677px;margin:0 auto;padding:0 16px;background:#faf9f5;color:${spec.text};`,
-    h1: `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:22px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
-    h2: `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${headingAccent};border-bottom:1px dashed ${headingAccent};font-size:20px;font-weight:bold;line-height:1.2;color:rgb(63, 63, 63);`,
-    h3: `margin:1.7em 8px 0.7em;font-size:18px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
-    h4: `margin:1.5em 8px 0.6em;padding-left:9px;border-left:3px solid ${headingAccent};font-size:16px;font-weight:bold;line-height:1.35;color:rgb(63, 63, 63);`,
-    p: `${READING_PARAGRAPH}color:rgb(34, 34, 34);overflow-wrap:break-word;`,
-    strong: `font-weight:700;color:rgb(63, 63, 63);`,
-    em: `font-style:italic;color:${spec.muted};`,
-    code: `display:inline-block;background:${inlineCodeBg};color:#9f452c;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;padding:2px 7px;border-radius:999px;border:1px solid rgba(200, 100, 66, 0.18);font-size:90%;line-height:1.4;`,
-    pre: `display:block;box-sizing:border-box;margin:1.5em 8px;padding:1.15em 1.2em 1.2em;background:${preBg};border:1px solid rgba(200, 100, 66, 0.18);border-radius:14px;overflow-x:auto;font-size:14px;line-height:1.6;box-shadow:0 8px 20px rgba(200, 100, 66, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.85);white-space:pre;-webkit-overflow-scrolling:touch;tab-size:2;`,
-    preCode: `background:none;padding:0;font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:14px;color:#3b342f;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;`,
-    blockquote: `margin:1.5em 8px 2em;padding:1em 1.2em;border-left:4px solid ${headingAccent};background:rgba(200, 100, 66, 0.1);color:rgb(63, 63, 63);font-size:15px;line-height:1.75;border-radius:0 8px 8px 0;`,
-    ul: READING_LIST,
-    ol: READING_LIST,
-    li: `${READING_LIST_ITEM}color:rgb(63, 63, 63);`,
-    hr: `border:none;border-top:1px dashed rgba(230, 130, 96, 0.4);margin:2em 8px;`,
-    img: `max-width:100%;border-radius:8px;display:block;margin:18px auto;`,
-    a: `color:${linkAccent};text-decoration:none;border-bottom:1px solid rgba(200, 100, 66, 0.3);word-break:break-all;overflow-wrap:anywhere;white-space:normal;`,
-    table: `width:100%;border-collapse:collapse;margin:1.5em 8px;font-size:14px;background:#faf9f5;`,
-    th: `background:#ead6cc;font-weight:800;padding:9px 12px;border:1px solid #dab1a1;text-align:left;color:#9f452c;`,
-    td: `padding:9px 12px;border:1px solid #dab1a1;color:#3b342f;`,
   }
 }
 
@@ -332,12 +299,8 @@ function h1Style(spec: ThemeSpec, soft: string, shadow: string): string {
       return `font-size:25px;font-weight:850;color:${spec.text};margin:30px 0 15px;line-height:1.34;padding:10px 14px;background:linear-gradient(90deg,${soft},transparent);border-left:6px solid ${spec.accent};border-radius:8px;`
     case "bold":
       return `font-size:24px;font-weight:900;color:#ffffff;margin:28px 0 15px;line-height:1.3;text-align:center;padding:14px 18px;background:${spec.accent};border-radius:12px;box-shadow:${shadow};`
-    case "classic":
-      return `font-size:26px;font-weight:850;color:${spec.text};margin:30px 0 15px;line-height:1.35;border-bottom:3px double ${spec.accent};padding-bottom:10px;`
-    case "extra":
-      return `font-size:25px;font-weight:900;color:${spec.text};margin:28px 0 14px;line-height:1.32;padding:12px 14px;background:${soft};border:2px solid ${spec.accent};border-radius:10px;`
     default:
-      return `font-size:24px;font-weight:850;color:${spec.text};margin:28px 0 14px;line-height:1.34;padding-bottom:8px;border-bottom:3px solid ${spec.accent};`
+      return `margin:1.8em 8px 0.8em 0;padding:0 0 0.55em 12px;border-left:4px solid ${spec.accent};border-bottom:1px dashed ${spec.accent};font-size:22px;font-weight:800;line-height:1.25;color:${spec.text};`
   }
 }
 
@@ -351,12 +314,8 @@ function h2Style(spec: ThemeSpec, soft: string, shadow: string): string {
       return `font-size:20px;font-weight:850;color:${spec.text};margin:28px 0 12px;line-height:1.42;padding:8px 12px;border-left:5px solid ${spec.accent};background:${soft};border-radius:0 8px 8px 0;`
     case "bold":
       return `font-size:20px;font-weight:900;color:#ffffff;margin:26px 0 12px;line-height:1.35;padding:10px 14px;background:${spec.accent};border-radius:10px;box-shadow:${shadow};`
-    case "classic":
-      return `font-size:20px;font-weight:850;color:${spec.text};margin:28px 0 12px;line-height:1.42;border-left:5px solid ${spec.accent};padding-left:12px;background:${soft};`
-    case "extra":
-      return `font-size:20px;font-weight:900;color:${spec.accent};margin:26px 0 12px;line-height:1.4;padding:8px 12px;background:${soft};border-left:5px solid ${spec.accent};`
     default:
-      return `font-size:20px;font-weight:850;color:${spec.text};margin:26px 0 12px;line-height:1.42;border-left:4px solid ${spec.accent};padding-left:12px;background:${soft};`
+      return `margin:2em 8px 0.75em 0;padding:0 0 0.5em 12px;border-left:4px solid ${spec.accent};border-bottom:1px dashed ${spec.accent};font-size:20px;font-weight:800;line-height:1.25;color:${spec.text};`
   }
 }
 

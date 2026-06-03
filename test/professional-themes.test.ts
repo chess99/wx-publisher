@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { convertMarkdown } from "../src/converter/index.js"
 import { getTheme, listThemes } from "../src/converter/themes.js"
+
+const THEMES_SOURCE = new URL("../src/converter/themes.ts", import.meta.url)
 
 const PROFESSIONAL_THEMES = [
   "default",
@@ -94,6 +97,7 @@ describe("professional theme matrix", () => {
 
   it("applies distinct family visual rules", () => {
     const defaultStyles = getTheme("default").styles
+    const bytedanceStyles = getTheme("bytedance").styles
     expect(getTheme("default").accent).toBe("#a34e2e")
     expect(defaultStyles.wrapper).toContain("background:#faf9f5")
     expect(defaultStyles.wrapper).toContain("color:#222222")
@@ -101,10 +105,15 @@ describe("professional theme matrix", () => {
     expect(defaultStyles.p).toContain("line-height:1.82")
     expect(defaultStyles.p).not.toContain("letter-spacing")
     expect(defaultStyles.h2).toContain("border-bottom:1px dashed")
-    expect(defaultStyles.h2).toContain("rgb(63, 63, 63)")
+    expect(defaultStyles.h2).toContain("#a34e2e")
+    expect(bytedanceStyles.h2).toContain("border-bottom:1px dashed")
+    expect(bytedanceStyles.h2).toContain("#1677ff")
     expect(defaultStyles.code).toContain("border-radius:999px")
-    expect(defaultStyles.pre).toContain("rgba(200, 100, 66, 0.14) 12px")
+    expect(bytedanceStyles.code).toContain("border-radius:999px")
+    expect(defaultStyles.pre).toContain("#a34e2e")
+    expect(bytedanceStyles.pre).toContain("#1677ff")
     expect(defaultStyles.preCode).toContain("overflow-wrap:anywhere")
+    expect(bytedanceStyles.preCode).toContain("overflow-wrap:anywhere")
 
     expect(getTheme("bytedance").accent).toBe("#1677ff")
     expect(getTheme("apple").accent).toBe("#007aff")
@@ -118,6 +127,13 @@ describe("professional theme matrix", () => {
     expect(getTheme("github-readme").styles.pre).toContain("#0969da")
     expect(getTheme("nyt-classic").styles.wrapper).toContain("#fdfaf6")
     expect(getTheme("wechat-native").styles.a).toContain("#07c160")
+  })
+
+  it("generates default through the shared theme factory", () => {
+    const source = readFileSync(THEMES_SOURCE, "utf8")
+
+    expect(source).not.toContain('if (spec.name === "default") return')
+    expect(source).not.toContain("createDefaultReferenceStyles")
   })
 
   it("keeps theme selection metadata available for AI callers", () => {
@@ -182,8 +198,8 @@ describe("professional theme matrix", () => {
     expect(result.html).toContain("background:#faf9f5")
     expect(result.html).toContain("font-size:16px;line-height:1.82")
     expect(result.html).not.toContain("letter-spacing:0.1em")
-    expect(result.html).toContain("border-left:4px solid rgb(230, 130, 96)")
-    expect(result.html).toContain("border-bottom:1px dashed rgb(230, 130, 96)")
+    expect(result.html).toContain("border-left:4px solid #a34e2e")
+    expect(result.html).toContain("border-bottom:1px dashed #a34e2e")
     expect(result.html).toContain('class="inline-code"')
     expect(result.html).toContain("border-radius:999px")
     expect(result.html).toContain("<br>/goal")
