@@ -20,7 +20,7 @@ import { spawn } from "child_process"
 import { createServer, type IncomingMessage, type ServerResponse } from "http"
 import type { AddressInfo } from "net"
 import { convertMarkdown } from "../converter/index.js"
-import { generatePreviewHtml, shellQuote } from "../converter/preview-html.js"
+import { generatePreviewHtml, shellQuote, type ThemePreviewResult } from "../converter/preview-html.js"
 import { WechatClient } from "../wechat/client.js"
 import { loadConfig, saveConfig, getConfigPath, validateConfig } from "../config/index.js"
 import { listThemes, getTheme, listThemeReferences, hasTheme, type Theme } from "../converter/themes.js"
@@ -443,6 +443,7 @@ program
         footnotes: true,
         local_rest_api: true,
         professional_themes: true,
+        theme_gallery: true,
       },
       coverage: {
         themes: {
@@ -470,9 +471,14 @@ program
           optional_flags: ["--theme", "--theme-file", "--output"],
         },
         preview: {
-          description: "生成浏览器主题预览页",
+          description: "生成浏览器主题画廊预览页",
           required_flags: ["--file"],
           optional_flags: ["--theme-file", "--output", "--no-open"],
+        },
+        "theme-gallery": {
+          description: "生成本地静态主题画廊，默认使用高级模块 showcase 样稿",
+          required_flags: [],
+          optional_flags: ["--file", "--theme-file", "--output", "--no-open"],
         },
         studio: {
           description: "启动本地网页工作台，支持编辑、预览、复制和创建微信公众号草稿",
@@ -508,7 +514,7 @@ program
       },
       external_theme_file: {
         description: "通过 --theme-file 传入外部主题 JSON，不能与 --theme 同时使用",
-        commands: ["convert", "publish", "preview", "theme schema", "theme validate"],
+        commands: ["convert", "publish", "preview", "theme-gallery", "theme schema", "theme validate"],
         schema: getThemeFileSchema(),
       },
       env_vars: {
@@ -648,6 +654,29 @@ program
 // ── preview：浏览器主题预览（人类用） ─────────────────────────────────────────
 
 program
+  .command("theme-gallery")
+  .description("生成本地静态主题画廊")
+  .option("-f, --file <path>", "Markdown 样稿路径（默认 examples/advanced-layout-showcase.md）")
+  .option("--theme-file <path>", "额外预览的外部主题 JSON 文件路径")
+  .option("-o, --output <path>", "输出 HTML 路径（默认写入系统临时目录）")
+  .option("--no-open", "生成 HTML 但不自动打开浏览器")
+  .action(async (opts) => {
+    const sourcePath = resolve(opts.file ?? "examples/advanced-layout-showcase.md")
+    const { results } = await renderThemePreviewResults(sourcePath, opts.themeFile)
+    const outputPath = opts.output ?? `${tmpdir()}/wxp-theme-gallery-${randomUUID()}.html`
+    writeThemeGallery(outputPath, results, sourcePath)
+    openPreviewIfNeeded(outputPath, opts.open !== false)
+
+    ok({
+      path: outputPath,
+      source_file: sourcePath,
+      theme_count: listThemes().length,
+      themes: results.map(r => ({ theme: r.theme, ok: !r.error, error: r.error })),
+      message: opts.open !== false ? "已在浏览器中打开主题画廊" : "主题画廊文件已生成",
+    })
+  })
+
+program
   .command("preview")
   .description("在浏览器中预览所有主题效果")
   .requiredOption("-f, --file <path>", "Markdown 文件路径")
@@ -655,68 +684,11 @@ program
   .option("-o, --output <path>", "输出 HTML 路径（默认写入系统临时目录）")
   .option("--no-open", "生成 HTML 但不自动打开浏览器")
   .action(async (opts) => {
-    let markdown: string
     const absPath = resolve(opts.file)
-    try {
-      markdown = readFileSync(absPath, "utf-8")
-    } catch (e) {
-      fail(`读取文件失败: ${opts.file}`, String(e))
-    }
-
-    const themes = listThemes()
-    const renderTargets: PreviewRenderTarget[] = themes.map(theme => ({
-      theme,
-      publishCommand: `wxp publish --file ${shellQuote(absPath)} --theme ${shellQuote(theme)}`,
-    }))
-
-    if (opts.themeFile) {
-      const themePath = resolve(opts.themeFile)
-      const result = loadThemeFile(themePath)
-      if (!result.theme) {
-        fail("主题文件无效", result.errors)
-      }
-      if (result.warnings.length) {
-        console.error(JSON.stringify({ warnings: result.warnings }))
-      }
-      renderTargets.push({
-        theme: result.theme.name,
-        themeDefinition: result.theme,
-        publishCommand: `wxp publish --file ${shellQuote(absPath)} --theme-file ${shellQuote(themePath)}`,
-      })
-    }
-
-    // 并行渲染所有主题，任一失败不影响其他
-    const settled = await Promise.allSettled(
-      renderTargets.map(target => convertMarkdown(markdown, {
-        theme: target.theme,
-        themeDefinition: target.themeDefinition,
-      }))
-    )
-
-    const results = renderTargets.map((target, i) => {
-      const r = settled[i]
-      if (r.status === "fulfilled") {
-        return { theme: target.theme, html: r.value.html, publishCommand: target.publishCommand }
-      } else {
-        return { theme: target.theme, html: "", error: String(r.reason), publishCommand: target.publishCommand }
-      }
-    })
-
+    const { results } = await renderThemePreviewResults(absPath, opts.themeFile)
     const outputPath = opts.output ?? `${tmpdir()}/wxp-preview-${randomUUID()}.html`
-    const html = generatePreviewHtml(results, absPath)
-
-    try {
-      writeFileSync(outputPath, html, "utf-8")
-    } catch (e) {
-      fail(`写入预览文件失败: ${outputPath}`, String(e))
-    }
-
-    if (opts.open !== false) {
-      const openCmd = process.platform === "darwin" ? "open"
-        : process.platform === "win32" ? "start"
-        : "xdg-open"
-      spawn(openCmd, [outputPath], { detached: true, stdio: "ignore" }).unref()
-    }
+    writeThemeGallery(outputPath, results, absPath)
+    openPreviewIfNeeded(outputPath, opts.open !== false)
 
     ok({
       path: outputPath,
@@ -738,6 +710,97 @@ interface PreviewRenderTarget {
   theme: string
   themeDefinition?: Theme
   publishCommand: string
+  metadata: Omit<ThemePreviewResult, "html" | "error" | "publishCommand">
+}
+
+async function renderThemePreviewResults(articlePath: string, themeFile?: string): Promise<{ results: ThemePreviewResult[] }> {
+  let markdown: string
+  try {
+    markdown = readFileSync(articlePath, "utf-8")
+  } catch (e) {
+    fail(`读取文件失败: ${articlePath}`, String(e))
+  }
+
+  const renderTargets: PreviewRenderTarget[] = listThemes().map(themeName => {
+    const theme = getTheme(themeName)
+    return {
+      theme: themeName,
+      publishCommand: `wxp publish --file ${shellQuote(articlePath)} --theme ${shellQuote(themeName)}`,
+      metadata: previewMetadata(theme),
+    }
+  })
+
+  if (themeFile) {
+    const themePath = resolve(themeFile)
+    const result = loadThemeFile(themePath)
+    if (!result.theme) {
+      fail("主题文件无效", result.errors)
+    }
+    if (result.warnings.length) {
+      console.error(JSON.stringify({ warnings: result.warnings }))
+    }
+    renderTargets.push({
+      theme: result.theme.name,
+      themeDefinition: result.theme,
+      publishCommand: `wxp publish --file ${shellQuote(articlePath)} --theme-file ${shellQuote(themePath)}`,
+      metadata: previewMetadata(result.theme, "custom"),
+    })
+  }
+
+  const settled = await Promise.allSettled(
+    renderTargets.map(target => convertMarkdown(markdown, {
+      theme: target.theme,
+      themeDefinition: target.themeDefinition,
+    }))
+  )
+
+  const results = renderTargets.map((target, i): ThemePreviewResult => {
+    const rendered = settled[i]
+    if (rendered.status === "fulfilled") {
+      return {
+        ...target.metadata,
+        html: rendered.value.html,
+        publishCommand: target.publishCommand,
+      }
+    }
+    return {
+      ...target.metadata,
+      html: "",
+      error: String(rendered.reason),
+      publishCommand: target.publishCommand,
+    }
+  })
+
+  return { results }
+}
+
+function previewMetadata(theme: Theme, collectionOverride?: string): Omit<ThemePreviewResult, "html" | "error" | "publishCommand"> {
+  return {
+    theme: theme.name,
+    displayName: theme.displayName ?? theme.name,
+    collection: collectionOverride ?? theme.collection ?? "custom",
+    bestFor: theme.bestFor ?? theme.description,
+    density: theme.density ?? "medium",
+    contrast: theme.contrast ?? "medium",
+    accent: theme.accent ?? "#07c160",
+  }
+}
+
+function writeThemeGallery(outputPath: string, results: ThemePreviewResult[], articlePath: string): void {
+  const html = generatePreviewHtml(results, articlePath)
+  try {
+    writeFileSync(outputPath, html, "utf-8")
+  } catch (e) {
+    fail(`写入预览文件失败: ${outputPath}`, String(e))
+  }
+}
+
+function openPreviewIfNeeded(outputPath: string, shouldOpen: boolean): void {
+  if (!shouldOpen) return
+  const openCmd = process.platform === "darwin" ? "open"
+    : process.platform === "win32" ? "start"
+    : "xdg-open"
+  spawn(openCmd, [outputPath], { detached: true, stdio: "ignore" }).unref()
 }
 
 interface ConvertApiBody {

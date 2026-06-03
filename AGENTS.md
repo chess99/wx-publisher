@@ -137,10 +137,12 @@ wxp convert --file article.md --theme github-readme > /tmp/preview.html
 ### 预览主题
 
 ```bash
+wxp theme-gallery
+wxp theme-gallery --no-open --output /tmp/wxp-theme-gallery.html
 wxp preview --file article.md
 ```
 
-`preview` 会生成浏览器预览页，便于人工比较主题效果。自动化流程通常直接使用 `--theme` 参数。
+`theme-gallery` 会生成本地静态主题画廊，默认使用 `examples/advanced-layout-showcase.md`，适合一次人工验收所有主题和高级模块。`preview` 会用指定文章生成同样的画廊页面，便于比较真实文章效果。自动化流程通常直接使用 `--theme` 参数。
 
 ## JSON 输出契约
 

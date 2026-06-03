@@ -121,6 +121,28 @@ describe("CLI external theme files", () => {
     expect(exitCode).toBe(0)
     expect(html).toContain("--theme-file")
     expect(html).toContain("test/fixtures/external-theme-valid.json")
+    expect(html).toContain('data-collection="custom"')
+  })
+
+  it("creates a static theme gallery from the showcase article by default", async () => {
+    const outputPath = resolve("/tmp", `wxp-theme-gallery-${Date.now()}.html`)
+    const { stdout, exitCode } = await runCli([
+      "theme-gallery",
+      "--output",
+      outputPath,
+      "--no-open",
+    ])
+    const payload = JSON.parse(stdout)
+    const html = readFileSync(payload.data.path, "utf-8")
+
+    expect(exitCode).toBe(0)
+    expect(payload.data.path).toBe(outputPath)
+    expect(payload.data.source_file).toContain("examples/advanced-layout-showcase.md")
+    expect(payload.data.theme_count).toBe(48)
+    expect(html).toContain("theme-gallery")
+    expect(html).toContain("advanced-layout-showcase.md")
+    expect(html).toContain('class="theme-card" data-theme="default"')
+    expect(html).toContain('class="theme-card" data-theme="github-readme"')
   })
 
   it("quotes paths with spaces in generated preview publish commands", async () => {

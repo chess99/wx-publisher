@@ -35,7 +35,10 @@ wxp publish --file article.md --cover cover.jpg
 # 打开本地 Studio：编辑、预览、复制并创建草稿
 wxp studio --file article.md
 
-# 在浏览器中预览所有主题效果（手动比较）
+# 生成静态主题画廊，默认使用 examples/advanced-layout-showcase.md
+wxp theme-gallery
+
+# 在浏览器中用当前文章预览所有主题效果（手动比较）
 wxp preview --file article.md
 
 # 仅转换，输出到文件（脚本/自动化用）
@@ -188,13 +191,20 @@ wxp theme schema
 
 ## 主题预览
 
-运行 `wxp preview` 在浏览器中并排查看所有主题效果，底部直接生成可复制的发布命令：
+运行 `wxp theme-gallery` 生成本地静态主题画廊。默认样稿是 `examples/advanced-layout-showcase.md`，用于一次查看普通 Markdown 和高级模块在所有主题下的效果：
+
+```bash
+wxp theme-gallery
+wxp theme-gallery --no-open --output /tmp/wxp-theme-gallery.html
+```
+
+也可以运行 `wxp preview`，用当前文章生成同样的画廊页面：
 
 ```bash
 wxp preview --file article.md
 ```
 
-浏览器打开后进程立即退出，不阻塞终端。切换 tab 查看不同主题，填入封面图路径后底部命令即可直接复制执行。
+浏览器打开后进程立即退出，不阻塞终端。画廊支持搜索、按系列/密度/对比度筛选，点击主题卡片查看完整预览，填入封面图路径后可复制对应发布命令。
 
 自动化流程通常不需要预览，直接用 `--theme` 参数即可。
 
